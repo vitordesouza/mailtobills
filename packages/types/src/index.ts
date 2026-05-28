@@ -3,7 +3,6 @@ export type {
   ExpenseDocumentAttachment,
   ExpenseDocumentRow,
 } from "./expenseDocument.js";
-export type { Invoice, InvoiceRow } from "./invoice.js";
 export {
   choosePrimaryAttachment,
   getAcceptedPdfAttachments,

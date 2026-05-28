@@ -1,13 +1,13 @@
 import type { ExpenseDocumentRow } from "@mailtobills/types";
 
-export type InvoiceSummary = {
+export type ExpenseDocumentSummary = {
   count: number;
   attachmentCount: number;
 };
 
-export type InvoicesResult = {
-  invoices: ExpenseDocumentRow[];
-  summary: InvoiceSummary;
+export type ExpenseDocumentsResult = {
+  documents: ExpenseDocumentRow[];
+  summary: ExpenseDocumentSummary;
   isLoading: boolean;
   totalCount: number;
 };

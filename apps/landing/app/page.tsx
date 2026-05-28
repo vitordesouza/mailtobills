@@ -24,20 +24,20 @@ const flowSteps = [
 
 export default function Page() {
   return (
-    <main className="min-h-svh bg-background text-foreground">
-      <section className="relative min-h-[86svh] overflow-hidden border-b">
+    <main className="min-h-svh bg-white text-slate-950 dark:bg-white dark:text-slate-950">
+      <section className="relative min-h-[86svh] overflow-hidden border-b border-slate-200">
         <div className="absolute inset-0 bg-[linear-gradient(135deg,#f8fafc_0%,#eef6f2_48%,#fff7ed_100%)]" />
         <div className="relative mx-auto grid min-h-[86svh] max-w-6xl items-center gap-10 px-6 py-12 lg:grid-cols-[0.95fr_1.05fr]">
           <div className="max-w-2xl space-y-7">
-            <div className="inline-flex items-center gap-2 rounded-full border bg-background/80 px-3 py-1 text-sm font-medium">
+            <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/85 px-3 py-1 text-sm font-medium text-slate-800 shadow-sm">
               <Mail className="size-4 text-emerald-700" />
               Forward expense PDFs
             </div>
             <div className="space-y-4">
-              <h1 className="text-4xl font-semibold tracking-normal sm:text-5xl lg:text-6xl">
+              <h1 className="text-4xl font-semibold tracking-normal text-slate-950 sm:text-5xl lg:text-6xl">
                 MailToBills
               </h1>
-              <p className="max-w-xl text-lg leading-8 text-muted-foreground">
+              <p className="max-w-xl text-lg leading-8 text-slate-600">
                 Collect received expense documents by month and export a clean
                 package for your accountant.
               </p>
@@ -53,11 +53,11 @@ export default function Page() {
           </div>
 
           <div className="relative">
-            <div className="rounded-lg border bg-background shadow-xl">
-              <div className="flex items-center justify-between border-b px-5 py-4">
+            <div className="rounded-lg border border-slate-900 bg-slate-950 text-white shadow-xl">
+              <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
                 <div>
                   <div className="text-sm font-semibold">May 2026</div>
-                  <div className="text-xs text-muted-foreground">
+                  <div className="text-xs text-slate-400">
                     Collected Expense Documents
                   </div>
                 </div>
@@ -65,7 +65,7 @@ export default function Page() {
                   Export ZIP
                 </div>
               </div>
-              <div className="divide-y">
+              <div className="divide-y divide-white/10">
                 {[
                   ["supplier-receipt.pdf", "Receipts from travel", "2 PDFs"],
                   ["fatura-energia-maio.pdf", "Monthly utility email", "1 PDF"],
@@ -82,11 +82,11 @@ export default function Page() {
                       <div className="truncate text-sm font-medium">
                         {filename}
                       </div>
-                      <div className="truncate text-xs text-muted-foreground">
+                      <div className="truncate text-xs text-slate-400">
                         {subject}
                       </div>
                     </div>
-                    <div className="text-xs font-medium text-muted-foreground">
+                    <div className="text-xs font-medium text-slate-400">
                       {count}
                     </div>
                   </div>
@@ -97,13 +97,16 @@ export default function Page() {
         </div>
       </section>
 
-      <section id="how-it-works" className="mx-auto max-w-6xl px-6 py-12">
+      <section
+        id="how-it-works"
+        className="mx-auto max-w-6xl bg-white px-6 py-12 text-slate-950"
+      >
         <div className="grid gap-4 md:grid-cols-3">
           {flowSteps.map(({ icon: Icon, title, copy }) => (
-            <div key={title} className="rounded-lg border p-5">
+            <div key={title} className="rounded-lg border border-slate-200 p-5">
               <Icon className="mb-4 size-5 text-emerald-700" />
               <h2 className="text-base font-semibold">{title}</h2>
-              <p className="mt-2 text-sm leading-6 text-muted-foreground">
+              <p className="mt-2 text-sm leading-6 text-slate-600">
                 {copy}
               </p>
             </div>

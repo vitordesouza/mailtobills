@@ -1,4 +1,4 @@
-import { getInvoices } from "@/lib/invoices/getInvoices";
+import { getExpenseDocuments } from "@/lib/expenseDocuments/getExpenseDocuments";
 
 const textEncoder = new TextEncoder();
 
@@ -159,12 +159,12 @@ export async function GET(
   { params }: { params: Promise<{ month: string }> },
 ) {
   const { month } = await params;
-  const { invoices } = await getInvoices(month);
+  const { documents } = await getExpenseDocuments(month);
   const origin = new URL(request.url).origin;
   const manifestRows = [];
   const files: Array<{ name: string; bytes: Uint8Array }> = [];
 
-  for (const document of invoices) {
+  for (const document of documents) {
     const primary = document.primaryAttachment;
 
     if (!primary?.downloadUrl) {

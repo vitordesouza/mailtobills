@@ -4,7 +4,7 @@ import * as React from "react";
 
 import { usePathname, useRouter } from "next/navigation";
 
-import { InvoicesTableSkeleton } from "@/components/invoices-table";
+import { ExpenseDocumentsTableSkeleton } from "@/components/expense-documents-table";
 import { Card, CardContent } from "@mailtobills/ui/components/card";
 import { Skeleton } from "@mailtobills/ui/components/skeleton";
 
@@ -110,7 +110,7 @@ export function MonthRouteLoadingOverlay() {
           <SummaryCardSkeleton className="md:col-span-1" />
           <SummaryCardSkeleton className="md:col-span-2" />
         </div>
-        <InvoicesTableSkeleton />
+        <ExpenseDocumentsTableSkeleton />
       </div>
     </div>
   );

@@ -3,11 +3,11 @@ import type { ReactNode } from "react";
 import { FileText, Mail, Paperclip } from "lucide-react";
 
 import { getMonthInfo } from "@/lib/months";
-import { getInvoices } from "@/lib/invoices/getInvoices";
+import { getExpenseDocuments } from "@/lib/expenseDocuments/getExpenseDocuments";
 import { Button } from "@mailtobills/ui/components/button";
 import { Card, CardContent } from "@mailtobills/ui/components/card";
 import { OnboardingEmptyState } from "@/components/onboarding-empty-state";
-import { InvoicesTable } from "@/components/invoices-table";
+import { ExpenseDocumentsTable } from "@/components/expense-documents-table";
 
 function SummaryCard({
   icon,
@@ -51,7 +51,9 @@ export default async function DashboardPage({
 }) {
   const { month } = await params;
   const monthInfo = getMonthInfo(month);
-  const { summary, totalCount, invoices } = await getInvoices(monthInfo.value);
+  const { summary, totalCount, documents } = await getExpenseDocuments(
+    monthInfo.value,
+  );
 
   if (totalCount === 0) {
     return <OnboardingEmptyState />;
@@ -87,8 +89,8 @@ export default async function DashboardPage({
           className="md:col-span-1"
         />
       </div>
-      <InvoicesTable
-        invoices={invoices}
+      <ExpenseDocumentsTable
+        documents={documents}
         emptyLabel={`No expense documents collected in ${monthInfo.label}.`}
       />
     </>

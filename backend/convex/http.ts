@@ -270,7 +270,7 @@ async function storeBase64Attachments(
   return stored;
 }
 
-const ingestInvoice = httpAction(async (ctx, request) => {
+const ingestExpenseDocument = httpAction(async (ctx, request) => {
   const authHeader = request.headers.get("authorization") ?? "";
   const ingestSecret = process.env.INGEST_SECRET;
 
@@ -581,7 +581,7 @@ auth.addHttpRoutes(http);
 http.route({
   path: "/ingest",
   method: "POST",
-  handler: ingestInvoice,
+  handler: ingestExpenseDocument,
 });
 
 http.route({

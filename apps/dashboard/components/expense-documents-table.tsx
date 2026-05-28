@@ -71,11 +71,11 @@ function ViewPdfButton({
   );
 }
 
-export function InvoicesTable({
-  invoices,
+export function ExpenseDocumentsTable({
+  documents,
   emptyLabel,
 }: {
-  invoices: ExpenseDocumentRow[];
+  documents: ExpenseDocumentRow[];
   emptyLabel: string;
 }) {
   const router = useRouter();
@@ -99,7 +99,7 @@ export function InvoicesTable({
     });
   };
 
-  if (invoices.length === 0) {
+  if (documents.length === 0) {
     return (
       <Card className="py-0">
         <CardContent className="flex min-h-[340px] flex-col items-center justify-center py-10 text-center">
@@ -134,7 +134,7 @@ export function InvoicesTable({
               </tr>
             </thead>
             <tbody className="divide-y">
-              {invoices.map((document) => {
+              {documents.map((document) => {
                 const sender = getSenderName(document);
                 const primary = document.primaryAttachment;
                 const isExpanded = expandedId === document.id;
@@ -293,7 +293,7 @@ export function InvoicesTable({
   );
 }
 
-export function InvoicesTableSkeleton({ rows = 6 }: { rows?: number }) {
+export function ExpenseDocumentsTableSkeleton({ rows = 6 }: { rows?: number }) {
   return (
     <Card className="gap-0 overflow-hidden py-0">
       <CardContent className="p-0">

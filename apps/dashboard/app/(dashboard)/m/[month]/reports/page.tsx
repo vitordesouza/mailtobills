@@ -1,6 +1,6 @@
 import { Download } from "lucide-react";
 
-import { getInvoices } from "@/lib/invoices/getInvoices";
+import { getExpenseDocuments } from "@/lib/expenseDocuments/getExpenseDocuments";
 import { getMonthInfo } from "@/lib/months";
 import { Button } from "@mailtobills/ui/components/button";
 import { Card, CardContent } from "@mailtobills/ui/components/card";
@@ -12,7 +12,7 @@ export default async function ReportsPage({
 }) {
   const { month } = await params;
   const monthInfo = getMonthInfo(month);
-  const { summary } = await getInvoices(monthInfo.value);
+  const { summary } = await getExpenseDocuments(monthInfo.value);
 
   return (
     <Card>

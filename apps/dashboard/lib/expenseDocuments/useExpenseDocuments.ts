@@ -9,28 +9,33 @@ import {
   expenseDocumentRowsForMonth,
   summarizeExpenseDocuments,
 } from "./transform";
-import type { InvoicesResult, InvoiceSummary } from "./types";
+import type {
+  ExpenseDocumentsResult,
+  ExpenseDocumentSummary,
+} from "./types";
 
-export type UseInvoicesResult = InvoicesResult;
+export type UseExpenseDocumentsResult = ExpenseDocumentsResult;
 
-export const useInvoices = (month: string): UseInvoicesResult => {
+export const useExpenseDocuments = (
+  month: string,
+): UseExpenseDocumentsResult => {
   const data = useQuery(api.expenseDocuments.listMine, {});
   const monthInfo = useMemo(() => getMonthInfo(month), [month]);
 
-  const invoices = useMemo(() => {
+  const documents = useMemo(() => {
     if (!data) return [];
 
     return expenseDocumentRowsForMonth(data, monthInfo);
   }, [data, monthInfo]);
 
-  const summary = useMemo<InvoiceSummary>(() => {
-    return summarizeExpenseDocuments(invoices);
-  }, [invoices]);
+  const summary = useMemo<ExpenseDocumentSummary>(() => {
+    return summarizeExpenseDocuments(documents);
+  }, [documents]);
 
   const totalCount = data?.length ?? 0;
 
   return {
-    invoices,
+    documents,
     summary,
     isLoading: data === undefined,
     totalCount,
