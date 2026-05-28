@@ -3,17 +3,24 @@
   "version": "0.0.0",
   "type": "module",
   "private": true,
-  "types": "./src/index.ts",
+  "types": "./dist/index.d.ts",
   "exports": {
-    ".": "./src/index.ts"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
   },
   "scripts": {
-    "lint": "eslint . --max-warnings 0"
+    "build": "tsc -p tsconfig.build.json",
+    "lint": "eslint . --max-warnings 0",
+    "test": "node --test --import tsx 'src/**/*.test.ts'"
   },
   "devDependencies": {
     "@mailtobills/eslint-config": "workspace:*",
     "@mailtobills/typescript-config": "workspace:*",
+    "@types/node": "^20.19.25",
     "eslint": "^9.39.1",
+    "tsx": "^4.21.0",
     "typescript": "^5.9.3"
   }
 }

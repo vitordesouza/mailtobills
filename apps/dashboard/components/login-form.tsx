@@ -6,8 +6,6 @@ import { useRouter } from "next/navigation";
 import { useConvexAuth } from "convex/react";
 import { useAuthActions } from "@convex-dev/auth/react";
 
-import Image from "next/image";
-
 import { cn } from "@mailtobills/ui/lib/utils";
 import { Logo } from "@mailtobills/ui/components/logo";
 import { Input } from "@mailtobills/ui/components/input";

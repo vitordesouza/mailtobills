@@ -15,6 +15,16 @@ type ParsedForward = {
   originSentAt?: number;
 };
 
+type IngestAttachmentInput = {
+  originalFilename: string;
+  mimeType?: string;
+  fileSize?: number;
+  fileUrl?: string;
+  fileStorageId?: Id<"_storage">;
+  attachmentId?: string;
+  originalOrder: number;
+};
+
 function parseForwardedBodyPreview(
   bodyPreview: string | undefined
 ): ParsedForward {
@@ -112,11 +122,112 @@ async function getUserByForwardingEmail(ctx: ActionCtx, fromEmail: string) {
   return user;
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function optionalString(value: unknown) {
+  return typeof value === "string" && value.trim() ? value.trim() : undefined;
+}
+
+function optionalNumber(value: unknown) {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string" && value.trim()) {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : undefined;
+  }
+
+  return undefined;
+}
+
+function parseJsonAttachments(body: Record<string, unknown>) {
+  const rawAttachments = Array.isArray(body.attachments)
+    ? body.attachments
+    : [];
+
+  const attachments = rawAttachments
+    .filter(isRecord)
+    .map<IngestAttachmentInput | null>((attachment, index) => {
+      const originalFilename =
+        optionalString(attachment.originalFilename) ??
+        optionalString(attachment.fileName) ??
+        optionalString(attachment.filename);
+
+      if (!originalFilename) {
+        return null;
+      }
+
+      return {
+        originalFilename,
+        mimeType: optionalString(attachment.mimeType),
+        fileSize: optionalNumber(attachment.fileSize),
+        fileUrl: optionalString(attachment.fileUrl),
+        fileStorageId: optionalString(attachment.fileStorageId) as
+          | Id<"_storage">
+          | undefined,
+        attachmentId:
+          optionalString(attachment.attachmentId) ??
+          optionalString(attachment.id) ??
+          optionalString(attachment.key),
+        originalOrder: optionalNumber(attachment.originalOrder) ?? index,
+      };
+    })
+    .filter((attachment): attachment is IngestAttachmentInput =>
+      Boolean(attachment)
+    );
+
+  if (attachments.length > 0) {
+    return attachments;
+  }
+
+  const pdfMeta = isRecord(body.pdfMeta) ? body.pdfMeta : undefined;
+  const originalFilename =
+    optionalString(pdfMeta?.fileName) ??
+    optionalString(pdfMeta?.originalFilename) ??
+    "document.pdf";
+
+  return [
+    {
+      originalFilename,
+      mimeType: optionalString(pdfMeta?.mimeType),
+      fileSize: optionalNumber(pdfMeta?.fileSize),
+      fileUrl: optionalString(pdfMeta?.fileUrl),
+      attachmentId:
+        optionalString(body.attachmentId) ??
+        optionalString(pdfMeta?.attachmentId) ??
+        optionalString(pdfMeta?.key) ??
+        optionalString(pdfMeta?.fileName),
+      originalOrder: 0,
+    },
+  ];
+}
+
+function attachmentSetIdentity(attachments: readonly IngestAttachmentInput[]) {
+  return attachments
+    .map((attachment) =>
+      [
+        attachment.originalOrder,
+        attachment.attachmentId ?? "",
+        attachment.originalFilename,
+        attachment.fileSize ?? "",
+      ].join(":")
+    )
+    .join("|");
+}
+
 const ingestInvoice = httpAction(async (ctx, request) => {
   const authHeader = request.headers.get("authorization") ?? "";
-  const expected = `Bearer ${process.env.INGEST_SECRET}`;
+  const ingestSecret = process.env.INGEST_SECRET;
 
-  if (!expected || authHeader !== expected) {
+  if (!ingestSecret) {
+    return jsonError(
+      500,
+      "INGEST_SECRET_NOT_CONFIGURED",
+      "Ingest secret is not configured"
+    );
+  }
+
+  if (authHeader !== `Bearer ${ingestSecret}`) {
     return jsonError(401, "UNAUTHORIZED", "Unauthorized");
   }
 
@@ -133,27 +244,24 @@ const ingestInvoice = httpAction(async (ctx, request) => {
     }
 
     // New validation for n8n payload
-    if (typeof body !== "object" || body === null) {
+    if (!isRecord(body)) {
       return jsonError(400, "INVALID_PAYLOAD", "Invalid payload");
     }
 
-    const b = body as any;
-
     // n8n payload (current workflow) sends these:
-    if (typeof b.forwarderFrom !== "string" || !b.forwarderFrom.trim()) {
+    const forwarderFrom = optionalString(body.forwarderFrom);
+    if (!forwarderFrom) {
       return jsonError(400, "MISSING_FORWARDER_FROM", "Missing forwarderFrom", {
-        messageId:
-          typeof (b as any).messageId === "string"
-            ? (b as any).messageId
-            : undefined,
+        messageId: optionalString(body.messageId),
       });
     }
 
-    if (typeof b.messageId !== "string" || !b.messageId.trim()) {
+    const messageId = optionalString(body.messageId);
+    if (!messageId) {
       return jsonError(400, "MISSING_MESSAGE_ID", "Missing messageId");
     }
 
-    const receivedAtRaw = b.receivedAt;
+    const receivedAtRaw = body.receivedAt;
     const receivedAtMs =
       typeof receivedAtRaw === "number"
         ? receivedAtRaw
@@ -163,50 +271,9 @@ const ingestInvoice = httpAction(async (ctx, request) => {
 
     if (!Number.isFinite(receivedAtMs)) {
       return jsonError(400, "INVALID_RECEIVED_AT", "Invalid receivedAt", {
-        messageId:
-          typeof (b as any).messageId === "string"
-            ? (b as any).messageId
-            : undefined,
+        messageId,
       });
     }
-
-    const {
-      // n8n current fields
-      forwarderFrom,
-      subject,
-      messageId,
-      dedupeKey,
-
-      // optional fields (future / other callers)
-      attachmentId,
-      bodyPreview,
-      originFromEmail,
-      originFromName,
-      originDomain,
-      originSubject,
-      originSentAt,
-
-      // pass-through payloads (we don't store them yet, but may be useful later)
-      raw,
-      pdfMeta,
-    } = b as {
-      forwarderFrom: string;
-      subject?: string;
-      messageId: string;
-      dedupeKey?: string;
-
-      attachmentId?: string;
-      bodyPreview?: string;
-
-      originFromEmail?: string;
-      originFromName?: string;
-      originDomain?: string;
-      originSubject?: string;
-      originSentAt?: number;
-
-      raw?: any;
-      pdfMeta?: any;
-    };
 
     const user = await getUserByForwardingEmail(ctx, forwarderFrom);
 
@@ -217,50 +284,62 @@ const ingestInvoice = httpAction(async (ctx, request) => {
       });
     }
 
-    const derivedOriginalFilename =
-      typeof pdfMeta?.fileName === "string" && pdfMeta.fileName.trim()
-        ? pdfMeta.fileName.trim()
-        : "invoice.pdf";
-
-    // Best-effort attachment identifier for idempotency when n8n doesn't send one yet
-    const derivedAttachmentId =
-      (typeof attachmentId === "string" && attachmentId.trim()) ||
-      (typeof pdfMeta?.key === "string" && pdfMeta.key.trim()) ||
-      (typeof pdfMeta?.fileName === "string" && pdfMeta.fileName.trim()) ||
-      undefined;
+    const attachments = parseJsonAttachments(body);
+    const raw = isRecord(body.raw) ? body.raw : undefined;
 
     // bodyPreview often lives in the raw Outlook payload
     const effectiveBodyPreview =
-      typeof bodyPreview === "string"
-        ? bodyPreview
-        : typeof raw?.bodyPreview === "string"
-          ? raw.bodyPreview
-          : undefined;
+      optionalString(body.bodyPreview) ??
+      (typeof raw?.bodyPreview === "string"
+        ? raw.bodyPreview
+        : undefined);
 
     const parsed = parseForwardedBodyPreview(effectiveBodyPreview);
 
+    const dedupeKey = optionalString(body.dedupeKey);
     const rawDedupe =
       dedupeKey ??
-      `${user._id}|${messageId}|${derivedAttachmentId ?? derivedOriginalFilename}|${receivedAtMs}`;
+      `${user._id}|${messageId}|${receivedAtMs}|${attachmentSetIdentity(attachments)}`;
 
     const finalDedupeKey = await shortDedupeKey(rawDedupe);
 
-    await ctx.runMutation(internal.invoices.ingestCreateInvoice, {
-      userId: user._id,
-      originalFilename: derivedOriginalFilename,
-      fileUrl: undefined,
-      fromEmail: forwarderFrom,
-      subject,
-      receivedAt: receivedAtMs,
-      messageId,
-      attachmentId: derivedAttachmentId,
-      dedupeKey: finalDedupeKey,
-      originFromEmail: originFromEmail ?? parsed.originFromEmail,
-      originFromName: originFromName ?? parsed.originFromName,
-      originDomain: originDomain ?? parsed.originDomain,
-      originSubject: originSubject ?? parsed.originSubject,
-      originSentAt: originSentAt ?? parsed.originSentAt,
-    });
+    try {
+      await ctx.runMutation(
+        internal.expenseDocuments.ingestCreateExpenseDocument,
+        {
+          userId: user._id,
+          fromEmail: forwarderFrom,
+          subject: optionalString(body.subject),
+          receivedAt: receivedAtMs,
+          messageId,
+          dedupeKey: finalDedupeKey,
+          originFromEmail:
+            optionalString(body.originFromEmail) ?? parsed.originFromEmail,
+          originFromName:
+            optionalString(body.originFromName) ?? parsed.originFromName,
+          originDomain: optionalString(body.originDomain) ?? parsed.originDomain,
+          originSubject:
+            optionalString(body.originSubject) ?? parsed.originSubject,
+          originSentAt: optionalNumber(body.originSentAt) ?? parsed.originSentAt,
+          rawEmailMetadata: body.raw ?? body,
+          attachments,
+        }
+      );
+    } catch (error) {
+      if (
+        error instanceof Error &&
+        error.message.includes("NO_ACCEPTABLE_PDFS")
+      ) {
+        return jsonError(
+          400,
+          "NO_ACCEPTABLE_PDFS",
+          "No acceptable PDF attachments",
+          { messageId }
+        );
+      }
+
+      throw error;
+    }
 
     return new Response(JSON.stringify({ ok: true, messageId }), {
       status: 201,
@@ -276,13 +355,20 @@ const ingestInvoice = httpAction(async (ctx, request) => {
     url.searchParams.get("forwarderFrom") ??
     undefined;
   const subject = url.searchParams.get("subject") ?? undefined;
-  const receivedAtParam = url.searchParams.get("receivedAt");
-  const receivedAt = receivedAtParam ? Number(receivedAtParam) : Date.now();
-  const originalFilename =
-    url.searchParams.get("originalFilename") ?? "invoice.pdf";
-
   const messageId = url.searchParams.get("messageId") ?? undefined;
   const attachmentId = url.searchParams.get("attachmentId") ?? undefined;
+  const mimeType = url.searchParams.get("mimeType") ?? undefined;
+  const fileSize = optionalNumber(url.searchParams.get("fileSize"));
+  const receivedAtParam = url.searchParams.get("receivedAt");
+  const receivedAt = receivedAtParam ? Number(receivedAtParam) : Date.now();
+  if (!Number.isFinite(receivedAt)) {
+    return jsonError(400, "INVALID_RECEIVED_AT", "Invalid receivedAt", {
+      messageId,
+    });
+  }
+
+  const originalFilename =
+    url.searchParams.get("originalFilename") ?? "document.pdf";
 
   const originFromEmail = url.searchParams.get("originFromEmail") ?? undefined;
   const originFromName = url.searchParams.get("originFromName") ?? undefined;
@@ -313,7 +399,7 @@ const ingestInvoice = httpAction(async (ctx, request) => {
     });
   }
 
-  const rawDedupe = `${user._id}|${messageId ?? "no-message"}|${attachmentId ?? originalFilename}|${receivedAt}`;
+  const rawDedupe = `${user._id}|${messageId ?? "no-message"}|${receivedAt}|0:${attachmentId ?? ""}:${originalFilename}:${fileSize ?? ""}`;
   const dedupeKey = await shortDedupeKey(rawDedupe);
 
   // Aqui a mágica do Convex storage
@@ -322,22 +408,48 @@ const ingestInvoice = httpAction(async (ctx, request) => {
   const fileBlob = new Blob([fileBuffer]);
   const storageId = await ctx.storage.store(fileBlob);
 
-  await ctx.runMutation(internal.invoices.ingestCreateInvoiceFromStorage, {
-    userId: user._id,
-    originalFilename,
-    storageId,
-    fromEmail,
-    subject,
-    receivedAt,
-    messageId,
-    attachmentId,
-    dedupeKey,
-    originFromEmail,
-    originFromName,
-    originDomain,
-    originSubject,
-    originSentAt,
-  });
+  try {
+    await ctx.runMutation(
+      internal.expenseDocuments.ingestCreateExpenseDocument,
+      {
+        userId: user._id,
+        fromEmail,
+        subject,
+        receivedAt,
+        messageId,
+        dedupeKey,
+        originFromEmail,
+        originFromName,
+        originDomain,
+        originSubject,
+        originSentAt,
+        attachments: [
+          {
+            originalFilename,
+            mimeType,
+            fileSize,
+            fileStorageId: storageId,
+            attachmentId,
+            originalOrder: 0,
+          },
+        ],
+      }
+    );
+  } catch (error) {
+    if (
+      error instanceof Error &&
+      error.message.includes("NO_ACCEPTABLE_PDFS")
+    ) {
+      return jsonError(
+        400,
+        "NO_ACCEPTABLE_PDFS",
+        "No acceptable PDF attachments",
+        { messageId }
+      );
+    }
+
+    throw error;
+  }
 
   return new Response(JSON.stringify({ ok: true, messageId }), {
     status: 201,
