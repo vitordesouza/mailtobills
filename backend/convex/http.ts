@@ -1,4 +1,5 @@
 import { httpRouter } from "convex/server";
+import { getAuthUserId } from "@convex-dev/auth/server";
 
 import { auth } from "./auth";
 import { internal } from "./_generated/api";
@@ -23,6 +24,7 @@ type IngestAttachmentInput = {
   fileStorageId?: Id<"_storage">;
   attachmentId?: string;
   originalOrder: number;
+  base64Data?: string;
 };
 
 function parseForwardedBodyPreview(
@@ -140,6 +142,18 @@ function optionalNumber(value: unknown) {
   return undefined;
 }
 
+function decodeBase64Payload(value: string) {
+  const [, payload = value] = value.split(",");
+  const binary = atob(payload);
+  const bytes = new Uint8Array(binary.length);
+
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+
+  return bytes;
+}
+
 function parseJsonAttachments(body: Record<string, unknown>) {
   const rawAttachments = Array.isArray(body.attachments)
     ? body.attachments
@@ -165,6 +179,9 @@ function parseJsonAttachments(body: Record<string, unknown>) {
         fileStorageId: optionalString(attachment.fileStorageId) as
           | Id<"_storage">
           | undefined,
+        base64Data:
+          optionalString(attachment.base64Data) ??
+          optionalString(attachment.data),
         attachmentId:
           optionalString(attachment.attachmentId) ??
           optionalString(attachment.id) ??
@@ -192,6 +209,8 @@ function parseJsonAttachments(body: Record<string, unknown>) {
       mimeType: optionalString(pdfMeta?.mimeType),
       fileSize: optionalNumber(pdfMeta?.fileSize),
       fileUrl: optionalString(pdfMeta?.fileUrl),
+      base64Data:
+        optionalString(pdfMeta?.base64Data) ?? optionalString(pdfMeta?.data),
       attachmentId:
         optionalString(body.attachmentId) ??
         optionalString(pdfMeta?.attachmentId) ??
@@ -213,6 +232,42 @@ function attachmentSetIdentity(attachments: readonly IngestAttachmentInput[]) {
       ].join(":")
     )
     .join("|");
+}
+
+async function storeBase64Attachments(
+  ctx: ActionCtx,
+  attachments: readonly IngestAttachmentInput[]
+): Promise<IngestAttachmentInput[]> {
+  const stored: IngestAttachmentInput[] = [];
+
+  for (const attachment of attachments) {
+    if (
+      !attachment.base64Data ||
+      attachment.fileStorageId ||
+      attachment.fileUrl
+    ) {
+      stored.push(attachment);
+      continue;
+    }
+
+    const bytes = decodeBase64Payload(attachment.base64Data);
+    const fileBlob = new Blob([bytes], {
+      type: attachment.mimeType ?? "application/pdf",
+    });
+    const fileStorageId = await ctx.storage.store(fileBlob);
+
+    stored.push({
+      originalFilename: attachment.originalFilename,
+      mimeType: attachment.mimeType,
+      fileSize: attachment.fileSize ?? bytes.byteLength,
+      fileUrl: attachment.fileUrl,
+      fileStorageId,
+      attachmentId: attachment.attachmentId,
+      originalOrder: attachment.originalOrder,
+    });
+  }
+
+  return stored;
 }
 
 const ingestInvoice = httpAction(async (ctx, request) => {
@@ -284,7 +339,10 @@ const ingestInvoice = httpAction(async (ctx, request) => {
       });
     }
 
-    const attachments = parseJsonAttachments(body);
+    const attachments = await storeBase64Attachments(
+      ctx,
+      parseJsonAttachments(body)
+    );
     const raw = isRecord(body.raw) ? body.raw : undefined;
 
     // bodyPreview often lives in the raw Outlook payload
@@ -459,27 +517,55 @@ const ingestInvoice = httpAction(async (ctx, request) => {
 
 const downloadFile = httpAction(async (ctx, request) => {
   const url = new URL(request.url);
-  const storageIdParam = url.searchParams.get("storageId");
+  const attachmentIdParam = url.searchParams.get("attachmentId");
 
-  if (!storageIdParam) {
-    return new Response("Missing storageId", { status: 400 });
+  if (!attachmentIdParam) {
+    return new Response("Missing attachmentId", { status: 400 });
   }
 
   try {
-    const storageId = storageIdParam as Id<"_storage">;
-    const file = await ctx.storage.get(storageId);
+    const userId = await getAuthUserId(ctx);
+
+    if (!userId) {
+      return new Response("Unauthorized", { status: 401 });
+    }
+
+    const result = await ctx.runQuery(
+      internal.expenseDocuments.getOwnedAttachmentForDownload,
+      {
+        userId,
+        attachmentId: attachmentIdParam as Id<"expenseDocumentAttachments">,
+      }
+    );
+
+    if (!result) {
+      return new Response("File not found", { status: 404 });
+    }
+
+    const { attachment } = result;
+
+    if (attachment.fileUrl) {
+      return Response.redirect(attachment.fileUrl, 302);
+    }
+
+    if (!attachment.fileStorageId) {
+      return new Response("File not found", { status: 404 });
+    }
+
+    const file = await ctx.storage.get(attachment.fileStorageId);
 
     if (!file) {
       return new Response("File not found", { status: 404 });
     }
 
-    // For now we assume PDF; later we can persist and return content-type from metadata
+    const filename = attachment.originalFilename.replace(/["\\\r\n]/g, "_");
+
     return new Response(file, {
       status: 200,
       headers: {
-        "content-type": "application/pdf",
+        "content-type": attachment.mimeType ?? "application/pdf",
         "cache-control": "private, max-age=0, must-revalidate",
-        "content-disposition": 'inline; filename="invoice.pdf"',
+        "content-disposition": `inline; filename="${filename}"`,
       },
     });
   } catch (error) {

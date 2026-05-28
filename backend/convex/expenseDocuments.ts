@@ -5,7 +5,12 @@ import {
 } from "@mailtobills/types";
 import { v } from "convex/values";
 
-import { internalMutation, mutation, query } from "./_generated/server";
+import {
+  internalMutation,
+  internalQuery,
+  mutation,
+  query,
+} from "./_generated/server";
 
 import type { Id } from "./_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "./_generated/server";
@@ -74,6 +79,39 @@ export const listMine = query({
         };
       })
     );
+  },
+});
+
+export const createDemoExpenseDocument = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await requireSignedInUserId(ctx);
+    const now = Date.now();
+
+    const expenseDocumentId = await ctx.db.insert("expenseDocuments", {
+      userId,
+      fromEmail: "billing@example.com",
+      subject: "Demo expense document",
+      receivedAt: now,
+      createdAt: now,
+      dedupeKey: `${userId}|demo|${now}`,
+    });
+
+    const attachmentId = await ctx.db.insert("expenseDocumentAttachments", {
+      expenseDocumentId,
+      originalFilename: "mailtobills-demo-receipt.pdf",
+      mimeType: "application/pdf",
+      fileUrl:
+        "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+      originalOrder: 0,
+      createdAt: now,
+    });
+
+    await ctx.db.patch(expenseDocumentId, {
+      primaryAttachmentId: attachmentId,
+    });
+
+    return expenseDocumentId;
   },
 });
 
@@ -197,5 +235,34 @@ export const softDelete = mutation({
     await ctx.db.patch(args.expenseDocumentId, {
       deletedAt: Date.now(),
     });
+  },
+});
+
+export const getOwnedAttachmentForDownload = internalQuery({
+  args: {
+    userId: v.id("users"),
+    attachmentId: v.id("expenseDocumentAttachments"),
+  },
+  handler: async (ctx, args) => {
+    const attachment = await ctx.db.get(args.attachmentId);
+
+    if (!attachment) {
+      return null;
+    }
+
+    const document = await ctx.db.get(attachment.expenseDocumentId);
+
+    if (
+      !document ||
+      document.userId !== args.userId ||
+      document.deletedAt
+    ) {
+      return null;
+    }
+
+    return {
+      attachment,
+      document,
+    };
   },
 });

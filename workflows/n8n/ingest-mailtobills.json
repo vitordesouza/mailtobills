@@ -3,61 +3,6 @@
   "nodes": [
     {
       "parameters": {
-        "method": "POST",
-        "url": "https://zany-spoonbill-120.convex.site/ingest",
-        "authentication": "predefinedCredentialType",
-        "nodeCredentialType": "httpBearerAuth",
-        "sendBody": true,
-        "bodyParameters": {
-          "parameters": [
-            {
-              "name": "raw",
-              "value": "={{ $json.raw }}"
-            },
-            {
-              "name": "pdfMeta",
-              "value": "={{ $json.pdfMeta }}"
-            },
-            {
-              "name": "primaryPdfKey",
-              "value": "={{ $json.primaryPdfKey }}"
-            },
-            {
-              "name": "messageId",
-              "value": "={{ $json.raw.id }}"
-            },
-            {
-              "name": "receivedAt",
-              "value": "={{ $json.raw.receivedDateTime }}"
-            },
-            {
-              "name": "subject",
-              "value": "={{ $json.raw.subject }}"
-            },
-            {
-              "name": "forwarderFrom",
-              "value": "={{ $json.raw.from?.emailAddress?.address }}"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.3,
-      "position": [-608, 496],
-      "id": "1f1b28b5-9188-4fd1-ba67-da802e802e2b",
-      "name": "HTTP Request",
-      "alwaysOutputData": false,
-      "credentials": {
-        "httpBearerAuth": {
-          "id": "KnurFOAV5AgN2Nut",
-          "name": "Ingest secret"
-        }
-      },
-      "disabled": true
-    },
-    {
-      "parameters": {
         "rule": {
           "interval": [
             {
@@ -69,7 +14,10 @@
       },
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.3,
-      "position": [-608, 152],
+      "position": [
+        -608,
+        152
+      ],
       "id": "518ccfc1-0b9e-4275-9007-f6a52716fb2f",
       "name": "Schedule Trigger"
     },
@@ -95,7 +43,10 @@
       },
       "type": "n8n-nodes-base.microsoftOutlook",
       "typeVersion": 2,
-      "position": [-384, 152],
+      "position": [
+        -384,
+        152
+      ],
       "id": "ed670184-5d8b-4c73-8c77-49b01391914e",
       "name": "Get many folder messages",
       "webhookId": "e9751d19-6e87-48a5-9f52-64cf26584ad8",
@@ -124,7 +75,10 @@
       },
       "type": "n8n-nodes-base.microsoftOutlook",
       "typeVersion": 2,
-      "position": [688, -240],
+      "position": [
+        688,
+        -240
+      ],
       "id": "f8d757d8-a973-42f3-8582-73ee4e26c7cf",
       "name": "Move to NeedsReview",
       "webhookId": "eff8a7ef-e651-491a-8249-adc062851d24",
@@ -141,7 +95,10 @@
       },
       "type": "n8n-nodes-base.splitInBatches",
       "typeVersion": 3,
-      "position": [-160, 152],
+      "position": [
+        -160,
+        152
+      ],
       "id": "41f315fb-3986-4965-96f6-ead7a4cd8a7c",
       "name": "Loop Over Messages"
     },
@@ -160,7 +117,10 @@
       },
       "type": "n8n-nodes-base.microsoftOutlook",
       "typeVersion": 2,
-      "position": [64, -16],
+      "position": [
+        64,
+        -16
+      ],
       "id": "1d6de35c-2ded-4392-90d1-aa45d772dc45",
       "name": "Get a message by ID",
       "webhookId": "43afbe8f-21b9-417f-aec0-e708b61def53",
@@ -173,11 +133,14 @@
     },
     {
       "parameters": {
-        "jsCode": "/**\n * Turns a single Outlook-trigger item into:\n * - N items (one per PDF attachment), each carrying:\n *   - raw email JSON (for Convex to parse)\n *   - pdfKey (binary key like attachment_0)\n *   - pdfMeta (filename, size, mime, etc.)\n *   - primaryPdfKey (best guess)\n *\n * If no PDFs exist, returns a single item with hasPdfs=false.\n */\n\nfunction safeLower(s) {\n  return (s ?? \"\").toString().trim().toLowerCase();\n}\n\nfunction isProbablyPdf(att) {\n  const mime = safeLower(att?.mimeType);\n  const name = safeLower(att?.fileName);\n\n  if (mime === \"application/pdf\") return true;\n  if (name.endsWith(\".pdf\")) return true;\n  if (mime === \"application/octet-stream\" && name.includes(\".pdf\")) return true;\n\n  return false;\n}\n\nfunction scoreFilename(fileName) {\n  const n = safeLower(fileName);\n\n  const positives = [\n    \"fatura\", \"factura\", \"invoice\", \"recibo\", \"conta\", \"pagamento\",\n    \"billing\", \"bill\", \"documento\", \"document\",\n    \"energia\", \"eletricidade\", \"electricidade\", \"gas\", \"água\", \"agua\",\n    \"meo\", \"vodafone\", \"nos\", \"endesa\", \"edp\",\n  ];\n\n  const negatives = [\n    \"marketing\", \"promo\", \"promocao\", \"promoção\", \"newsletter\", \"oferta\",\n    \"manual\", \"terms\", \"termos\", \"conditions\", \"condicoes\", \"condições\",\n    \"privacy\", \"privacidade\", \"politica\", \"política\", \"contract\", \"contrato\",\n  ];\n\n  let score = 0;\n  for (const p of positives) if (n.includes(p)) score += 3;\n  for (const x of negatives) if (n.includes(x)) score -= 4;\n  if (/\\d{6,}/.test(n)) score += 2; // long invoice-like numbers\n\n  return score;\n}\n\nfunction pickPrimaryPdf(pdfList) {\n  if (!pdfList.length) return null;\n\n  const sorted = [...pdfList].sort((a, b) => {\n    const sizeDiff = (b.fileSize ?? 0) - (a.fileSize ?? 0);\n    if (sizeDiff !== 0) return sizeDiff;\n\n    const scoreDiff = (b.nameScore ?? 0) - (a.nameScore ?? 0);\n    if (scoreDiff !== 0) return scoreDiff;\n\n    return safeLower(a.fileName).localeCompare(safeLower(b.fileName));\n  });\n\n  return sorted[0];\n}\n\nconst item = $input.first();\nconst raw = item.json;\nconst bin = item.binary ?? {};\n\nconst attachmentsAll = Object.entries(bin).map(([key, b]) => {\n  const fileName = b.fileName ?? null;\n  const mimeType = b.mimeType ?? null;\n  const fileSize =\n    Number(b.fileSize ?? b.fileSizeBytes ?? b.dataSize ?? 0) || 0;\n\n  const att = { key, fileName, mimeType, fileSize };\n  att.isPdf = isProbablyPdf(att);\n  att.nameScore = scoreFilename(fileName);\n\n  return att;\n});\n\nconst attachmentsPdf = attachmentsAll.filter(a => a.isPdf);\nconst primaryPdf = pickPrimaryPdf(attachmentsPdf);\nconst primaryPdfKey = primaryPdf?.key ?? null;\n\nif (!attachmentsPdf.length) {\n  // Return a single item so the workflow can branch cleanly\n  return [{\n    json: {\n      hasPdfs: false,\n      raw,\n      attachmentsAll,\n      attachmentsPdf: [],\n      primaryPdfKey: null,\n    },\n    binary: item.binary,\n  }];\n}\n\n// Return one item per PDF\nreturn attachmentsPdf.map((pdfMeta, idx) => ({\n  json: {\n    hasPdfs: true,\n    raw,\n    pdfKey: pdfMeta.key,\n    pdfMeta,\n    messageId: raw.id,\n    primaryPdfKey,\n    pdfIndex: idx,\n    pdfCount: attachmentsPdf.length,\n  },\n  binary: item.binary, // keep all binaries; HTTP node will pick via pdfKey\n}));\n"
+        "jsCode": "/**\n * Build one backend ingest payload per forwarded email.\n * n8n only filters acceptable PDFs and transports their metadata/content;\n * MailToBills backend owns Primary Attachment selection.\n */\n\nfunction cleanString(value) {\n  return (value ?? '').toString().trim();\n}\n\nfunction lower(value) {\n  return cleanString(value).toLowerCase();\n}\n\nfunction isAcceptablePdf(attachment) {\n  const mimeType = lower(attachment.mimeType);\n  const fileName = lower(attachment.fileName);\n\n  return (\n    mimeType === 'application/pdf' ||\n    fileName.endsWith('.pdf') ||\n    (mimeType === 'application/octet-stream' && fileName.includes('.pdf'))\n  );\n}\n\nfunction emailAddress(rawAddress) {\n  return rawAddress?.emailAddress?.address ?? rawAddress?.address ?? rawAddress ?? null;\n}\n\nconst item = $input.first();\nconst raw = item.json;\nconst binary = item.binary ?? {};\n\nconst attachmentsAll = Object.entries(binary).map(([key, value], index) => {\n  const fileName = value.fileName ?? value.file_name ?? key;\n  const mimeType = value.mimeType ?? value.mime_type ?? null;\n  const fileSize = Number(value.fileSize ?? value.fileSizeBytes ?? value.dataSize ?? 0) || 0;\n\n  return {\n    key,\n    originalFilename: fileName,\n    fileName,\n    mimeType,\n    fileSize,\n    attachmentId: value.id ?? key,\n    originalOrder: index,\n    isPdf: isAcceptablePdf({ fileName, mimeType }),\n    base64Data: value.data ?? null,\n  };\n});\n\nconst attachments = attachmentsAll\n  .filter((attachment) => attachment.isPdf)\n  .map(({ isPdf, ...attachment }) => attachment);\n\nif (!attachments.length) {\n  return [\n    {\n      json: {\n        hasPdfs: false,\n        messageId: raw.id,\n        raw,\n        attachmentsAll: attachmentsAll.map(({ base64Data, ...attachment }) => attachment),\n      },\n      binary,\n    },\n  ];\n}\n\nreturn [\n  {\n    json: {\n      hasPdfs: true,\n      messageId: raw.id,\n      forwarderFrom: emailAddress(raw.from),\n      subject: raw.subject,\n      receivedAt: raw.receivedDateTime ?? raw.createdDateTime ?? new Date().toISOString(),\n      bodyPreview: raw.bodyPreview,\n      raw,\n      attachments,\n      attachmentCount: attachments.length,\n    },\n    binary,\n  },\n];\n"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [288, -16],
+      "position": [
+        288,
+        -16
+      ],
       "id": "80530906-d27b-44e0-a13c-18e13315fd94",
       "name": "Code in JavaScript1"
     },
@@ -208,7 +171,10 @@
       },
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
-      "position": [512, -16],
+      "position": [
+        512,
+        -16
+      ],
       "id": "ea34a537-6f11-4001-b150-6e4e9a0af2f9",
       "name": "If1"
     },
@@ -224,6 +190,30 @@
             {
               "name": "messageId",
               "value": "={{ $json.messageId }}"
+            },
+            {
+              "name": "forwarderFrom",
+              "value": "={{ $json.forwarderFrom }}"
+            },
+            {
+              "name": "subject",
+              "value": "={{ $json.subject }}"
+            },
+            {
+              "name": "receivedAt",
+              "value": "={{ $json.receivedAt }}"
+            },
+            {
+              "name": "bodyPreview",
+              "value": "={{ $json.bodyPreview }}"
+            },
+            {
+              "name": "raw",
+              "value": "={{ $json.raw }}"
+            },
+            {
+              "name": "attachments",
+              "value": "={{ $json.attachments }}"
             }
           ]
         },
@@ -231,7 +221,10 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [512, 176],
+      "position": [
+        512,
+        176
+      ],
       "id": "c52d24cf-21e4-4bea-a13f-db36b5dca61e",
       "name": "HTTP Request1",
       "credentials": {
@@ -259,7 +252,10 @@
       },
       "type": "n8n-nodes-base.microsoftOutlook",
       "typeVersion": 2,
-      "position": [176, 368],
+      "position": [
+        176,
+        368
+      ],
       "id": "0e16c380-3bd4-4a69-b784-71f1f1606c23",
       "name": "Move a message1",
       "webhookId": "02e96b47-6a5e-429d-8d6d-4db4662e97d5",
@@ -278,7 +274,10 @@
       },
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
-      "position": [512, 368],
+      "position": [
+        512,
+        368
+      ],
       "id": "d71e6b71-eeed-46cd-845e-167704198134",
       "name": "Wait",
       "webhookId": "9eee0e0c-54ca-45b3-ae52-caf56ff517ff"

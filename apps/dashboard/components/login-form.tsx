@@ -51,8 +51,8 @@ export function LoginForm({
   const heroSubtitle = useMemo(
     () =>
       mode === "signIn"
-        ? "Access your invoices dashboard and keep bills organized."
-        : "Create your MailToBills workspace in a couple of clicks.",
+        ? "Access your expense documents dashboard and keep PDFs organized."
+        : "Create your MailToBills account in a couple of clicks.",
     [mode]
   );
 
@@ -314,12 +314,12 @@ export function LoginForm({
               <div className="space-y-4">
                 <div className="flex flex-col gap-2 p-12 space-y-4">
                   <h1 className="text-2xl font-bold dark:text-card-foreground">
-                    Forward your invoices. We&apos;ll do the rest.
+                    Forward expense PDFs. We&apos;ll organize them.
                   </h1>
                   <p className="max-w-2xl text-base text-slate-700 sm:text-lg dark:text-muted-foreground">
-                    Automate invoice collection, keep documents safe, and export
-                    everything for your accountant without digging through your
-                    inbox.
+                    Collect received expense documents by month and export the
+                    current primary PDFs with a CSV manifest for your
+                    accountant.
                   </p>
                 </div>
               </div>

@@ -7,6 +7,7 @@ export type ExpenseDocumentAttachment = {
     fileUrl?: string;
     fileStorageId?: string;
     attachmentId?: string;
+    downloadUrl?: string;
     originalOrder: number;
     createdAt: number;
 };

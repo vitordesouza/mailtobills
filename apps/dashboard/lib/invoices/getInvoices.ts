@@ -6,15 +6,18 @@ import { api } from "@mailtobills/convex/_generated/api";
 
 import { getMonthInfo } from "../months";
 import type { InvoicesResult } from "./types";
-import { invoiceRowsForMonth, summarizeInvoices } from "./transform";
+import {
+  expenseDocumentRowsForMonth,
+  summarizeExpenseDocuments,
+} from "./transform";
 
 export async function getInvoices(month: string): Promise<InvoicesResult> {
   const token = await convexAuthNextjsToken();
-  const data = await fetchQuery(api.invoices.listMine, {}, { token });
+  const data = await fetchQuery(api.expenseDocuments.listMine, {}, { token });
   const monthInfo = getMonthInfo(month);
 
-  const invoices = invoiceRowsForMonth(data, monthInfo);
-  const summary = summarizeInvoices(invoices);
+  const invoices = expenseDocumentRowsForMonth(data, monthInfo);
+  const summary = summarizeExpenseDocuments(invoices);
 
   return {
     invoices,
@@ -23,4 +26,3 @@ export async function getInvoices(month: string): Promise<InvoicesResult> {
     totalCount: data.length,
   };
 }
-

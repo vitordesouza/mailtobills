@@ -103,7 +103,7 @@ export function AppSidebar({
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-medium">MailtoBills</span>
                   <span className="truncate text-xs">
-                    Your invoices. Organized.
+                    Expense documents. Organized.
                   </span>
                 </div>
               </Link>

@@ -1,61 +1,105 @@
-import type { InvoiceRow } from "@mailtobills/types";
+import type {
+  ExpenseDocumentAttachment,
+  ExpenseDocumentRow,
+} from "@mailtobills/types";
 
 import type { MonthInfo } from "../months";
 import { isInMonthRange } from "../months";
 
-const getConvexHttpBase = () =>
-  process.env.NEXT_PUBLIC_CONVEX_HTTP_URL ??
-  process.env.NEXT_PUBLIC_CONVEX_URL?.replace(".cloud", ".site") ??
-  "";
+type ConvexAttachment = {
+  _id: string;
+  expenseDocumentId: string;
+  originalFilename: string;
+  mimeType?: string | null;
+  fileSize?: number | null;
+  fileUrl?: string | null;
+  fileStorageId?: string | null;
+  attachmentId?: string | null;
+  originalOrder: number;
+  createdAt: number;
+};
 
-export function invoiceRowsForMonth(
-  data: Array<{
-    _id: string;
-    originalFilename: string;
-    fromEmail?: string | null;
-    subject?: string | null;
-    receivedAt?: number | null;
-    createdAt: number;
-    fileUrl?: string | null;
-    fileStorageId?: string | null;
-  }>,
+type ConvexExpenseDocument = {
+  _id: string;
+  userId: string;
+  fromEmail?: string | null;
+  subject?: string | null;
+  messageId?: string | null;
+  receivedAt: number;
+  createdAt: number;
+  deletedAt?: number | null;
+  dedupeKey: string;
+  primaryAttachmentId?: string | null;
+  attachments: ConvexAttachment[];
+  primaryAttachment?: ConvexAttachment | null;
+};
+
+function toAttachment(attachment: ConvexAttachment): ExpenseDocumentAttachment {
+  return {
+    id: attachment._id,
+    expenseDocumentId: attachment.expenseDocumentId,
+    originalFilename: attachment.originalFilename,
+    mimeType: attachment.mimeType ?? undefined,
+    fileSize: attachment.fileSize ?? undefined,
+    fileUrl: attachment.fileUrl ?? undefined,
+    fileStorageId: attachment.fileStorageId ?? undefined,
+    attachmentId: attachment.attachmentId ?? undefined,
+    originalOrder: attachment.originalOrder,
+    createdAt: attachment.createdAt,
+    downloadUrl: `/api/files/${attachment._id}`,
+  };
+}
+
+export function expenseDocumentRowsForMonth(
+  data: ConvexExpenseDocument[],
   monthInfo: MonthInfo,
-): InvoiceRow[] {
-  const convexHttpBase = getConvexHttpBase();
-
+): ExpenseDocumentRow[] {
   return data
-    .filter((invoice) =>
-      isInMonthRange(invoice.receivedAt ?? invoice.createdAt, monthInfo),
-    )
-    .sort(
-      (a, b) => (b.receivedAt ?? b.createdAt) - (a.receivedAt ?? a.createdAt),
-    )
-    .map<InvoiceRow>((invoice) => {
-      const fileUrl =
-        invoice.fileUrl ||
-        (invoice.fileStorageId && convexHttpBase
-          ? `${convexHttpBase}/file?storageId=${invoice.fileStorageId}`
-          : undefined);
+    .filter((document) => isInMonthRange(document.receivedAt, monthInfo))
+    .sort((a, b) => b.receivedAt - a.receivedAt)
+    .map<ExpenseDocumentRow>((document) => {
+      const attachments = document.attachments
+        .slice()
+        .sort((a, b) => a.originalOrder - b.originalOrder)
+        .map((attachment) => toAttachment(attachment));
+
+      const primaryAttachment =
+        document.primaryAttachmentId !== undefined
+          ? attachments.find(
+              (attachment) => attachment.id === document.primaryAttachmentId,
+            )
+          : undefined;
 
       return {
-        id: invoice._id,
-        originalFilename: invoice.originalFilename,
-        fromEmail: invoice.fromEmail ?? undefined,
-        subject: invoice.subject ?? undefined,
-        receivedAt: invoice.receivedAt ?? invoice.createdAt,
-        createdAt: invoice.createdAt,
-        fileUrl,
+        id: document._id,
+        userId: document.userId,
+        fromEmail: document.fromEmail ?? undefined,
+        subject: document.subject ?? undefined,
+        messageId: document.messageId ?? undefined,
+        receivedAt: document.receivedAt,
+        createdAt: document.createdAt,
+        deletedAt: document.deletedAt ?? undefined,
+        dedupeKey: document.dedupeKey,
+        primaryAttachmentId: document.primaryAttachmentId ?? undefined,
+        attachments,
+        primaryAttachment:
+          primaryAttachment ??
+          attachments.find(
+            (attachment) =>
+              attachment.id === document.primaryAttachment?._id,
+          ) ??
+          attachments[0],
       };
     });
 }
 
-export function summarizeInvoices(invoices: InvoiceRow[]) {
-  const count = invoices.length;
+export function summarizeExpenseDocuments(documents: ExpenseDocumentRow[]) {
+  const count = documents.length;
   return {
     count,
-    total: 0,
-    missingVatCount: 0,
-    unreviewedCount: count,
+    attachmentCount: documents.reduce(
+      (total, document) => total + document.attachments.length,
+      0,
+    ),
   };
 }
-

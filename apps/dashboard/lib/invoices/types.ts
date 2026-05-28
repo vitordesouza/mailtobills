@@ -1,16 +1,13 @@
-import type { InvoiceRow } from "@mailtobills/types";
+import type { ExpenseDocumentRow } from "@mailtobills/types";
 
 export type InvoiceSummary = {
   count: number;
-  total: number;
-  missingVatCount: number;
-  unreviewedCount: number;
+  attachmentCount: number;
 };
 
 export type InvoicesResult = {
-  invoices: InvoiceRow[];
+  invoices: ExpenseDocumentRow[];
   summary: InvoiceSummary;
   isLoading: boolean;
   totalCount: number;
 };
-

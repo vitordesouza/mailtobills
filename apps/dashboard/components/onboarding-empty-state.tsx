@@ -15,14 +15,16 @@ import { Label } from "@mailtobills/ui/components/label";
 export const OnboardingEmptyState = () => {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
-  const createInvoice = useMutation(api.invoices.createInvoice);
+  const createDemoExpenseDocument = useMutation(
+    api.expenseDocuments.createDemoExpenseDocument,
+  );
 
   const [isCopied, setIsCopied] = useState(false);
   const [isSendingTest, setIsSendingTest] = useState(false);
 
   const inboxAddress = "inbox@mailtobills.com";
   const onboardingSteps = [
-    "Find an invoice in your email",
+    "Find an expense PDF in your email",
     `Forward it to ${inboxAddress}`,
     "See it appear here instantly!",
   ];
@@ -37,18 +39,11 @@ export const OnboardingEmptyState = () => {
     }
   };
 
-  const handleSendTestInvoice = () => {
+  const handleSendTestDocument = () => {
     setIsSendingTest(true);
-    createInvoice({
-      originalFilename: "mailtobills-test-invoice.pdf",
-      fileUrl:
-        "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
-      fromEmail: "billing@example.com",
-      subject: "Test invoice",
-      receivedAt: Date.now(),
-    })
+    createDemoExpenseDocument({})
       .catch((error) => {
-        console.error("Failed to create test invoice", error);
+        console.error("Failed to create demo expense document", error);
       })
       .finally(() => {
         router.refresh();
@@ -67,8 +62,8 @@ export const OnboardingEmptyState = () => {
               Get started with MailtoBills
             </h1>
             <p className="text-muted-foreground">
-              Forward your invoices to the address below to see them organized
-              automatically.
+              Forward expense PDFs to the address below to collect them by
+              month.
             </p>
           </div>
 
@@ -114,15 +109,15 @@ export const OnboardingEmptyState = () => {
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
             <Button
               type="button"
-              onClick={handleSendTestInvoice}
+              onClick={handleSendTestDocument}
               disabled={isSendingTest}
               className="w-full whitespace-nowrap sm:w-auto"
             >
-              {isSendingTest ? "Sending..." : "Send a test invoice"}
+              {isSendingTest ? "Sending..." : "Add a demo document"}
             </Button>
             <p className="text-muted-foreground text-sm">
-              No invoices yet. Start forwarding your bills to organize them
-              automatically.
+              No documents yet. Start forwarding expense PDFs to organize them
+              for your accountant.
             </p>
           </div>
         </div>
@@ -130,7 +125,7 @@ export const OnboardingEmptyState = () => {
         <div className="bg-muted/30 flex items-center justify-center rounded-xl border p-6">
           <Image
             src="/images/mailtobills-envelope.png"
-            alt="Invoice in an envelope"
+            alt="Expense document in an envelope"
             width={420}
             height={280}
             className="h-auto w-full max-w-md"

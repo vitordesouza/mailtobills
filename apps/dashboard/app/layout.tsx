@@ -17,7 +17,7 @@ const fontMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "MailToBills Dashboard",
-  description: "Review and export your invoices from one place.",
+  description: "Collect and export expense documents from one place.",
 };
 
 export default function RootLayout({

@@ -1,3 +1,13 @@
 # n8n Workflows
 
-Exported n8n JSON workflows for email ingestion and forwarding will live here.
+`ingest-mailtobills.json` polls the collection mailbox, loads each forwarded
+email with attachments, and sends one JSON ingest request per accepted email.
+
+The workflow should only handle transport and operational routing:
+
+- keep acceptable PDF attachments for the email payload
+- move no-PDF or failed messages to an operational mailbox folder
+- move accepted messages to the processed mailbox folder
+
+Primary Attachment selection belongs in the MailToBills backend/shared TypeScript
+logic, not in n8n.

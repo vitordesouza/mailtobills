@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-import { Check, Inbox, Mail } from "lucide-react";
+import { FileText, Mail, Paperclip } from "lucide-react";
 
 import { getMonthInfo } from "@/lib/months";
 import { getInvoices } from "@/lib/invoices/getInvoices";
@@ -57,37 +57,39 @@ export default async function DashboardPage({
     return <OnboardingEmptyState />;
   }
 
-  const markedAsPaid = Math.max(0, summary.count - summary.unreviewedCount);
-
   return (
     <>
-      <div className="grid auto-rows-min gap-4 md:grid-cols-4">
+      <div className="grid auto-rows-min gap-4 md:grid-cols-3">
         <SummaryCard
-          title="Invoices added"
+          title="Documents collected"
           value={summary.count}
           icon={<Mail className="size-5" />}
           iconClassName="bg-primary/10 text-primary"
           className="md:col-span-1"
         />
         <SummaryCard
-          title="Marked as paid"
-          value={markedAsPaid}
-          icon={<Check className="size-5" />}
+          title="PDF attachments"
+          value={summary.attachmentCount}
+          icon={<Paperclip className="size-5" />}
           iconClassName="bg-emerald-500/10 text-emerald-600 dark:text-emerald-500"
           className="md:col-span-1"
         />
         <SummaryCard
-          title="Left to review"
-          value={summary.unreviewedCount}
-          icon={<Inbox className="size-5" />}
+          title="Primary PDFs"
+          value={summary.count}
+          icon={<FileText className="size-5" />}
           iconClassName="bg-primary/10 text-primary"
-          action={<Button type="button">Review inbox</Button>}
-          className="md:col-span-2"
+          action={
+            <Button asChild type="button">
+              <a href={`/api/exports/${monthInfo.value}`}>Export month</a>
+            </Button>
+          }
+          className="md:col-span-1"
         />
       </div>
       <InvoicesTable
         invoices={invoices}
-        emptyLabel={`Nothing to review in ${monthInfo.label}.`}
+        emptyLabel={`No expense documents collected in ${monthInfo.label}.`}
       />
     </>
   );
