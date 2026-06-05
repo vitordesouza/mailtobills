@@ -9,12 +9,20 @@ import type {
 } from "@mailtobills/types";
 import type { Id } from "@mailtobills/convex/_generated/dataModel";
 import { useMutation } from "convex/react";
-import { ChevronDown, ChevronRight, FileText, Trash2 } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronRight,
+  ExternalLink,
+  FileText,
+  Star,
+  Trash2,
+} from "lucide-react";
 
 import { api } from "@/lib/convexClient";
 import { Button } from "@mailtobills/ui/components/button";
 import { Card, CardContent } from "@mailtobills/ui/components/card";
 import { Skeleton } from "@mailtobills/ui/components/skeleton";
+import { cn } from "@mailtobills/ui/lib/utils";
 
 const getSenderName = (document: ExpenseDocumentRow) => {
   const email = document.fromEmail;
@@ -57,6 +65,7 @@ function ViewPdfButton({
   if (!url) {
     return (
       <Button variant="outline" size="sm" disabled>
+        <ExternalLink className="size-3.5" />
         {children}
       </Button>
     );
@@ -65,6 +74,7 @@ function ViewPdfButton({
   return (
     <Button asChild variant="outline" size="sm">
       <a href={url} target="_blank" rel="noreferrer">
+        <ExternalLink className="size-3.5" />
         {children}
       </a>
     </Button>
@@ -101,9 +111,12 @@ export function ExpenseDocumentsTable({
 
   if (documents.length === 0) {
     return (
-      <Card className="py-0">
+      <Card className="rounded-lg py-0 shadow-xs">
         <CardContent className="flex min-h-[340px] flex-col items-center justify-center py-10 text-center">
-          <div className="text-sm font-medium">No documents</div>
+          <div className="flex size-10 items-center justify-center rounded-lg border bg-muted/30">
+            <FileText className="text-muted-foreground size-5" />
+          </div>
+          <div className="mt-3 text-sm font-medium">No documents</div>
           <div className="text-muted-foreground mt-1 text-sm">{emptyLabel}</div>
         </CardContent>
       </Card>
@@ -111,10 +124,21 @@ export function ExpenseDocumentsTable({
   }
 
   return (
-    <Card className="gap-0 overflow-hidden py-0">
+    <Card className="min-w-0 gap-0 overflow-hidden rounded-lg py-0 shadow-xs">
+      <div className="flex flex-col gap-1 border-b bg-card px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h2 className="text-sm font-semibold">Collected Expense Documents</h2>
+          <p className="text-muted-foreground text-xs">
+            One row per accepted forwarded email.
+          </p>
+        </div>
+        <div className="text-muted-foreground text-xs font-medium">
+          {documents.length} {documents.length === 1 ? "document" : "documents"}
+        </div>
+      </div>
       <CardContent className="p-0">
-        <div className="overflow-x-auto">
-          <table className="w-full table-fixed text-sm">
+        <div className="w-full max-w-full overflow-x-auto">
+          <table className="w-full min-w-[920px] table-fixed text-sm">
             <colgroup>
               <col className="w-[52px]" />
               <col className="w-[220px]" />
@@ -123,7 +147,7 @@ export function ExpenseDocumentsTable({
               <col className="w-[120px]" />
               <col className="w-[190px]" />
             </colgroup>
-            <thead className="bg-muted/20 text-muted-foreground">
+            <thead className="bg-muted/30 text-muted-foreground">
               <tr className="[&_th]:px-4 [&_th]:py-3 [&_th]:text-left [&_th]:font-medium">
                 <th className="sr-only">Expand</th>
                 <th>Sender</th>
@@ -147,9 +171,7 @@ export function ExpenseDocumentsTable({
 
                 return (
                   <Fragment key={document.id}>
-                    <tr
-                      className="hover:bg-muted/30 [&>td]:px-4 [&>td]:py-3"
-                    >
+                    <tr className="transition-colors hover:bg-muted/25 [&>td]:px-4 [&>td]:py-3">
                       <td>
                         <Button
                           type="button"
@@ -174,7 +196,7 @@ export function ExpenseDocumentsTable({
                       </td>
                       <td>
                         <div className="flex items-center gap-3">
-                          <div className="bg-primary/10 text-primary flex size-9 items-center justify-center rounded-lg text-xs font-semibold">
+                          <div className="flex size-9 items-center justify-center rounded-lg border bg-background text-xs font-semibold shadow-xs">
                             {sender.charAt(0).toUpperCase()}
                           </div>
                           <div className="min-w-0">
@@ -186,8 +208,15 @@ export function ExpenseDocumentsTable({
                         </div>
                       </td>
                       <td className="min-w-0">
-                        <div className="truncate font-medium">
-                          {primary?.originalFilename ?? "No primary PDF"}
+                        <div className="flex min-w-0 items-center gap-2">
+                          <div className="truncate font-medium">
+                            {primary?.originalFilename ?? "No primary PDF"}
+                          </div>
+                          {primary ? (
+                            <span className="inline-flex shrink-0 items-center rounded-md border border-amber-500/20 bg-amber-500/10 px-1.5 py-0.5 text-[11px] font-medium text-amber-800 dark:text-amber-300">
+                              Primary
+                            </span>
+                          ) : null}
                         </div>
                         <div className="text-muted-foreground truncate text-xs">
                           {document.subject ?? "No email subject"}
@@ -197,7 +226,9 @@ export function ExpenseDocumentsTable({
                         {formatReceivedAt(document.receivedAt)}
                       </td>
                       <td className="text-muted-foreground border-l">
-                        {document.attachments.length}
+                        <span className="inline-flex min-w-7 justify-center rounded-md border bg-background px-2 py-1 text-xs font-medium text-foreground">
+                          {document.attachments.length}
+                        </span>
                       </td>
                       <td className="border-l text-right">
                         <div className="flex justify-end gap-2">
@@ -225,8 +256,8 @@ export function ExpenseDocumentsTable({
                     </tr>
                     {isExpanded ? (
                       <tr key={`${document.id}-attachments`}>
-                        <td colSpan={6} className="bg-muted/20 px-4 py-3">
-                          <div className="space-y-2 pl-[52px]">
+                        <td colSpan={6} className="bg-muted/25 px-4 py-3">
+                          <div className="space-y-2 pl-0 sm:pl-[52px]">
                             {document.attachments.map((attachment) => {
                               const isPrimary = attachment.id === primary?.id;
                               const fileSize = formatFileSize(
@@ -236,10 +267,26 @@ export function ExpenseDocumentsTable({
                               return (
                                 <div
                                   key={attachment.id}
-                                  className="flex items-center justify-between gap-3 rounded-md border bg-background px-3 py-2"
+                                  className={cn(
+                                    "flex flex-col gap-3 rounded-md border bg-background px-3 py-2 shadow-xs sm:flex-row sm:items-center sm:justify-between",
+                                    isPrimary &&
+                                      "border-amber-500/30 bg-amber-500/5",
+                                  )}
                                 >
                                   <div className="flex min-w-0 items-center gap-3">
-                                    <FileText className="text-muted-foreground size-4 shrink-0" />
+                                    <div
+                                      className={cn(
+                                        "flex size-8 shrink-0 items-center justify-center rounded-md border bg-muted/30",
+                                        isPrimary &&
+                                          "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300",
+                                      )}
+                                    >
+                                      {isPrimary ? (
+                                        <Star className="size-4" />
+                                      ) : (
+                                        <FileText className="text-muted-foreground size-4" />
+                                      )}
+                                    </div>
                                     <div className="min-w-0">
                                       <div className="truncate font-medium">
                                         {attachment.originalFilename}
@@ -250,7 +297,7 @@ export function ExpenseDocumentsTable({
                                       </div>
                                     </div>
                                   </div>
-                                  <div className="flex shrink-0 items-center gap-2">
+                                  <div className="flex shrink-0 items-center gap-2 sm:justify-end">
                                     {!isPrimary ? (
                                       <Button
                                         type="button"
@@ -295,10 +342,10 @@ export function ExpenseDocumentsTable({
 
 export function ExpenseDocumentsTableSkeleton({ rows = 6 }: { rows?: number }) {
   return (
-    <Card className="gap-0 overflow-hidden py-0">
+    <Card className="min-w-0 gap-0 overflow-hidden py-0">
       <CardContent className="p-0">
-        <div className="overflow-x-auto">
-          <table className="w-full table-fixed text-sm">
+        <div className="w-full max-w-full overflow-x-auto">
+          <table className="w-full min-w-[920px] table-fixed text-sm">
             <colgroup>
               <col className="w-[52px]" />
               <col className="w-[220px]" />

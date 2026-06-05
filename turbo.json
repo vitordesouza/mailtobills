@@ -8,6 +8,9 @@
     "GOOGLE_CLIENT_ID",
     "GOOGLE_CLIENT_SECRET",
     "INGEST_SECRET",
+    "NEXT_PUBLIC_DEV_AUTH_EMAIL",
+    "NEXT_PUBLIC_DEV_AUTH_PASSWORD",
+    "NODE_ENV",
     "SITE_URL"
   ],
   "tasks": {

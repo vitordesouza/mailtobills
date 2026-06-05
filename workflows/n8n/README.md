@@ -11,3 +11,6 @@ The workflow should only handle transport and operational routing:
 
 Primary Attachment selection belongs in the MailToBills backend/shared TypeScript
 logic, not in n8n.
+
+Use `docs/launch-validation-checklist.md` for launch smoke tests and
+`docs/operations-runbook.md` for VPS/n8n recovery steps.

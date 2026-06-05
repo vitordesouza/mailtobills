@@ -1,6 +1,7 @@
 import { getExpenseDocuments } from "@/lib/expenseDocuments/getExpenseDocuments";
 
 const textEncoder = new TextEncoder();
+const collectionMonthPattern = /^\d{4}-\d{2}$/;
 
 function crc32(bytes: Uint8Array) {
   let crc = 0xffffffff;
@@ -159,6 +160,11 @@ export async function GET(
   { params }: { params: Promise<{ month: string }> },
 ) {
   const { month } = await params;
+
+  if (!collectionMonthPattern.test(month)) {
+    return new Response("Invalid Collection Month", { status: 400 });
+  }
+
   const { documents } = await getExpenseDocuments(month);
   const origin = new URL(request.url).origin;
   const manifestRows = [];

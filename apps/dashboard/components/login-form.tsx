@@ -25,6 +25,12 @@ type Props = {
   initialMode: AuthMode;
 };
 
+const devAuthEmail = process.env.NEXT_PUBLIC_DEV_AUTH_EMAIL;
+const devAuthPassword = process.env.NEXT_PUBLIC_DEV_AUTH_PASSWORD;
+const isDevAuthEnabled =
+  process.env.NODE_ENV === "development" &&
+  Boolean(devAuthEmail && devAuthPassword);
+
 export function LoginForm({
   className,
   initialMode,
@@ -119,6 +125,61 @@ export function LoginForm({
     }
   };
 
+  const handleDevAuth = async () => {
+    if (!devAuthEmail || !devAuthPassword) return;
+
+    resetFeedback();
+
+    try {
+      setIsSubmitting(true);
+
+      try {
+        const result = await signIn("password", {
+          flow: "signIn",
+          email: devAuthEmail.trim().toLowerCase(),
+          password: devAuthPassword,
+        });
+
+        if (result.redirect) {
+          window.location.href = result.redirect.toString();
+          return;
+        }
+
+        router.replace("/");
+        return;
+      } catch (signInError) {
+        console.log("Dev auth sign-in failed, attempting account creation", {
+          email: devAuthEmail,
+          error:
+            signInError instanceof Error
+              ? signInError.message
+              : "Unknown sign-in error",
+        });
+      }
+
+      const result = await signIn("password", {
+        flow: "signUp",
+        email: devAuthEmail.trim().toLowerCase(),
+        password: devAuthPassword,
+      });
+
+      if (result.redirect) {
+        window.location.href = result.redirect.toString();
+        return;
+      }
+
+      router.replace("/");
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : "Failed to use the dev account."
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card className="overflow-hidden p-0">
@@ -186,6 +247,17 @@ export function LoginForm({
                       ? "Sign in with password"
                       : "Create account"}
                 </Button>
+                {isDevAuthEnabled ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="mt-2 w-full"
+                    disabled={isSubmitting || isLoading}
+                    onClick={handleDevAuth}
+                  >
+                    Use dev account
+                  </Button>
+                ) : null}
               </Field>
 
               <FieldSeparator className="*:data-[slot=field-separator-content]:bg-card">

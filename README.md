@@ -97,6 +97,21 @@ CONVEX_SITE_URL=http://localhost:3001
 
 Adjust for preview/production environments accordingly.
 
+### Local dashboard QA account
+
+For repeatable local visual QA, the dashboard can show a development-only
+shortcut on `/signin`. Add these to `apps/dashboard/.env` or
+`apps/dashboard/.env.local`:
+
+```
+NEXT_PUBLIC_DEV_AUTH_EMAIL=visual-qa@mailtobills.local
+NEXT_PUBLIC_DEV_AUTH_PASSWORD=<local-only-password>
+```
+
+When both values are present and `NODE_ENV=development`, the sign-in page shows
+`Use dev account`. It signs in with that password account, or creates it if it
+does not exist. Do not set these variables in production.
+
 ---
 
 ## For AI-assisted development
