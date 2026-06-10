@@ -1,5 +1,6 @@
 import { httpRouter } from "convex/server";
 import { getAuthUserId } from "@convex-dev/auth/server";
+import { normalizeBase64Payload } from "@mailtobills/types";
 
 import { auth } from "./auth";
 import { internal } from "./_generated/api";
@@ -143,8 +144,7 @@ function optionalNumber(value: unknown) {
 }
 
 function decodeBase64Payload(value: string) {
-  const [, payload = value] = value.split(",");
-  const binary = atob(payload);
+  const binary = atob(normalizeBase64Payload(value));
   const bytes = new Uint8Array(binary.length);
 
   for (let i = 0; i < binary.length; i++) {
@@ -250,8 +250,18 @@ async function storeBase64Attachments(
       continue;
     }
 
-    const bytes = decodeBase64Payload(attachment.base64Data);
-    const fileBlob = new Blob([bytes], {
+    let bytes: Uint8Array;
+
+    try {
+      bytes = decodeBase64Payload(attachment.base64Data);
+    } catch {
+      throw new Error(`Invalid base64 attachment: ${attachment.originalFilename}`);
+    }
+
+    const attachmentBytes = new Uint8Array(bytes.length);
+    attachmentBytes.set(bytes);
+
+    const fileBlob = new Blob([attachmentBytes], {
       type: attachment.mimeType ?? "application/pdf",
     });
     const fileStorageId = await ctx.storage.store(fileBlob);
@@ -339,10 +349,20 @@ const ingestExpenseDocument = httpAction(async (ctx, request) => {
       });
     }
 
-    const attachments = await storeBase64Attachments(
-      ctx,
-      parseJsonAttachments(body)
-    );
+    let attachments: IngestAttachmentInput[];
+
+    try {
+      attachments = await storeBase64Attachments(
+        ctx,
+        parseJsonAttachments(body)
+      );
+    } catch (error) {
+      return jsonError(400, "INVALID_ATTACHMENT_DATA", "Invalid attachment data", {
+        messageId,
+        detail: error instanceof Error ? error.message : undefined,
+      });
+    }
+
     const raw = isRecord(body.raw) ? body.raw : undefined;
 
     // bodyPreview often lives in the raw Outlook payload

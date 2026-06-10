@@ -57,11 +57,15 @@ Do not set local QA credentials in production.
 
 The n8n workflow should keep transport and operational routing only:
 
-- Accepted forwarded emails: move to the processed mailbox folder.
-- No acceptable PDFs: move to the operational rejection folder.
-- Unknown sender: move to the operational rejection folder.
-- Ingest failure: leave visible for retry or move to an operational failure
-  folder with logs.
+- Poll only unread Inbox messages that have attachments.
+- Accepted forwarded emails with at least one acceptable PDF: store the
+  document in Convex, then move the source email to `Processed`.
+- Convex validation failures, including unknown sender or invalid attachment
+  payloads: move the source email to `NeedsReview` and continue the batch.
+- Emails with attachments but no acceptable PDFs: move the source email to
+  `NeedsReview` and continue the batch.
+- Emails without attachments are skipped by the MVP workflow filter. Do not
+  create Customer-facing dashboard records for them.
 
 Rejected Forwarded Emails are not Customer-facing MVP records.
 

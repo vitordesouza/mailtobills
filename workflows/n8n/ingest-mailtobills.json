@@ -35,6 +35,7 @@
         "filtersUI": {
           "values": {
             "filters": {
+              "hasAttachments": true,
               "readStatus": "unread"
             }
           }
@@ -62,7 +63,7 @@
         "operation": "move",
         "messageId": {
           "__rl": true,
-          "value": "={{ $json.raw.id }}",
+          "value": "={{ $('Code in JavaScript1').item.json.messageId }}",
           "mode": "id"
         },
         "folderId": {
@@ -133,7 +134,7 @@
     },
     {
       "parameters": {
-        "jsCode": "/**\n * Build one backend ingest payload per forwarded email.\n * n8n only filters acceptable PDFs and transports their metadata/content;\n * MailToBills backend owns Primary Attachment selection.\n */\n\nfunction cleanString(value) {\n  return (value ?? '').toString().trim();\n}\n\nfunction lower(value) {\n  return cleanString(value).toLowerCase();\n}\n\nfunction isAcceptablePdf(attachment) {\n  const mimeType = lower(attachment.mimeType);\n  const fileName = lower(attachment.fileName);\n\n  return (\n    mimeType === 'application/pdf' ||\n    fileName.endsWith('.pdf') ||\n    (mimeType === 'application/octet-stream' && fileName.includes('.pdf'))\n  );\n}\n\nfunction emailAddress(rawAddress) {\n  return rawAddress?.emailAddress?.address ?? rawAddress?.address ?? rawAddress ?? null;\n}\n\nconst item = $input.first();\nconst raw = item.json;\nconst binary = item.binary ?? {};\n\nconst attachmentsAll = Object.entries(binary).map(([key, value], index) => {\n  const fileName = value.fileName ?? value.file_name ?? key;\n  const mimeType = value.mimeType ?? value.mime_type ?? null;\n  const fileSize = Number(value.fileSize ?? value.fileSizeBytes ?? value.dataSize ?? 0) || 0;\n\n  return {\n    key,\n    originalFilename: fileName,\n    fileName,\n    mimeType,\n    fileSize,\n    attachmentId: value.id ?? key,\n    originalOrder: index,\n    isPdf: isAcceptablePdf({ fileName, mimeType }),\n    base64Data: value.data ?? null,\n  };\n});\n\nconst attachments = attachmentsAll\n  .filter((attachment) => attachment.isPdf)\n  .map(({ isPdf, ...attachment }) => attachment);\n\nif (!attachments.length) {\n  return [\n    {\n      json: {\n        hasPdfs: false,\n        messageId: raw.id,\n        raw,\n        attachmentsAll: attachmentsAll.map(({ base64Data, ...attachment }) => attachment),\n      },\n      binary,\n    },\n  ];\n}\n\nreturn [\n  {\n    json: {\n      hasPdfs: true,\n      messageId: raw.id,\n      forwarderFrom: emailAddress(raw.from),\n      subject: raw.subject,\n      receivedAt: raw.receivedDateTime ?? raw.createdDateTime ?? new Date().toISOString(),\n      bodyPreview: raw.bodyPreview,\n      raw,\n      attachments,\n      attachmentCount: attachments.length,\n    },\n    binary,\n  },\n];\n"
+        "jsCode": "/**\n * Build one backend ingest payload per forwarded email.\n * n8n only filters acceptable PDFs and transports their metadata/content;\n * MailToBills backend owns Primary Attachment selection.\n */\n\nfunction cleanString(value) {\n  return (value ?? '').toString().trim();\n}\n\nfunction lower(value) {\n  return cleanString(value).toLowerCase();\n}\n\nfunction isAcceptablePdf(attachment) {\n  const mimeType = lower(attachment.mimeType);\n  const fileName = lower(attachment.fileName);\n\n  return (\n    mimeType === 'application/pdf' ||\n    fileName.endsWith('.pdf') ||\n    (mimeType === 'application/octet-stream' && fileName.includes('.pdf'))\n  );\n}\n\nfunction emailAddress(rawAddress) {\n  return rawAddress?.emailAddress?.address ?? rawAddress?.address ?? rawAddress ?? null;\n}\n\nconst item = $input.first();\nconst raw = item.json;\nconst binary = item.binary ?? {};\n\nconst attachmentsAll = await Promise.all(Object.entries(binary).map(async ([key, value], index) => {\n  const fileName = value.fileName ?? value.file_name ?? key;\n  const mimeType = value.mimeType ?? value.mime_type ?? null;\n  const fileSize = Number(value.fileSize ?? value.fileSizeBytes ?? value.dataSize ?? 0) || 0;\n  const binaryBuffer = await this.helpers.getBinaryDataBuffer(0, key);\n\n  return {\n    key,\n    originalFilename: fileName,\n    fileName,\n    mimeType,\n    fileSize,\n    attachmentId: value.id ?? key,\n    originalOrder: index,\n    isPdf: isAcceptablePdf({ fileName, mimeType }),\n    base64Data: binaryBuffer.toString('base64'),\n  };\n}));\n\nconst attachments = attachmentsAll\n  .filter((attachment) => attachment.isPdf)\n  .map(({ isPdf, ...attachment }) => attachment);\n\nif (!attachments.length) {\n  return [\n    {\n      json: {\n        hasPdfs: false,\n        messageId: raw.id,\n        raw,\n        attachmentsAll: attachmentsAll.map(({ base64Data, ...attachment }) => attachment),\n      },\n      binary,\n    },\n  ];\n}\n\nreturn [\n  {\n    json: {\n      hasPdfs: true,\n      messageId: raw.id,\n      forwarderFrom: emailAddress(raw.from),\n      subject: raw.subject,\n      receivedAt: raw.receivedDateTime ?? raw.createdDateTime ?? new Date().toISOString(),\n      bodyPreview: raw.bodyPreview,\n      raw,\n      attachments,\n      attachmentCount: attachments.length,\n    },\n    binary,\n  },\n];\n"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -181,7 +182,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://zany-spoonbill-120.convex.site/ingest",
+        "url": "https://original-ladybug-947.convex.site/ingest",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "httpBearerAuth",
         "sendBody": true,
@@ -232,14 +233,15 @@
           "id": "KnurFOAV5AgN2Nut",
           "name": "Ingest secret"
         }
-      }
+      },
+      "onError": "continueErrorOutput"
     },
     {
       "parameters": {
         "operation": "move",
         "messageId": {
           "__rl": true,
-          "value": "={{ $json.data.parseJson().messageId }}",
+          "value": "={{ $('Code in JavaScript1').item.json.messageId }}",
           "mode": "id"
         },
         "folderId": {
@@ -364,6 +366,13 @@
         [
           {
             "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Move to NeedsReview",
             "type": "main",
             "index": 0
           }
