@@ -15,9 +15,19 @@ const fontMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: "MailToBills",
+  title: {
+    default: "MailToBills — Stop chasing expense PDFs every month",
+    template: "%s · MailToBills",
+  },
   description:
-    "Forward expense PDFs, collect them by month, and export a package for your accountant.",
+    "Forward any invoice, receipt, or fatura to your private MailToBills address. We file it by month and hand your accountant one clean ZIP with every PDF and a CSV manifest.",
+  openGraph: {
+    title: "MailToBills — Stop chasing expense PDFs every month",
+    description:
+      "Forward expense PDFs, collect them by month, and export a clean package for your accountant.",
+    siteName: "MailToBills",
+    type: "website",
+  },
 }
 
 export default function RootLayout({

@@ -1,42 +1,25 @@
-import type { ReactNode } from "react";
-
 import { Download, FileText, Inbox, Paperclip } from "lucide-react";
 
 import { getMonthInfo } from "@/lib/months";
 import { getExpenseDocuments } from "@/lib/expenseDocuments/getExpenseDocuments";
 import { Button } from "@mailtobills/ui/components/button";
+import {
+  PageHeader,
+  PageHeaderContent,
+  PageHeaderDescription,
+  PageHeaderEyebrow,
+  PageHeaderTitle,
+} from "@mailtobills/ui/components/page-header";
+import {
+  Stat,
+  StatContent,
+  StatGroup,
+  StatIcon,
+  StatLabel,
+  StatValue,
+} from "@mailtobills/ui/components/stat";
 import { OnboardingEmptyState } from "@/components/onboarding-empty-state";
 import { ExpenseDocumentsTable } from "@/components/expense-documents-table";
-
-function MetricBlock({
-  icon,
-  title,
-  value,
-  iconClassName,
-}: {
-  title: string;
-  value: number;
-  icon: ReactNode;
-  iconClassName: string;
-}) {
-  return (
-    <div className="flex min-w-0 items-center gap-3">
-      <div
-        className={`flex size-10 shrink-0 items-center justify-center rounded-lg border ${iconClassName}`}
-      >
-        {icon}
-      </div>
-      <div className="min-w-0">
-        <div className="text-muted-foreground truncate text-xs font-medium uppercase">
-          {title}
-        </div>
-        <div className="text-2xl font-semibold leading-none tracking-tight">
-          {value}
-        </div>
-      </div>
-    </div>
-  );
-}
 
 export default async function DashboardPage({
   params,
@@ -54,48 +37,53 @@ export default async function DashboardPage({
   }
 
   return (
-    <div className="space-y-4">
-      <section className="overflow-hidden rounded-lg border bg-card shadow-xs">
-        <div className="grid gap-6 p-4 md:grid-cols-[1fr_auto] md:items-center md:p-5">
-          <div className="min-w-0 space-y-1">
-            <p className="text-muted-foreground text-xs font-medium uppercase">
-              Collection Month
-            </p>
-            <h1 className="truncate text-2xl font-semibold tracking-tight">
-              {monthInfo.label}
-            </h1>
-            <p className="text-muted-foreground max-w-2xl text-sm">
+    <div className="animate-in fade-in space-y-4 duration-300">
+      <section className="bg-card overflow-hidden rounded-lg border shadow-xs">
+        <PageHeader className="p-4 md:p-5">
+          <PageHeaderContent>
+            <PageHeaderEyebrow>Collection Month</PageHeaderEyebrow>
+            <PageHeaderTitle>{monthInfo.label}</PageHeaderTitle>
+            <PageHeaderDescription>
               Collected Expense Documents ready for review, download, or
               Accountant Export.
-            </p>
-          </div>
-          <Button asChild type="button" className="w-full md:w-auto">
+            </PageHeaderDescription>
+          </PageHeaderContent>
+          <Button asChild className="w-full md:w-auto">
             <a href={`/api/exports/${monthInfo.value}`}>
               <Download className="size-4" />
               Export month
             </a>
           </Button>
-        </div>
-        <div className="grid gap-4 border-t bg-muted/20 p-4 lg:grid-cols-3 md:p-5">
-          <MetricBlock
-            title="Collected"
-            value={summary.count}
-            icon={<Inbox className="size-5" />}
-            iconClassName="bg-background text-foreground"
-          />
-          <MetricBlock
-            title="PDF attachments"
-            value={summary.attachmentCount}
-            icon={<Paperclip className="size-5" />}
-            iconClassName="bg-emerald-500/10 text-emerald-700 border-emerald-500/20 dark:text-emerald-400"
-          />
-          <MetricBlock
-            title="Primary PDFs"
-            value={summary.count}
-            icon={<FileText className="size-5" />}
-            iconClassName="bg-amber-500/10 text-amber-700 border-amber-500/20 dark:text-amber-400"
-          />
-        </div>
+        </PageHeader>
+        <StatGroup className="bg-muted/30 border-t p-4 md:p-5">
+          <Stat>
+            <StatIcon tone="neutral">
+              <Inbox />
+            </StatIcon>
+            <StatContent>
+              <StatLabel>Collected</StatLabel>
+              <StatValue>{summary.count}</StatValue>
+            </StatContent>
+          </Stat>
+          <Stat>
+            <StatIcon tone="success">
+              <Paperclip />
+            </StatIcon>
+            <StatContent>
+              <StatLabel>PDF attachments</StatLabel>
+              <StatValue>{summary.attachmentCount}</StatValue>
+            </StatContent>
+          </Stat>
+          <Stat>
+            <StatIcon tone="warning">
+              <FileText />
+            </StatIcon>
+            <StatContent>
+              <StatLabel>Primary PDFs</StatLabel>
+              <StatValue>{summary.count}</StatValue>
+            </StatContent>
+          </Stat>
+        </StatGroup>
       </section>
       <ExpenseDocumentsTable
         documents={documents}

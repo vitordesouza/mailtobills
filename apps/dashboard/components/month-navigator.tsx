@@ -45,9 +45,6 @@ export const MonthNavigator = () => {
 
   return (
     <section className="flex w-full flex-wrap items-center gap-3">
-      <h1 className="absolute hidden text-base font-semibold tracking-tight text-foreground sm:block lg:text-xl">
-        {monthInfo.label}
-      </h1>
       <div className="bg-background mx-auto flex items-center overflow-hidden">
         <div className="bg-background flex items-center overflow-hidden rounded-lg border shadow-xs">
           <Link

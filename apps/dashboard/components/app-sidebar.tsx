@@ -3,7 +3,13 @@
 import * as React from "react";
 
 import { useParams, usePathname } from "next/navigation";
-import { Bot, LifeBuoy, Send, Settings2, SquareTerminal } from "lucide-react";
+import {
+  ChartColumn,
+  LayoutDashboard,
+  LifeBuoy,
+  Send,
+  Settings2,
+} from "lucide-react";
 
 import Link from "next/link";
 
@@ -59,13 +65,13 @@ export function AppSidebar({
       {
         title: "Dashboard",
         url: dashboardUrl,
-        icon: SquareTerminal,
+        icon: LayoutDashboard,
         isActive: isDashboardActive,
       },
       {
         title: "Reports",
         url: reportsUrl,
-        icon: Bot,
+        icon: ChartColumn,
         isActive: isReportsActive,
       },
       {

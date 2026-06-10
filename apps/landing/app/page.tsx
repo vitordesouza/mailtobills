@@ -1,118 +1,25 @@
-import { Button } from "@mailtobills/ui/components/button";
-import { FileArchive, FileText, Mail, PackageCheck } from "lucide-react";
-
-const dashboardUrl =
-  process.env.NEXT_PUBLIC_DASHBOARD_URL ?? "http://localhost:3000/signin";
-
-const flowSteps = [
-  {
-    icon: Mail,
-    title: "Forward PDFs",
-    copy: "Send received supplier invoices, receipts, bills, or faturas from your trusted email.",
-  },
-  {
-    icon: PackageCheck,
-    title: "Collect by month",
-    copy: "One accepted forwarded email becomes one document row with its PDF attachment set.",
-  },
-  {
-    icon: FileArchive,
-    title: "Export for accountant",
-    copy: "Download a ZIP with the current primary PDFs and a CSV manifest of known metadata.",
-  },
-];
+import { SiteFooter } from "@/components/site-footer";
+import { SiteHeader } from "@/components/site-header";
+import { Faq } from "@/components/sections/faq";
+import { Features } from "@/components/sections/features";
+import { FinalCta } from "@/components/sections/final-cta";
+import { Hero } from "@/components/sections/hero";
+import { HowItWorks } from "@/components/sections/how-it-works";
+import { Pricing } from "@/components/sections/pricing";
 
 export default function Page() {
   return (
-    <main className="min-h-svh bg-white text-slate-950 dark:bg-white dark:text-slate-950">
-      <section className="relative min-h-[86svh] overflow-hidden border-b border-slate-200">
-        <div className="absolute inset-0 bg-[linear-gradient(135deg,#f8fafc_0%,#eef6f2_48%,#fff7ed_100%)]" />
-        <div className="relative mx-auto grid min-h-[86svh] max-w-6xl items-center gap-10 px-6 py-12 lg:grid-cols-[0.95fr_1.05fr]">
-          <div className="max-w-2xl space-y-7">
-            <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/85 px-3 py-1 text-sm font-medium text-slate-800 shadow-sm">
-              <Mail className="size-4 text-emerald-700" />
-              Forward expense PDFs
-            </div>
-            <div className="space-y-4">
-              <h1 className="text-4xl font-semibold tracking-normal text-slate-950 sm:text-5xl lg:text-6xl">
-                MailToBills
-              </h1>
-              <p className="max-w-xl text-lg leading-8 text-slate-600">
-                Collect received expense documents by month and export a clean
-                package for your accountant.
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-3">
-              <Button asChild size="lg">
-                <a href={dashboardUrl}>Open dashboard</a>
-              </Button>
-              <Button asChild variant="outline" size="lg">
-                <a href="#how-it-works">See the flow</a>
-              </Button>
-            </div>
-          </div>
-
-          <div className="relative">
-            <div className="rounded-lg border border-slate-900 bg-slate-950 text-white shadow-xl">
-              <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
-                <div>
-                  <div className="text-sm font-semibold">May 2026</div>
-                  <div className="text-xs text-slate-400">
-                    Collected Expense Documents
-                  </div>
-                </div>
-                <div className="rounded-md bg-emerald-700 px-3 py-1 text-sm font-medium text-white">
-                  Export ZIP
-                </div>
-              </div>
-              <div className="divide-y divide-white/10">
-                {[
-                  ["supplier-receipt.pdf", "Receipts from travel", "2 PDFs"],
-                  ["fatura-energia-maio.pdf", "Monthly utility email", "1 PDF"],
-                  ["software-bill.pdf", "Subscription receipt", "3 PDFs"],
-                ].map(([filename, subject, count]) => (
-                  <div
-                    key={filename}
-                    className="grid grid-cols-[auto_1fr_auto] items-center gap-3 px-5 py-4"
-                  >
-                    <div className="flex size-10 items-center justify-center rounded-md bg-amber-100 text-amber-800">
-                      <FileText className="size-5" />
-                    </div>
-                    <div className="min-w-0">
-                      <div className="truncate text-sm font-medium">
-                        {filename}
-                      </div>
-                      <div className="truncate text-xs text-slate-400">
-                        {subject}
-                      </div>
-                    </div>
-                    <div className="text-xs font-medium text-slate-400">
-                      {count}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section
-        id="how-it-works"
-        className="mx-auto max-w-6xl bg-white px-6 py-12 text-slate-950"
-      >
-        <div className="grid gap-4 md:grid-cols-3">
-          {flowSteps.map(({ icon: Icon, title, copy }) => (
-            <div key={title} className="rounded-lg border border-slate-200 p-5">
-              <Icon className="mb-4 size-5 text-emerald-700" />
-              <h2 className="text-base font-semibold">{title}</h2>
-              <p className="mt-2 text-sm leading-6 text-slate-600">
-                {copy}
-              </p>
-            </div>
-          ))}
-        </div>
-      </section>
-    </main>
+    <div className="bg-background text-foreground flex min-h-svh flex-col">
+      <SiteHeader />
+      <main className="flex-1">
+        <Hero />
+        <HowItWorks />
+        <Features />
+        <Pricing />
+        <Faq />
+        <FinalCta />
+      </main>
+      <SiteFooter />
+    </div>
   );
 }
