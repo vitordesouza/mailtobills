@@ -1,11 +1,16 @@
 "use client";
 
 import { useAuthActions } from "@convex-dev/auth/react";
+import { useTheme } from "next-themes";
 
 import {
   Bell,
+  Check,
   LogOut,
+  Monitor,
+  Moon,
   Sparkles,
+  Sun,
   BadgeCheck,
   CreditCard,
   ChevronsUpDown,
@@ -45,6 +50,13 @@ export function NavUser({
 }) {
   const { isMobile } = useSidebar();
   const { signOut } = useAuthActions();
+  const { theme, setTheme } = useTheme();
+
+  const themeOptions = [
+    { value: "light", label: "Light", icon: Sun },
+    { value: "dark", label: "Dark", icon: Moon },
+    { value: "system", label: "System", icon: Monitor },
+  ] as const;
 
   return (
     <SidebarMenu>
@@ -107,6 +119,19 @@ export function NavUser({
                 <Bell />
                 Notifications
               </DropdownMenuItem>
+            </DropdownMenuGroup>
+            <DropdownMenuSeparator />
+            <DropdownMenuGroup>
+              <DropdownMenuLabel className="text-muted-foreground font-mono text-[10px] font-medium tracking-[0.08em] uppercase">
+                Theme
+              </DropdownMenuLabel>
+              {themeOptions.map(({ value, label, icon: Icon }) => (
+                <DropdownMenuItem key={value} onClick={() => setTheme(value)}>
+                  <Icon />
+                  {label}
+                  {theme === value ? <Check className="ml-auto" /> : null}
+                </DropdownMenuItem>
+              ))}
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => signOut()}>
