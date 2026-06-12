@@ -27,6 +27,7 @@ import {
   EmptyStateIcon,
   EmptyStateTitle,
 } from "@mailtobills/ui/components/empty-state";
+import { SectionLabel } from "@mailtobills/ui/components/section-label";
 import { Skeleton } from "@mailtobills/ui/components/skeleton";
 import {
   Table,
@@ -112,19 +113,42 @@ function TableHeading({
   count?: number;
 }) {
   return (
-    <div className="bg-card flex flex-col gap-1 border-b px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-      <div>
-        <h2 className="text-sm font-semibold">Collected Expense Documents</h2>
+    <div className="bg-card flex flex-col gap-1 border-b px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+      <div className="min-w-0 space-y-0.5">
+        <SectionLabel withRule={false} className="text-foreground">
+          Collected Expense Documents
+        </SectionLabel>
         <p className="text-muted-foreground text-xs">
           One row per accepted forwarded email.
         </p>
       </div>
       {count !== undefined ? (
-        <div className="text-muted-foreground text-xs font-medium tabular-nums">
-          {count} {count === 1 ? "document" : "documents"}
+        <div className="text-muted-foreground font-mono text-[11px] font-medium tracking-[0.08em] uppercase tabular-nums">
+          {count} {count === 1 ? "doc" : "docs"}
         </div>
       ) : null}
     </div>
+  );
+}
+
+const monoHeadClass = "font-mono text-[11px] tracking-[0.08em] uppercase";
+
+function DocumentsTableHeader() {
+  return (
+    <TableHeader>
+      <TableRow className="hover:bg-transparent">
+        <TableHead className="sr-only">Expand</TableHead>
+        <TableHead className={monoHeadClass}>Sender</TableHead>
+        <TableHead className={monoHeadClass}>Document</TableHead>
+        <TableHead className={cn(monoHeadClass, "border-l")}>
+          Received
+        </TableHead>
+        <TableHead className={cn(monoHeadClass, "border-l")}>PDFs</TableHead>
+        <TableHead className={cn(monoHeadClass, "border-l text-right")}>
+          Actions
+        </TableHead>
+      </TableRow>
+    </TableHeader>
   );
 }
 
@@ -175,16 +199,7 @@ export function ExpenseDocumentsTable({
       <CardContent className="p-0">
         <Table className="min-w-[920px] table-fixed">
           {tableColumns}
-          <TableHeader>
-            <TableRow className="hover:bg-transparent">
-              <TableHead className="sr-only">Expand</TableHead>
-              <TableHead>Sender</TableHead>
-              <TableHead>Document</TableHead>
-              <TableHead className="border-l">Received</TableHead>
-              <TableHead className="border-l">PDFs</TableHead>
-              <TableHead className="border-l text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
+          <DocumentsTableHeader />
           <TableBody>
             {documents.map((document) => {
               const sender = getSenderName(document);
@@ -252,7 +267,7 @@ export function ExpenseDocumentsTable({
                         {document.subject ?? "No email subject"}
                       </div>
                     </TableCell>
-                    <TableCell className="text-muted-foreground border-l whitespace-nowrap tabular-nums">
+                    <TableCell className="text-muted-foreground border-l font-mono text-xs whitespace-nowrap tabular-nums">
                       {formatReceivedAt(document.receivedAt)}
                     </TableCell>
                     <TableCell className="border-l">
@@ -382,16 +397,7 @@ export function ExpenseDocumentsTableSkeleton({ rows = 6 }: { rows?: number }) {
       <CardContent className="p-0">
         <Table className="min-w-[920px] table-fixed">
           {tableColumns}
-          <TableHeader>
-            <TableRow className="hover:bg-transparent">
-              <TableHead className="sr-only">Expand</TableHead>
-              <TableHead>Sender</TableHead>
-              <TableHead>Document</TableHead>
-              <TableHead className="border-l">Received</TableHead>
-              <TableHead className="border-l">PDFs</TableHead>
-              <TableHead className="border-l text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
+          <DocumentsTableHeader />
           <TableBody>
             {Array.from({ length: rows }).map((_, idx) => (
               <TableRow key={idx} className="hover:bg-transparent">

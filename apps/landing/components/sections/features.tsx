@@ -7,6 +7,8 @@ import {
   Zap,
 } from "lucide-react";
 
+import { SectionEyebrow } from "@/components/section-eyebrow";
+
 const features = [
   {
     icon: CalendarDays,
@@ -42,12 +44,10 @@ const features = [
 
 export function Features() {
   return (
-    <section id="features" className="bg-muted/30 scroll-mt-14 border-b">
+    <section id="features" className="bg-sidebar/60 scroll-mt-14 border-b">
       <div className="mx-auto max-w-6xl px-6 py-16 sm:py-20">
         <div className="mx-auto max-w-2xl space-y-3 text-center">
-          <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-            Features
-          </p>
+          <SectionEyebrow>Features</SectionEyebrow>
           <h2 className="text-3xl font-semibold tracking-tight text-balance">
             Built for people who&apos;d rather not do bookkeeping
           </h2>

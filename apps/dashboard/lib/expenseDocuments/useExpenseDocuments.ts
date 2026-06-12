@@ -32,11 +32,20 @@ export const useExpenseDocuments = (
     return summarizeExpenseDocuments(documents);
   }, [documents]);
 
+  const previousSummary = useMemo<ExpenseDocumentSummary>(() => {
+    if (!data) return { count: 0, attachmentCount: 0 };
+
+    return summarizeExpenseDocuments(
+      expenseDocumentRowsForMonth(data, getMonthInfo(monthInfo.previous)),
+    );
+  }, [data, monthInfo]);
+
   const totalCount = data?.length ?? 0;
 
   return {
     documents,
     summary,
+    previousSummary,
     isLoading: data === undefined,
     totalCount,
   };

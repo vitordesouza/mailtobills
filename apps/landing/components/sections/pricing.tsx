@@ -4,6 +4,7 @@ import { Badge } from "@mailtobills/ui/components/badge";
 import { Button } from "@mailtobills/ui/components/button";
 import { cn } from "@mailtobills/ui/lib/utils";
 
+import { SectionEyebrow } from "@/components/section-eyebrow";
 import { signUpUrl } from "@/lib/links";
 
 const plans = [
@@ -43,9 +44,7 @@ export function Pricing() {
     <section id="pricing" className="scroll-mt-14 border-b">
       <div className="mx-auto max-w-6xl px-6 py-16 sm:py-20">
         <div className="mx-auto max-w-2xl space-y-3 text-center">
-          <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-            Pricing
-          </p>
+          <SectionEyebrow>Pricing</SectionEyebrow>
           <h2 className="text-3xl font-semibold tracking-tight text-balance">
             Cheaper than an hour of bookkeeping
           </h2>
@@ -64,10 +63,7 @@ export function Pricing() {
               )}
             >
               {plan.highlighted ? (
-                <Badge
-                  variant="success"
-                  className="absolute -top-2.5 right-6 rounded-full px-2.5"
-                >
+                <Badge className="absolute -top-2.5 right-6 rounded-full px-2.5 font-mono text-[10px] tracking-[0.08em] uppercase">
                   Early-bird price
                 </Badge>
               ) : null}
@@ -86,7 +82,7 @@ export function Pricing() {
               <ul className="mt-6 flex-1 space-y-2.5">
                 {plan.features.map((feature) => (
                   <li key={feature} className="flex items-start gap-2 text-sm">
-                    <Check className="mt-0.5 size-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                    <Check className="text-primary mt-0.5 size-4 shrink-0" />
                     {feature}
                   </li>
                 ))}
@@ -94,6 +90,7 @@ export function Pricing() {
               <Button
                 asChild
                 variant={plan.highlighted ? "default" : "outline"}
+                typography="mono"
                 className="mt-6 w-full"
               >
                 <a href={signUpUrl}>{plan.cta}</a>

@@ -3,6 +3,7 @@ import { convexAuthNextjsToken } from "@convex-dev/auth/nextjs/server";
 import { api } from "@mailtobills/convex/_generated/api";
 
 import { CopyField } from "@/components/copy-field";
+import { InboxChip } from "@/components/inbox-chip";
 import { Badge } from "@mailtobills/ui/components/badge";
 import {
   PageHeader,
@@ -10,6 +11,7 @@ import {
   PageHeaderDescription,
   PageHeaderTitle,
 } from "@mailtobills/ui/components/page-header";
+import { SectionLabel } from "@mailtobills/ui/components/section-label";
 import { Separator } from "@mailtobills/ui/components/separator";
 import { SidebarTrigger } from "@mailtobills/ui/components/sidebar";
 
@@ -24,8 +26,10 @@ function SettingsRow({
 }) {
   return (
     <section className="bg-card rounded-lg border shadow-xs">
-      <div className="border-b px-4 py-3 md:px-5">
-        <h2 className="text-sm font-semibold">{title}</h2>
+      <div className="space-y-0.5 border-b px-4 py-3 md:px-5">
+        <SectionLabel withRule={false} className="text-foreground">
+          {title}
+        </SectionLabel>
         <p className="text-muted-foreground text-xs">{description}</p>
       </div>
       <div className="p-4 md:p-5">{children}</div>
@@ -39,14 +43,19 @@ export default async function SettingsPage() {
 
   return (
     <>
-      <header className="border-border mb-4 flex h-16 w-full min-w-0 shrink-0 items-center gap-2 border-b">
+      <header className="border-border mb-4 flex h-14 w-full min-w-0 shrink-0 items-center gap-2 border-b">
         <div className="flex w-full min-w-0 items-center gap-2 px-4">
           <SidebarTrigger className="-ml-1" />
           <Separator
             orientation="vertical"
-            className="mr-2 data-[orientation=vertical]:h-4"
+            className="mr-1 data-[orientation=vertical]:h-4"
           />
           <span className="text-sm font-medium">Settings</span>
+          <Separator
+            orientation="vertical"
+            className="mx-1 hidden data-[orientation=vertical]:h-4 sm:block"
+          />
+          <InboxChip className="hidden sm:inline-flex" />
         </div>
       </header>
       <div className="animate-in fade-in min-w-0 flex-1 space-y-4 p-4 pt-0 duration-300">
