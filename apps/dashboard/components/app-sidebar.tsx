@@ -3,7 +3,13 @@
 import * as React from "react";
 
 import { useParams, usePathname } from "next/navigation";
-import { Bot, LifeBuoy, Send, Settings2, SquareTerminal } from "lucide-react";
+import {
+  ChartColumn,
+  LayoutDashboard,
+  LifeBuoy,
+  Send,
+  Settings2,
+} from "lucide-react";
 
 import Link from "next/link";
 
@@ -59,13 +65,13 @@ export function AppSidebar({
       {
         title: "Dashboard",
         url: dashboardUrl,
-        icon: SquareTerminal,
+        icon: LayoutDashboard,
         isActive: isDashboardActive,
       },
       {
         title: "Reports",
         url: reportsUrl,
-        icon: Bot,
+        icon: ChartColumn,
         isActive: isReportsActive,
       },
       {
@@ -94,16 +100,21 @@ export function AppSidebar({
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton size="lg" asChild>
+            <SidebarMenuButton
+              size="lg"
+              asChild
+              className="border-sidebar-border bg-background hover:bg-background border shadow-xs group-data-[collapsible=icon]:border-transparent group-data-[collapsible=icon]:bg-transparent group-data-[collapsible=icon]:shadow-none"
+            >
               <Link href={dashboardUrl}>
-                <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
-                  {/* <Command className="size-4" /> */}
+                <div className="bg-primary text-primary-foreground flex aspect-square size-8 shrink-0 items-center justify-center rounded-md">
                   <Logo className="size-5" />
                 </div>
-                <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-medium">MailtoBills</span>
-                  <span className="truncate text-xs">
-                    Expense documents. Organized.
+                <div className="grid flex-1 text-left leading-tight">
+                  <span className="truncate text-sm font-medium">
+                    MailToBills
+                  </span>
+                  <span className="text-muted-foreground truncate font-mono text-[10px] font-medium tracking-[0.08em] uppercase">
+                    Workspace
                   </span>
                 </div>
               </Link>

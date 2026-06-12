@@ -8,6 +8,7 @@ export type ExpenseDocumentSummary = {
 export type ExpenseDocumentsResult = {
   documents: ExpenseDocumentRow[];
   summary: ExpenseDocumentSummary;
+  previousSummary: ExpenseDocumentSummary;
   isLoading: boolean;
   totalCount: number;
 };

@@ -6,37 +6,48 @@ export function Logo(props: React.ComponentProps<"svg">) {
       viewBox="0 0 48 48"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      className="text-slate-900 dark:text-white"
       {...props}
     >
-      <rect
-        x="6"
-        y="6"
-        rx="8"
-        width="36"
-        height="36"
-        strokeWidth="2"
-        stroke="currentColor"
-      />
-
+      {/* Outer diamond envelope */}
       <path
-        strokeWidth="2"
+        d="M24 3.5 L44.5 24 L24 44.5 L3.5 24 Z"
         stroke="currentColor"
-        strokeLinecap="round"
-        d="M12 16L24 25L36 16"
+        strokeWidth="3"
+        strokeLinejoin="round"
+      />
+      {/* Document sheet with folded corner */}
+      <path
+        d="M17 12.5 H27 L31 16.5 V31 H17 Z"
+        stroke="currentColor"
+        strokeWidth="3"
         strokeLinejoin="round"
       />
       <path
-        d="M16 30H32"
-        strokeWidth="2"
+        d="M27 12.5 V16.5 H31"
         stroke="currentColor"
+        strokeWidth="3"
+        strokeLinejoin="round"
+      />
+      {/* Text lines */}
+      <path
+        d="M21 21.5 H27"
+        stroke="currentColor"
+        strokeWidth="3"
         strokeLinecap="round"
       />
       <path
-        d="M16 34H26"
-        strokeWidth="2"
+        d="M21 25.5 H25"
         stroke="currentColor"
+        strokeWidth="3"
         strokeLinecap="round"
+      />
+      {/* Envelope fold */}
+      <path
+        d="M9.5 28 L24 38.5 L38.5 28"
+        stroke="currentColor"
+        strokeWidth="3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
       />
     </svg>
   );

@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ConvexAuthNextjsServerProvider } from "@convex-dev/auth/nextjs/server";
 
@@ -18,6 +18,13 @@ const fontMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "MailToBills Dashboard",
   description: "Collect and export expense documents from one place.",
+};
+
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f3f1ea" },
+    { media: "(prefers-color-scheme: dark)", color: "#1b1c17" },
+  ],
 };
 
 export default function RootLayout({

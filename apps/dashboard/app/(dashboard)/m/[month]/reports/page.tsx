@@ -1,9 +1,26 @@
-import { Download } from "lucide-react";
+import { Download, FileArchive, Inbox, Paperclip } from "lucide-react";
 
 import { getExpenseDocuments } from "@/lib/expenseDocuments/getExpenseDocuments";
+import { percentDelta } from "@/lib/expenseDocuments/transform";
 import { getMonthInfo } from "@/lib/months";
 import { Button } from "@mailtobills/ui/components/button";
-import { Card, CardContent } from "@mailtobills/ui/components/card";
+import {
+  PageHeader,
+  PageHeaderContent,
+  PageHeaderDescription,
+  PageHeaderTitle,
+} from "@mailtobills/ui/components/page-header";
+import { SectionLabel } from "@mailtobills/ui/components/section-label";
+import {
+  StatGroup,
+  StatLabel,
+  StatTile,
+  StatTileFooter,
+  StatTileHeader,
+  StatTilePeriod,
+  StatValue,
+} from "@mailtobills/ui/components/stat";
+import { TrendChip } from "@mailtobills/ui/components/trend-chip";
 
 export default async function ReportsPage({
   params,
@@ -12,31 +29,94 @@ export default async function ReportsPage({
 }) {
   const { month } = await params;
   const monthInfo = getMonthInfo(month);
-  const { summary } = await getExpenseDocuments(monthInfo.value);
+  const { summary, previousSummary } = await getExpenseDocuments(
+    monthInfo.value,
+  );
+
+  const previousShortLabel = getMonthInfo(
+    monthInfo.previous,
+  ).start.toLocaleString("en-US", { month: "short" });
+  const vsPrevious = `VS ${previousShortLabel}`;
 
   return (
-    <Card>
-      <CardContent className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div>
-          <h1 className="text-xl font-semibold">
-            Accountant export for {monthInfo.label}
-          </h1>
-          <p className="text-muted-foreground mt-1 text-sm">
+    <div className="animate-in fade-in space-y-5 duration-300">
+      <PageHeader>
+        <PageHeaderContent className="space-y-2">
+          <SectionLabel>Accountant Export</SectionLabel>
+          <PageHeaderTitle className="text-3xl">
+            {monthInfo.label}
+          </PageHeaderTitle>
+          <PageHeaderDescription>
             Download the current primary PDFs and a CSV manifest for collected
             expense documents in this collection month.
-          </p>
-          <p className="text-muted-foreground mt-3 text-sm">
-            {summary.count} documents, {summary.attachmentCount} PDF
-            attachments
-          </p>
-        </div>
-        <Button asChild>
+          </PageHeaderDescription>
+        </PageHeaderContent>
+        <Button asChild typography="mono" className="w-full md:w-auto">
           <a href={`/api/exports/${monthInfo.value}`}>
             <Download className="size-4" />
             Export ZIP
           </a>
         </Button>
-      </CardContent>
-    </Card>
+      </PageHeader>
+
+      <StatGroup variant="row">
+        <StatTile>
+          <StatTileHeader>
+            <StatLabel>Documents</StatLabel>
+            <Inbox />
+          </StatTileHeader>
+          <StatValue className="text-3xl">{summary.count}</StatValue>
+          <StatTileFooter>
+            <TrendChip
+              delta={percentDelta(summary.count, previousSummary.count)}
+            />
+            <StatTilePeriod>{vsPrevious}</StatTilePeriod>
+          </StatTileFooter>
+        </StatTile>
+        <StatTile>
+          <StatTileHeader>
+            <StatLabel>PDF Attachments</StatLabel>
+            <Paperclip />
+          </StatTileHeader>
+          <StatValue className="text-3xl">{summary.attachmentCount}</StatValue>
+          <StatTileFooter>
+            <TrendChip
+              delta={percentDelta(
+                summary.attachmentCount,
+                previousSummary.attachmentCount,
+              )}
+            />
+            <StatTilePeriod>{vsPrevious}</StatTilePeriod>
+          </StatTileFooter>
+        </StatTile>
+        <StatTile>
+          <StatTileHeader>
+            <StatLabel>Files in Export</StatLabel>
+            <FileArchive />
+          </StatTileHeader>
+          <StatValue className="text-3xl">{summary.count + 1}</StatValue>
+          <StatTileFooter>
+            <TrendChip
+              delta={percentDelta(summary.count, previousSummary.count)}
+            />
+            <StatTilePeriod>{vsPrevious}</StatTilePeriod>
+          </StatTileFooter>
+        </StatTile>
+      </StatGroup>
+
+      <section className="bg-card space-y-3 rounded-lg border p-4 shadow-xs md:p-5">
+        <SectionLabel>What is inside the ZIP</SectionLabel>
+        <ul className="text-muted-foreground space-y-1.5 text-sm">
+          <li>
+            One PDF per collected document — the attachment currently marked as
+            Primary.
+          </li>
+          <li>
+            A CSV manifest with sender, subject, received date, and filename
+            for every document.
+          </li>
+        </ul>
+      </section>
+    </div>
   );
 }

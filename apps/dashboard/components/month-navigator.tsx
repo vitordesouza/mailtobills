@@ -44,12 +44,8 @@ export const MonthNavigator = () => {
   }, [router, previousHref, nextHref, previous2Href, next2Href]);
 
   return (
-    <section className="flex w-full flex-wrap items-center gap-3">
-      <h1 className="absolute hidden text-base font-semibold tracking-tight text-foreground sm:block lg:text-xl">
-        {monthInfo.label}
-      </h1>
-      <div className="bg-background mx-auto flex items-center overflow-hidden">
-        <div className="bg-background flex items-center overflow-hidden rounded-lg border shadow-xs">
+    <section className="flex items-center">
+      <div className="bg-background flex items-center overflow-hidden rounded-lg border shadow-xs">
           <Link
             prefetch
             href={previousHref}
@@ -65,7 +61,7 @@ export const MonthNavigator = () => {
             <ChevronLeft className="size-4" />
           </Link>
           <Separator orientation="vertical" className="h-8" />
-          <div className="text-foreground px-3 py-1 text-sm font-medium">
+          <div className="text-foreground px-3 py-1 font-mono text-xs font-medium tracking-[0.06em] uppercase tabular-nums">
             {monthInfo.label}
           </div>
           <Separator orientation="vertical" className="h-8" />
@@ -83,7 +79,6 @@ export const MonthNavigator = () => {
           >
             <ChevronRight className="size-4" />
           </Link>
-        </div>
       </div>
     </section>
   );

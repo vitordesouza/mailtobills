@@ -27,7 +27,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
       enableSystem
       attribute="class"
       enableColorScheme
-      defaultTheme="system"
+      defaultTheme="light"
       disableTransitionOnChange
     >
       <ConvexAuthNextjsProvider client={convexClient}>
