@@ -36,7 +36,7 @@ function PageHeaderEyebrow({
     <p
       data-slot="page-header-eyebrow"
       className={cn(
-        "text-muted-foreground text-xs font-medium tracking-wide uppercase",
+        "text-muted-foreground font-mono text-[11px] font-medium tracking-[0.08em] uppercase",
         className,
       )}
       {...props}

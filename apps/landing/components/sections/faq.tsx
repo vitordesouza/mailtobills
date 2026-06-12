@@ -1,5 +1,7 @@
 import { ChevronDown } from "lucide-react";
 
+import { SectionEyebrow } from "@/components/section-eyebrow";
+
 const faqs = [
   {
     question: "What happens when I forward an email?",
@@ -33,9 +35,7 @@ export function Faq() {
     <section id="faq" className="scroll-mt-14 border-b">
       <div className="mx-auto max-w-3xl px-6 py-16 sm:py-20">
         <div className="space-y-3 text-center">
-          <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-            FAQ
-          </p>
+          <SectionEyebrow>FAQ</SectionEyebrow>
           <h2 className="text-3xl font-semibold tracking-tight text-balance">
             Questions, answered
           </h2>

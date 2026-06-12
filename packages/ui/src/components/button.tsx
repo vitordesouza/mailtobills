@@ -28,10 +28,15 @@ const buttonVariants = cva(
         "icon-sm": "size-8",
         "icon-lg": "size-10",
       },
+      typography: {
+        default: "",
+        mono: "font-mono text-xs font-medium uppercase tracking-[0.08em]",
+      },
     },
     defaultVariants: {
       variant: "default",
       size: "default",
+      typography: "default",
     },
   }
 );
@@ -40,6 +45,7 @@ function Button({
   className,
   variant = "default",
   size = "default",
+  typography = "default",
   asChild = false,
   ...props
 }: React.ComponentProps<"button"> &
@@ -53,7 +59,7 @@ function Button({
       data-slot="button"
       data-variant={variant}
       data-size={size}
-      className={cn(buttonVariants({ variant, size, className }))}
+      className={cn(buttonVariants({ variant, size, typography, className }))}
       {...props}
     />
   );

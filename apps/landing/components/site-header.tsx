@@ -15,7 +15,9 @@ export function SiteHeader() {
     <header className="bg-background/80 sticky top-0 z-50 border-b backdrop-blur-md">
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 px-6">
         <a href="#" className="flex items-center gap-2">
-          <Logo className="size-7" />
+          <span className="bg-primary text-primary-foreground flex size-7 items-center justify-center rounded-md">
+            <Logo className="size-5" />
+          </span>
           <span className="text-sm font-semibold tracking-tight">
             MailToBills
           </span>
@@ -35,7 +37,7 @@ export function SiteHeader() {
           <Button asChild variant="ghost" size="sm">
             <a href={signInUrl}>Sign in</a>
           </Button>
-          <Button asChild size="sm">
+          <Button asChild size="sm" typography="mono">
             <a href={signUpUrl}>Get started</a>
           </Button>
         </div>

@@ -103,3 +103,12 @@ export function summarizeExpenseDocuments(documents: ExpenseDocumentRow[]) {
     ),
   };
 }
+
+/**
+ * Month-over-month change in percent. `null` means there is no prior data
+ * to compare against (previous month was empty but this one is not).
+ */
+export function percentDelta(current: number, previous: number): number | null {
+  if (previous === 0) return current === 0 ? 0 : null;
+  return ((current - previous) / previous) * 100;
+}

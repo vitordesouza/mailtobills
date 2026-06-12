@@ -13,9 +13,9 @@ import { Button } from "@mailtobills/ui/components/button";
 import {
   PageHeaderContent,
   PageHeaderDescription,
-  PageHeaderEyebrow,
   PageHeaderTitle,
 } from "@mailtobills/ui/components/page-header";
+import { SectionLabel } from "@mailtobills/ui/components/section-label";
 
 const inboxAddress = "inbox@mailtobills.com";
 
@@ -50,7 +50,7 @@ export const OnboardingEmptyState = () => {
       <div className="grid gap-0 lg:grid-cols-[1.1fr_0.9fr]">
         <div className="flex flex-col gap-6 p-5 sm:p-6 lg:p-8">
           <PageHeaderContent className="space-y-2">
-            <PageHeaderEyebrow>First Collection</PageHeaderEyebrow>
+            <SectionLabel>First Collection</SectionLabel>
             <PageHeaderTitle className="text-3xl whitespace-normal">
               Forward your first Expense Document
             </PageHeaderTitle>
@@ -60,7 +60,7 @@ export const OnboardingEmptyState = () => {
             </PageHeaderDescription>
           </PageHeaderContent>
 
-          <div className="bg-muted/20 rounded-lg border p-4">
+          <div className="bg-sidebar/50 rounded-lg border border-dashed p-4">
             <CopyField
               id="mailtobills-inbox"
               label="Collection Address"
@@ -71,7 +71,7 @@ export const OnboardingEmptyState = () => {
           <ol className="grid gap-3 border-y py-5">
             {onboardingSteps.map((text, index) => (
               <li key={text} className="flex items-start gap-3">
-                <span className="bg-background mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-md border text-sm font-medium shadow-xs">
+                <span className="bg-background mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-md border font-mono text-xs font-medium shadow-xs">
                   {index === 2 ? (
                     <CheckCircle2 className="size-4" />
                   ) : index === 1 ? (
@@ -88,6 +88,7 @@ export const OnboardingEmptyState = () => {
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
             <Button
               type="button"
+              typography="mono"
               onClick={handleSendTestDocument}
               disabled={isSendingTest}
               className="w-full whitespace-nowrap sm:w-auto"
@@ -101,7 +102,7 @@ export const OnboardingEmptyState = () => {
           </div>
         </div>
 
-        <div className="flex min-h-[280px] items-center justify-center border-t bg-[linear-gradient(135deg,var(--muted)_0%,transparent_55%)] p-6 lg:border-t-0 lg:border-l">
+        <div className="bg-sidebar flex min-h-[280px] items-center justify-center border-t p-6 lg:border-t-0 lg:border-l">
           <Image
             src="/images/mailtobills-envelope.png"
             alt="Expense document in an envelope"

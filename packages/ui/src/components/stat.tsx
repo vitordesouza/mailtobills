@@ -3,11 +3,28 @@ import { cva, type VariantProps } from "class-variance-authority";
 
 import { cn } from "@mailtobills/ui/lib/utils";
 
-function StatGroup({ className, ...props }: React.ComponentProps<"div">) {
+const statGroupVariants = cva("", {
+  variants: {
+    variant: {
+      grid: "grid gap-4 sm:grid-cols-2 lg:grid-cols-3",
+      row: "divide-border bg-card grid grid-cols-1 divide-y overflow-hidden rounded-xl border shadow-xs sm:grid-cols-3 sm:divide-x sm:divide-y-0",
+    },
+  },
+  defaultVariants: {
+    variant: "grid",
+  },
+});
+
+function StatGroup({
+  className,
+  variant = "grid",
+  ...props
+}: React.ComponentProps<"div"> & VariantProps<typeof statGroupVariants>) {
   return (
     <div
       data-slot="stat-group"
-      className={cn("grid gap-4 sm:grid-cols-2 lg:grid-cols-3", className)}
+      data-variant={variant}
+      className={cn(statGroupVariants({ variant, className }))}
       {...props}
     />
   );
@@ -72,7 +89,7 @@ function StatLabel({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="stat-label"
       className={cn(
-        "text-muted-foreground truncate text-xs font-medium tracking-wide uppercase",
+        "text-muted-foreground truncate font-mono text-[11px] font-medium tracking-[0.08em] uppercase",
         className,
       )}
       {...props}
@@ -93,4 +110,65 @@ function StatValue({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
-export { StatGroup, Stat, StatIcon, StatContent, StatLabel, StatValue };
+/* Aster-style tile, used inside StatGroup variant="row" */
+function StatTile({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="stat-tile"
+      className={cn("flex min-w-0 flex-col gap-3 p-4 md:p-5", className)}
+      {...props}
+    />
+  );
+}
+
+function StatTileHeader({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="stat-tile-header"
+      className={cn(
+        "text-muted-foreground flex items-center justify-between gap-2 [&>svg]:size-3.5 [&>svg]:shrink-0",
+        className,
+      )}
+      {...props}
+    />
+  );
+}
+
+function StatTileFooter({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="stat-tile-footer"
+      className={cn(
+        "mt-auto flex items-center justify-between gap-2",
+        className,
+      )}
+      {...props}
+    />
+  );
+}
+
+function StatTilePeriod({ className, ...props }: React.ComponentProps<"span">) {
+  return (
+    <span
+      data-slot="stat-tile-period"
+      className={cn(
+        "text-muted-foreground rounded-sm border px-1.5 py-0.5 font-mono text-[10px] font-medium tracking-[0.08em] whitespace-nowrap uppercase",
+        className,
+      )}
+      {...props}
+    />
+  );
+}
+
+export {
+  StatGroup,
+  Stat,
+  StatIcon,
+  StatContent,
+  StatLabel,
+  StatValue,
+  StatTile,
+  StatTileHeader,
+  StatTileFooter,
+  StatTilePeriod,
+};

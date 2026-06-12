@@ -361,39 +361,27 @@ export function LoginForm({
               </FieldDescription>
             </FieldGroup>
           </form>
-          <div className="bg-muted relative hidden md:block">
-            {/* <Image
-              src="/images/bg.png"
-              width={447}
-              height={528}
-              alt="Image"
-              className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
-            /> */}
-            <div className="h-full flex flex-col items-center justify-center relative z-10 inset-0 mx-auto my-auto object-cover">
-              <div className="flex items-center gap-2">
-                {/* <Image
-                  src="/images/icon.svg"
-                  alt="Image"
-                  width={100}
-                  height={100}
-                  className="relative z-10 inset-0 object-cover dark:brightness-[2]"
-                /> */}
-                <Logo className="relative size-18 z-10 inset-0 object-cover dark:text-card-foreground" />
-                <h1 className="text-3xl font-bold text-slate-900 dark:text-card-foreground">
-                  MailtoBills
+          <div className="bg-sidebar relative hidden p-4 md:block">
+            <div className="flex h-full flex-col items-center justify-center rounded-lg border border-dashed">
+              <div className="flex items-center gap-3">
+                <span className="bg-primary text-primary-foreground flex size-12 items-center justify-center rounded-lg">
+                  <Logo className="size-8" />
+                </span>
+                <h1 className="text-foreground text-3xl font-bold tracking-tight">
+                  MailToBills
                 </h1>
               </div>
-              <div className="space-y-4">
-                <div className="flex flex-col gap-2 p-12 space-y-4">
-                  <h1 className="text-2xl font-bold dark:text-card-foreground">
-                    Forward expense PDFs. We&apos;ll organize them.
-                  </h1>
-                  <p className="max-w-2xl text-base text-slate-700 sm:text-lg dark:text-muted-foreground">
-                    Collect received expense documents by month and export the
-                    current primary PDFs with a CSV manifest for your
-                    accountant.
-                  </p>
-                </div>
+              <div className="flex flex-col gap-2 p-12">
+                <p className="text-muted-foreground font-mono text-[11px] font-medium tracking-[0.08em] uppercase">
+                  Expense documents. Organized.
+                </p>
+                <h2 className="text-foreground text-2xl font-bold tracking-tight">
+                  Forward expense PDFs. We&apos;ll organize them.
+                </h2>
+                <p className="text-muted-foreground max-w-2xl text-base">
+                  Collect received expense documents by month and export the
+                  current primary PDFs with a CSV manifest for your accountant.
+                </p>
               </div>
             </div>
           </div>

@@ -1,23 +1,26 @@
 import { Download, FileArchive, Inbox, Paperclip } from "lucide-react";
 
 import { getExpenseDocuments } from "@/lib/expenseDocuments/getExpenseDocuments";
+import { percentDelta } from "@/lib/expenseDocuments/transform";
 import { getMonthInfo } from "@/lib/months";
 import { Button } from "@mailtobills/ui/components/button";
 import {
   PageHeader,
   PageHeaderContent,
   PageHeaderDescription,
-  PageHeaderEyebrow,
   PageHeaderTitle,
 } from "@mailtobills/ui/components/page-header";
+import { SectionLabel } from "@mailtobills/ui/components/section-label";
 import {
-  Stat,
-  StatContent,
   StatGroup,
-  StatIcon,
   StatLabel,
+  StatTile,
+  StatTileFooter,
+  StatTileHeader,
+  StatTilePeriod,
   StatValue,
 } from "@mailtobills/ui/components/stat";
+import { TrendChip } from "@mailtobills/ui/components/trend-chip";
 
 export default async function ReportsPage({
   params,
@@ -26,60 +29,84 @@ export default async function ReportsPage({
 }) {
   const { month } = await params;
   const monthInfo = getMonthInfo(month);
-  const { summary } = await getExpenseDocuments(monthInfo.value);
+  const { summary, previousSummary } = await getExpenseDocuments(
+    monthInfo.value,
+  );
+
+  const previousShortLabel = getMonthInfo(
+    monthInfo.previous,
+  ).start.toLocaleString("en-US", { month: "short" });
+  const vsPrevious = `VS ${previousShortLabel}`;
 
   return (
-    <div className="animate-in fade-in space-y-4 duration-300">
-      <section className="bg-card overflow-hidden rounded-lg border shadow-xs">
-        <PageHeader className="p-4 md:p-5">
-          <PageHeaderContent>
-            <PageHeaderEyebrow>Accountant Export</PageHeaderEyebrow>
-            <PageHeaderTitle>{monthInfo.label}</PageHeaderTitle>
-            <PageHeaderDescription>
-              Download the current primary PDFs and a CSV manifest for
-              collected expense documents in this collection month.
-            </PageHeaderDescription>
-          </PageHeaderContent>
-          <Button asChild className="w-full md:w-auto">
-            <a href={`/api/exports/${monthInfo.value}`}>
-              <Download className="size-4" />
-              Export ZIP
-            </a>
-          </Button>
-        </PageHeader>
-        <StatGroup className="bg-muted/30 border-t p-4 md:p-5">
-          <Stat>
-            <StatIcon tone="neutral">
-              <Inbox />
-            </StatIcon>
-            <StatContent>
-              <StatLabel>Documents</StatLabel>
-              <StatValue>{summary.count}</StatValue>
-            </StatContent>
-          </Stat>
-          <Stat>
-            <StatIcon tone="success">
-              <Paperclip />
-            </StatIcon>
-            <StatContent>
-              <StatLabel>PDF attachments</StatLabel>
-              <StatValue>{summary.attachmentCount}</StatValue>
-            </StatContent>
-          </Stat>
-          <Stat>
-            <StatIcon tone="warning">
-              <FileArchive />
-            </StatIcon>
-            <StatContent>
-              <StatLabel>Files in export</StatLabel>
-              <StatValue>{summary.count + 1}</StatValue>
-            </StatContent>
-          </Stat>
-        </StatGroup>
-      </section>
-      <section className="bg-card rounded-lg border p-4 shadow-xs md:p-5">
-        <h2 className="text-sm font-semibold">What is inside the ZIP</h2>
-        <ul className="text-muted-foreground mt-2 space-y-1.5 text-sm">
+    <div className="animate-in fade-in space-y-5 duration-300">
+      <PageHeader>
+        <PageHeaderContent className="space-y-2">
+          <SectionLabel>Accountant Export</SectionLabel>
+          <PageHeaderTitle className="text-3xl">
+            {monthInfo.label}
+          </PageHeaderTitle>
+          <PageHeaderDescription>
+            Download the current primary PDFs and a CSV manifest for collected
+            expense documents in this collection month.
+          </PageHeaderDescription>
+        </PageHeaderContent>
+        <Button asChild typography="mono" className="w-full md:w-auto">
+          <a href={`/api/exports/${monthInfo.value}`}>
+            <Download className="size-4" />
+            Export ZIP
+          </a>
+        </Button>
+      </PageHeader>
+
+      <StatGroup variant="row">
+        <StatTile>
+          <StatTileHeader>
+            <StatLabel>Documents</StatLabel>
+            <Inbox />
+          </StatTileHeader>
+          <StatValue className="text-3xl">{summary.count}</StatValue>
+          <StatTileFooter>
+            <TrendChip
+              delta={percentDelta(summary.count, previousSummary.count)}
+            />
+            <StatTilePeriod>{vsPrevious}</StatTilePeriod>
+          </StatTileFooter>
+        </StatTile>
+        <StatTile>
+          <StatTileHeader>
+            <StatLabel>PDF Attachments</StatLabel>
+            <Paperclip />
+          </StatTileHeader>
+          <StatValue className="text-3xl">{summary.attachmentCount}</StatValue>
+          <StatTileFooter>
+            <TrendChip
+              delta={percentDelta(
+                summary.attachmentCount,
+                previousSummary.attachmentCount,
+              )}
+            />
+            <StatTilePeriod>{vsPrevious}</StatTilePeriod>
+          </StatTileFooter>
+        </StatTile>
+        <StatTile>
+          <StatTileHeader>
+            <StatLabel>Files in Export</StatLabel>
+            <FileArchive />
+          </StatTileHeader>
+          <StatValue className="text-3xl">{summary.count + 1}</StatValue>
+          <StatTileFooter>
+            <TrendChip
+              delta={percentDelta(summary.count, previousSummary.count)}
+            />
+            <StatTilePeriod>{vsPrevious}</StatTilePeriod>
+          </StatTileFooter>
+        </StatTile>
+      </StatGroup>
+
+      <section className="bg-card space-y-3 rounded-lg border p-4 shadow-xs md:p-5">
+        <SectionLabel>What is inside the ZIP</SectionLabel>
+        <ul className="text-muted-foreground space-y-1.5 text-sm">
           <li>
             One PDF per collected document — the attachment currently marked as
             Primary.

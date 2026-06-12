@@ -5,7 +5,6 @@ import * as React from "react";
 import { usePathname, useRouter } from "next/navigation";
 
 import { ExpenseDocumentsTableSkeleton } from "@/components/expense-documents-table";
-import { Card, CardContent } from "@mailtobills/ui/components/card";
 import { Skeleton } from "@mailtobills/ui/components/skeleton";
 
 type NavigationProgressContextValue = {
@@ -80,20 +79,19 @@ export function useNavigationProgress() {
   return value;
 }
 
-function SummaryCardSkeleton({ className }: { className?: string }) {
+function StatTileSkeleton() {
   return (
-    <Card className={className}>
-      <CardContent className="flex items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <Skeleton className="size-11 rounded-xl" />
-          <div className="space-y-2">
-            <Skeleton className="h-4 w-28" />
-            <Skeleton className="h-8 w-12" />
-          </div>
-        </div>
-        <Skeleton className="h-9 w-28 rounded-md" />
-      </CardContent>
-    </Card>
+    <div className="flex min-w-0 flex-col gap-3 p-4 md:p-5">
+      <div className="flex items-center justify-between gap-2">
+        <Skeleton className="h-3 w-24" />
+        <Skeleton className="size-3.5 rounded-sm" />
+      </div>
+      <Skeleton className="h-8 w-12" />
+      <div className="flex items-center justify-between gap-2">
+        <Skeleton className="h-4 w-16" />
+        <Skeleton className="h-4 w-12" />
+      </div>
+    </div>
   );
 }
 
@@ -103,12 +101,20 @@ export function MonthRouteLoadingOverlay() {
 
   return (
     <div className="pointer-events-none absolute inset-0 z-10">
-      <div className="absolute inset-0 bg-background/50 backdrop-blur-[2px]" />
-      <div className="relative flex flex-col gap-4">
-        <div className="grid auto-rows-min gap-4 md:grid-cols-4">
-          <SummaryCardSkeleton className="md:col-span-1" />
-          <SummaryCardSkeleton className="md:col-span-1" />
-          <SummaryCardSkeleton className="md:col-span-2" />
+      <div className="bg-background/50 absolute inset-0 backdrop-blur-[2px]" />
+      <div className="relative flex flex-col gap-5">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div className="space-y-2">
+            <Skeleton className="h-3 w-32" />
+            <Skeleton className="h-8 w-48" />
+            <Skeleton className="h-4 w-72 max-w-full" />
+          </div>
+          <Skeleton className="h-9 w-full rounded-md md:w-40" />
+        </div>
+        <div className="divide-border bg-card grid grid-cols-1 divide-y overflow-hidden rounded-xl border shadow-xs sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+          <StatTileSkeleton />
+          <StatTileSkeleton />
+          <StatTileSkeleton />
         </div>
         <ExpenseDocumentsTableSkeleton />
       </div>

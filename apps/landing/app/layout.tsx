@@ -1,5 +1,5 @@
 import { Geist, Geist_Mono } from "next/font/google"
-import type { Metadata } from "next"
+import type { Metadata, Viewport } from "next"
 
 import "@mailtobills/ui/globals.css"
 import { Providers } from "@/components/providers"
@@ -28,6 +28,13 @@ export const metadata: Metadata = {
     siteName: "MailToBills",
     type: "website",
   },
+}
+
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f3f1ea" },
+    { media: "(prefers-color-scheme: dark)", color: "#1b1c17" },
+  ],
 }
 
 export default function RootLayout({

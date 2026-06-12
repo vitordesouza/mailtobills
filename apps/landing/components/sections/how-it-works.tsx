@@ -1,5 +1,7 @@
 import { FileArchive, FolderCheck, Mail } from "lucide-react";
 
+import { SectionEyebrow } from "@/components/section-eyebrow";
+
 const steps = [
   {
     icon: Mail,
@@ -26,9 +28,7 @@ export function HowItWorks() {
     <section id="how-it-works" className="scroll-mt-14 border-b">
       <div className="mx-auto max-w-6xl px-6 py-16 sm:py-20">
         <div className="mx-auto max-w-2xl space-y-3 text-center">
-          <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-            How it works
-          </p>
+          <SectionEyebrow>How it works</SectionEyebrow>
           <h2 className="text-3xl font-semibold tracking-tight text-balance">
             From inbox chaos to a clean monthly package
           </h2>
@@ -47,7 +47,7 @@ export function HowItWorks() {
                 <span className="bg-muted/40 flex size-10 items-center justify-center rounded-lg border">
                   <Icon className="size-5" />
                 </span>
-                <span className="text-muted-foreground/60 text-sm font-semibold tabular-nums">
+                <span className="text-muted-foreground/60 font-mono text-sm font-semibold tabular-nums">
                   {step}
                 </span>
               </div>
