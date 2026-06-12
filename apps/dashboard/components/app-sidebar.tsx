@@ -3,7 +3,14 @@
 import * as React from "react";
 
 import { useParams, usePathname } from "next/navigation";
-import { Bot, LifeBuoy, Send, Settings2, SquareTerminal } from "lucide-react";
+import {
+  Archive,
+  Download,
+  Inbox,
+  LifeBuoy,
+  Send,
+  Settings2,
+} from "lucide-react";
 
 import Link from "next/link";
 
@@ -59,13 +66,13 @@ export function AppSidebar({
       {
         title: "Dashboard",
         url: dashboardUrl,
-        icon: SquareTerminal,
+        icon: Inbox,
         isActive: isDashboardActive,
       },
       {
-        title: "Reports",
+        title: "Exports",
         url: reportsUrl,
-        icon: Bot,
+        icon: Download,
         isActive: isReportsActive,
       },
       {
@@ -90,20 +97,25 @@ export function AppSidebar({
   };
 
   return (
-    <Sidebar variant="inset" {...props}>
-      <SidebarHeader>
+    <Sidebar variant="inset" className="border-sidebar-border/70" {...props}>
+      <SidebarHeader className="px-3 pt-3">
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton size="lg" asChild>
+            <SidebarMenuButton
+              size="lg"
+              asChild
+              className="h-12 rounded-2xl border border-sidebar-border/70 bg-card/65 shadow-[0_1px_0_oklch(1_0_0/70%)_inset]"
+            >
               <Link href={dashboardUrl}>
-                <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
-                  {/* <Command className="size-4" /> */}
-                  <Logo className="size-5" />
+                <div className="flex aspect-square size-8 items-center justify-center rounded-xl bg-[oklch(0.42_0.16_230)] text-white shadow-sm">
+                  <Logo className="size-5 text-white" />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-medium">MailtoBills</span>
-                  <span className="truncate text-xs">
-                    Expense documents. Organized.
+                  <span className="truncate font-semibold tracking-[-0.02em]">
+                    MailToBills
+                  </span>
+                  <span className="truncate text-xs text-sidebar-foreground/58">
+                    Inbox to accountant-ready
                   </span>
                 </div>
               </Link>
@@ -111,12 +123,18 @@ export function AppSidebar({
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
-      <SidebarContent>
+      <SidebarContent className="px-2">
         <NavMain items={data.navMain} />
         {/* <NavProjects projects={data.projects} /> */}
-        <NavSecondary items={data.navSecondary} className="mt-auto" />
+        <div className="mt-auto rounded-2xl border border-sidebar-border/70 bg-card/55 p-2 shadow-[0_1px_0_oklch(1_0_0/60%)_inset]">
+          <div className="mb-2 flex items-center gap-2 px-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-sidebar-foreground/45">
+            <Archive className="size-3.5" />
+            Quiet ops
+          </div>
+          <NavSecondary items={data.navSecondary} />
+        </div>
       </SidebarContent>
-      <SidebarFooter>
+      <SidebarFooter className="px-3 pb-3">
         <NavUser user={data.user} />
       </SidebarFooter>
     </Sidebar>

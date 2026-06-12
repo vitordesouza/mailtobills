@@ -3,7 +3,7 @@
 import * as React from "react";
 
 import { usePathname, useParams, useRouter } from "next/navigation";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, CalendarDays } from "lucide-react";
 
 import Link from "next/link";
 
@@ -37,53 +37,60 @@ export const MonthNavigator = () => {
   const next2Href = buildMonthHref(pathname, next2);
 
   React.useEffect(() => {
-    // Prefetch a small window of months to reduce skeleton flashes when paging quickly.
     for (const href of [previousHref, nextHref, previous2Href, next2Href]) {
       router.prefetch(href);
     }
   }, [router, previousHref, nextHref, previous2Href, next2Href]);
 
   return (
-    <section className="flex w-full flex-wrap items-center gap-3">
-      <h1 className="absolute hidden text-base font-semibold tracking-tight text-foreground sm:block lg:text-xl">
-        {monthInfo.label}
-      </h1>
-      <div className="bg-background mx-auto flex items-center overflow-hidden">
-        <div className="bg-background flex items-center overflow-hidden rounded-lg border shadow-xs">
-          <Link
-            prefetch
-            href={previousHref}
-            aria-label="Previous month"
-            aria-disabled={isNavigating}
-            onClick={(event) => {
-              if (isNavigating) return;
-              event.preventDefault();
-              navigate(previousHref);
-            }}
-            className="text-muted-foreground hover:bg-accent hover:text-accent-foreground focus-visible:ring-ring/50 inline-flex h-8 w-8 items-center justify-center transition outline-none focus-visible:ring-[3px] aria-disabled:pointer-events-none aria-disabled:opacity-50"
-          >
-            <ChevronLeft className="size-4" />
-          </Link>
-          <Separator orientation="vertical" className="h-8" />
-          <div className="text-foreground px-3 py-1 text-sm font-medium">
-            {monthInfo.label}
-          </div>
-          <Separator orientation="vertical" className="h-8" />
-          <Link
-            href={nextHref}
-            prefetch
-            aria-label="Next month"
-            aria-disabled={isNavigating}
-            onClick={(event) => {
-              if (isNavigating) return;
-              event.preventDefault();
-              navigate(nextHref);
-            }}
-            className="text-muted-foreground hover:bg-accent hover:text-accent-foreground focus-visible:ring-ring/50 inline-flex h-8 w-8 items-center justify-center transition outline-none focus-visible:ring-[3px] aria-disabled:pointer-events-none aria-disabled:opacity-50"
-          >
-            <ChevronRight className="size-4" />
-          </Link>
+    <section className="flex w-full min-w-0 items-center gap-3">
+      <div className="hidden min-w-0 items-center gap-2 lg:flex">
+        <div className="flex size-8 items-center justify-center rounded-xl border bg-card/80 text-primary shadow-[0_1px_0_oklch(1_0_0/70%)_inset]">
+          <CalendarDays className="size-4" />
         </div>
+        <div className="min-w-0">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+            Collection month
+          </p>
+          <h1 className="truncate text-base font-semibold tracking-[-0.02em] text-foreground">
+            {monthInfo.label}
+          </h1>
+        </div>
+      </div>
+      <div className="mx-auto flex items-center overflow-hidden rounded-2xl border bg-card/82 p-1 shadow-[0_1px_0_oklch(1_0_0/70%)_inset,0_12px_30px_oklch(0.18_0.012_258/6%)] backdrop-blur lg:mx-0 lg:ml-auto">
+        <Link
+          prefetch
+          href={previousHref}
+          aria-label="Previous month"
+          aria-disabled={isNavigating}
+          onClick={(event) => {
+            if (isNavigating) return;
+            event.preventDefault();
+            navigate(previousHref);
+          }}
+          className="text-muted-foreground hover:bg-accent/70 hover:text-accent-foreground focus-visible:ring-ring/40 inline-flex h-8 w-8 items-center justify-center rounded-xl transition outline-none focus-visible:ring-[3px] aria-disabled:pointer-events-none aria-disabled:opacity-50"
+        >
+          <ChevronLeft className="size-4" />
+        </Link>
+        <Separator orientation="vertical" className="mx-1 h-5" />
+        <div className="min-w-[8.5rem] px-3 py-1 text-center text-sm font-semibold tracking-[-0.01em] text-foreground">
+          {monthInfo.label}
+        </div>
+        <Separator orientation="vertical" className="mx-1 h-5" />
+        <Link
+          href={nextHref}
+          prefetch
+          aria-label="Next month"
+          aria-disabled={isNavigating}
+          onClick={(event) => {
+            if (isNavigating) return;
+            event.preventDefault();
+            navigate(nextHref);
+          }}
+          className="text-muted-foreground hover:bg-accent/70 hover:text-accent-foreground focus-visible:ring-ring/40 inline-flex h-8 w-8 items-center justify-center rounded-xl transition outline-none focus-visible:ring-[3px] aria-disabled:pointer-events-none aria-disabled:opacity-50"
+        >
+          <ChevronRight className="size-4" />
+        </Link>
       </div>
     </section>
   );

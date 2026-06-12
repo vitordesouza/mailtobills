@@ -1,4 +1,4 @@
-import { Download } from "lucide-react";
+import { Download, FileArchive, FileText } from "lucide-react";
 
 import { getExpenseDocuments } from "@/lib/expenseDocuments/getExpenseDocuments";
 import { getMonthInfo } from "@/lib/months";
@@ -15,22 +15,35 @@ export default async function ReportsPage({
   const { summary } = await getExpenseDocuments(monthInfo.value);
 
   return (
-    <Card>
-      <CardContent className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div>
-          <h1 className="text-xl font-semibold">
-            Accountant export for {monthInfo.label}
-          </h1>
-          <p className="text-muted-foreground mt-1 text-sm">
-            Download the current primary PDFs and a CSV manifest for collected
-            expense documents in this collection month.
-          </p>
-          <p className="text-muted-foreground mt-3 text-sm">
-            {summary.count} documents, {summary.attachmentCount} PDF
-            attachments
-          </p>
+    <Card className="overflow-hidden rounded-[1.75rem] py-0">
+      <CardContent className="grid gap-6 p-5 md:grid-cols-[1fr_auto] md:items-center md:p-7">
+        <div className="flex gap-4">
+          <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+            <FileArchive className="size-5" />
+          </div>
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+              Accountant export
+            </p>
+            <h1 className="mt-2 text-3xl font-semibold tracking-[-0.045em]">
+              {monthInfo.label} export pack
+            </h1>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
+              Download the current primary PDFs and a CSV manifest for collected
+              expense documents in this collection month.
+            </p>
+            <div className="mt-4 flex flex-wrap gap-2 text-sm">
+              <span className="inline-flex items-center gap-2 rounded-full border bg-background/70 px-3 py-1 font-medium">
+                <FileText className="size-4 text-primary" />
+                {summary.count} documents
+              </span>
+              <span className="rounded-full border bg-background/70 px-3 py-1 font-medium">
+                {summary.attachmentCount} PDF attachments
+              </span>
+            </div>
+          </div>
         </div>
-        <Button asChild>
+        <Button asChild size="lg">
           <a href={`/api/exports/${monthInfo.value}`}>
             <Download className="size-4" />
             Export ZIP

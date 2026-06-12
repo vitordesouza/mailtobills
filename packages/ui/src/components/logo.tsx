@@ -6,36 +6,34 @@ export function Logo(props: React.ComponentProps<"svg">) {
       viewBox="0 0 48 48"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      className="text-slate-900 dark:text-white"
+      aria-hidden="true"
+      className="text-[oklch(0.42_0.16_230)]"
       {...props}
     >
-      <rect
-        x="6"
-        y="6"
-        rx="8"
-        width="36"
-        height="36"
-        strokeWidth="2"
-        stroke="currentColor"
-      />
-
       <path
-        strokeWidth="2"
+        d="M24 4.5 42.5 18v18.5L31 43.5H17L5.5 36.5V18L24 4.5Z"
         stroke="currentColor"
-        strokeLinecap="round"
-        d="M12 16L24 25L36 16"
+        strokeWidth="3.2"
         strokeLinejoin="round"
       />
       <path
-        d="M16 30H32"
-        strokeWidth="2"
+        d="M8 20.5 20.5 31h7L40 20.5"
         stroke="currentColor"
+        strokeWidth="3.2"
         strokeLinecap="round"
+        strokeLinejoin="round"
       />
       <path
-        d="M16 34H26"
-        strokeWidth="2"
+        d="M15.5 15.5h17v19L24 41l-8.5-6.5v-19Z"
+        fill="var(--background)"
         stroke="currentColor"
+        strokeWidth="3.2"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M20 23.5h8M20 29h6"
+        stroke="currentColor"
+        strokeWidth="3.2"
         strokeLinecap="round"
       />
     </svg>

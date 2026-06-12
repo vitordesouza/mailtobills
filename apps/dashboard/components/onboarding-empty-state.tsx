@@ -52,14 +52,14 @@ export const OnboardingEmptyState = () => {
   };
 
   return (
-    <section className="overflow-hidden rounded-lg border bg-card shadow-xs">
+    <section className="overflow-hidden rounded-[1.75rem] border bg-card/86 shadow-[0_1px_0_oklch(1_0_0/75%)_inset,0_24px_70px_oklch(0.18_0.012_258/8%)] backdrop-blur">
       <div className="grid gap-0 lg:grid-cols-[1.1fr_0.9fr]">
         <div className="flex flex-col gap-6 p-5 sm:p-6 lg:p-8">
           <div className="space-y-2">
-            <p className="text-muted-foreground text-xs font-medium uppercase">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
               First Collection
             </p>
-            <h1 className="text-3xl font-semibold tracking-tight">
+            <h1 className="text-3xl font-semibold tracking-[-0.04em] sm:text-4xl">
               Forward your first Expense Document
             </h1>
             <p className="text-muted-foreground max-w-xl">
@@ -68,12 +68,10 @@ export const OnboardingEmptyState = () => {
             </p>
           </div>
 
-          <div className="rounded-lg border bg-muted/20 p-4">
+          <div className="rounded-2xl border bg-muted/30 p-4 shadow-[0_1px_0_oklch(1_0_0/70%)_inset]">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
               <div className="grid gap-1">
-                <Label htmlFor="mailtobills-inbox">
-                  Collection Address
-                </Label>
+                <Label htmlFor="mailtobills-inbox">Collection Address</Label>
                 <Input
                   id="mailtobills-inbox"
                   ref={inputRef}
@@ -82,14 +80,14 @@ export const OnboardingEmptyState = () => {
                   onClick={() => {
                     inputRef.current?.select();
                   }}
-                  className="font-mono"
+                  className="rounded-xl font-mono"
                 />
               </div>
               <Button
                 type="button"
                 variant="outline"
                 onClick={handleCopyAddress}
-                className="w-full sm:w-auto"
+                className="w-full rounded-xl sm:w-auto"
               >
                 <Copy className="size-4" />
                 {isCopied ? "Copied" : "Copy"}
@@ -100,7 +98,7 @@ export const OnboardingEmptyState = () => {
           <ol className="grid gap-3 border-y py-5">
             {onboardingSteps.map((text, index) => (
               <li key={text} className="flex items-start gap-3">
-                <span className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-md border bg-background text-sm font-medium shadow-xs">
+                <span className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-xl border bg-background text-sm font-semibold shadow-[0_1px_0_oklch(1_0_0/70%)_inset]">
                   {index === 2 ? (
                     <CheckCircle2 className="size-4" />
                   ) : index === 1 ? (
@@ -130,7 +128,7 @@ export const OnboardingEmptyState = () => {
           </div>
         </div>
 
-        <div className="flex min-h-[280px] items-center justify-center border-t bg-[linear-gradient(135deg,var(--muted)_0%,transparent_55%)] p-6 lg:border-l lg:border-t-0">
+        <div className="flex min-h-[280px] items-center justify-center border-t bg-[radial-gradient(circle_at_50%_40%,oklch(0.9_0.08_190/50%),transparent_42%),linear-gradient(135deg,var(--muted)_0%,transparent_60%)] p-6 lg:border-l lg:border-t-0">
           <Image
             src="/images/mailtobills-envelope.png"
             alt="Expense document in an envelope"

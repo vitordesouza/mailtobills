@@ -72,7 +72,7 @@ function ViewPdfButton({
   }
 
   return (
-    <Button asChild variant="outline" size="sm">
+    <Button asChild variant="outline" size="sm" className="rounded-xl">
       <a href={url} target="_blank" rel="noreferrer">
         <ExternalLink className="size-3.5" />
         {children}
@@ -97,10 +97,7 @@ export function ExpenseDocumentsTable({
   );
   const softDelete = useMutation(api.expenseDocuments.softDelete);
 
-  const runAction = (
-    id: string,
-    action: () => Promise<unknown>,
-  ) => {
+  const runAction = (id: string, action: () => Promise<unknown>) => {
     setPendingId(id);
     startTransition(() => {
       action()
@@ -111,9 +108,9 @@ export function ExpenseDocumentsTable({
 
   if (documents.length === 0) {
     return (
-      <Card className="rounded-lg py-0 shadow-xs">
+      <Card className="rounded-[1.5rem] py-0">
         <CardContent className="flex min-h-[340px] flex-col items-center justify-center py-10 text-center">
-          <div className="flex size-10 items-center justify-center rounded-lg border bg-muted/30">
+          <div className="flex size-11 items-center justify-center rounded-2xl border bg-muted/40">
             <FileText className="text-muted-foreground size-5" />
           </div>
           <div className="mt-3 text-sm font-medium">No documents</div>
@@ -124,15 +121,17 @@ export function ExpenseDocumentsTable({
   }
 
   return (
-    <Card className="min-w-0 gap-0 overflow-hidden rounded-lg py-0 shadow-xs">
-      <div className="flex flex-col gap-1 border-b bg-card px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+    <Card className="min-w-0 gap-0 overflow-hidden rounded-[1.5rem] py-0">
+      <div className="flex flex-col gap-2 border-b bg-card/70 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-sm font-semibold">Collected Expense Documents</h2>
+          <h2 className="text-sm font-semibold tracking-[-0.01em]">
+            Collected Expense Documents
+          </h2>
           <p className="text-muted-foreground text-xs">
             One row per accepted forwarded email.
           </p>
         </div>
-        <div className="text-muted-foreground text-xs font-medium">
+        <div className="rounded-full border bg-background/70 px-2.5 py-1 text-xs font-semibold text-muted-foreground">
           {documents.length} {documents.length === 1 ? "document" : "documents"}
         </div>
       </div>
@@ -147,8 +146,8 @@ export function ExpenseDocumentsTable({
               <col className="w-[120px]" />
               <col className="w-[190px]" />
             </colgroup>
-            <thead className="bg-muted/30 text-muted-foreground">
-              <tr className="[&_th]:px-4 [&_th]:py-3 [&_th]:text-left [&_th]:font-medium">
+            <thead className="bg-muted/35 text-muted-foreground">
+              <tr className="[&_th]:px-4 [&_th]:py-3 [&_th]:text-left [&_th]:text-[11px] [&_th]:font-semibold [&_th]:uppercase [&_th]:tracking-[0.14em]">
                 <th className="sr-only">Expand</th>
                 <th>Sender</th>
                 <th>Document</th>
@@ -157,7 +156,7 @@ export function ExpenseDocumentsTable({
                 <th className="border-l text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y">
+            <tbody className="divide-y divide-border/70">
               {documents.map((document) => {
                 const sender = getSenderName(document);
                 const primary = document.primaryAttachment;
@@ -171,13 +170,13 @@ export function ExpenseDocumentsTable({
 
                 return (
                   <Fragment key={document.id}>
-                    <tr className="transition-colors hover:bg-muted/25 [&>td]:px-4 [&>td]:py-3">
+                    <tr className="transition-colors duration-200 hover:bg-accent/45 [&>td]:px-4 [&>td]:py-3.5">
                       <td>
                         <Button
                           type="button"
                           variant="ghost"
                           size="icon"
-                          className="size-8"
+                          className="size-8 rounded-xl"
                           onClick={() =>
                             setExpandedId(isExpanded ? null : document.id)
                           }
@@ -196,11 +195,13 @@ export function ExpenseDocumentsTable({
                       </td>
                       <td>
                         <div className="flex items-center gap-3">
-                          <div className="flex size-9 items-center justify-center rounded-lg border bg-background text-xs font-semibold shadow-xs">
+                          <div className="flex size-9 items-center justify-center rounded-xl border bg-[linear-gradient(180deg,oklch(1_0_0/80%),oklch(0.94_0.015_82))] text-xs font-semibold text-primary shadow-[0_1px_0_oklch(1_0_0/75%)_inset]">
                             {sender.charAt(0).toUpperCase()}
                           </div>
                           <div className="min-w-0">
-                            <div className="truncate font-medium">{sender}</div>
+                            <div className="truncate font-semibold tracking-[-0.01em]">
+                              {sender}
+                            </div>
                             <div className="text-muted-foreground truncate text-xs">
                               {document.fromEmail ?? "Forwarded email"}
                             </div>
@@ -209,11 +210,11 @@ export function ExpenseDocumentsTable({
                       </td>
                       <td className="min-w-0">
                         <div className="flex min-w-0 items-center gap-2">
-                          <div className="truncate font-medium">
+                          <div className="truncate font-semibold tracking-[-0.01em]">
                             {primary?.originalFilename ?? "No primary PDF"}
                           </div>
                           {primary ? (
-                            <span className="inline-flex shrink-0 items-center rounded-md border border-amber-500/20 bg-amber-500/10 px-1.5 py-0.5 text-[11px] font-medium text-amber-800 dark:text-amber-300">
+                            <span className="inline-flex shrink-0 items-center rounded-full border border-[oklch(0.84_0.08_78)] bg-[oklch(0.94_0.08_78)] px-2 py-0.5 text-[11px] font-semibold text-[oklch(0.42_0.1_70)]">
                               Primary
                             </span>
                           ) : null}
@@ -226,7 +227,7 @@ export function ExpenseDocumentsTable({
                         {formatReceivedAt(document.receivedAt)}
                       </td>
                       <td className="text-muted-foreground border-l">
-                        <span className="inline-flex min-w-7 justify-center rounded-md border bg-background px-2 py-1 text-xs font-medium text-foreground">
+                        <span className="inline-flex min-w-7 justify-center rounded-full border bg-background/80 px-2 py-1 text-xs font-semibold text-foreground">
                           {document.attachments.length}
                         </span>
                       </td>
@@ -237,7 +238,7 @@ export function ExpenseDocumentsTable({
                             type="button"
                             variant="ghost"
                             size="icon"
-                            className="size-8 text-muted-foreground hover:text-destructive"
+                            className="size-8 rounded-xl text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
                             disabled={isBusy}
                             onClick={() =>
                               runAction(document.id, () =>
@@ -256,7 +257,7 @@ export function ExpenseDocumentsTable({
                     </tr>
                     {isExpanded ? (
                       <tr key={`${document.id}-attachments`}>
-                        <td colSpan={6} className="bg-muted/25 px-4 py-3">
+                        <td colSpan={6} className="bg-muted/28 px-4 py-3">
                           <div className="space-y-2 pl-0 sm:pl-[52px]">
                             {document.attachments.map((attachment) => {
                               const isPrimary = attachment.id === primary?.id;
@@ -268,17 +269,17 @@ export function ExpenseDocumentsTable({
                                 <div
                                   key={attachment.id}
                                   className={cn(
-                                    "flex flex-col gap-3 rounded-md border bg-background px-3 py-2 shadow-xs sm:flex-row sm:items-center sm:justify-between",
+                                    "flex flex-col gap-3 rounded-2xl border bg-background/76 px-3 py-2.5 shadow-[0_1px_0_oklch(1_0_0/70%)_inset] sm:flex-row sm:items-center sm:justify-between",
                                     isPrimary &&
-                                      "border-amber-500/30 bg-amber-500/5",
+                                      "border-[oklch(0.84_0.08_78)] bg-[oklch(0.96_0.06_78)]",
                                   )}
                                 >
                                   <div className="flex min-w-0 items-center gap-3">
                                     <div
                                       className={cn(
-                                        "flex size-8 shrink-0 items-center justify-center rounded-md border bg-muted/30",
+                                        "flex size-8 shrink-0 items-center justify-center rounded-xl border bg-muted/30",
                                         isPrimary &&
-                                          "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300",
+                                          "border-[oklch(0.84_0.08_78)] bg-[oklch(0.93_0.08_78)] text-[oklch(0.42_0.1_70)]",
                                       )}
                                     >
                                       {isPrimary ? (

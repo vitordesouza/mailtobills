@@ -35,13 +35,20 @@ export function NavMain({
   }[];
 }) {
   return (
-    <SidebarGroup>
-      <SidebarGroupLabel>Menu</SidebarGroupLabel>
+    <SidebarGroup className="py-3">
+      <SidebarGroupLabel className="px-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-sidebar-foreground/45">
+        Workspace
+      </SidebarGroupLabel>
       <SidebarMenu>
         {items.map((item) => (
           <Collapsible key={item.title} asChild defaultOpen={item.isActive}>
             <SidebarMenuItem>
-              <SidebarMenuButton asChild tooltip={item.title} isActive={item.isActive}>
+              <SidebarMenuButton
+                asChild
+                tooltip={item.title}
+                isActive={item.isActive}
+                className="h-10 rounded-xl data-[active=true]:bg-sidebar-accent data-[active=true]:font-semibold data-[active=true]:shadow-[0_1px_0_oklch(1_0_0/65%)_inset]"
+              >
                 <a href={item.url}>
                   <item.icon />
                   <span>{item.title}</span>

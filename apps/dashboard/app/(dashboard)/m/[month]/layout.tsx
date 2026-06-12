@@ -25,7 +25,7 @@ export default async function MonthLayout({
 
   return (
     <NavigationProgressProvider>
-      <header className="mb-4 flex h-16 w-full min-w-0 shrink-0 items-center gap-2 border-b border-border">
+      <header className="sticky top-0 z-20 mx-2 mb-4 flex h-16 min-w-0 shrink-0 items-center gap-2 border-b border-border/70 bg-background/72 backdrop-blur-xl supports-[backdrop-filter]:bg-background/62 md:mx-4">
         <div className="flex w-full min-w-0 items-center gap-2 px-4">
           <SidebarTrigger className="-ml-1" />
           <Separator
@@ -35,7 +35,7 @@ export default async function MonthLayout({
           <MonthNavigator />
         </div>
       </header>
-      <div className="relative flex min-w-0 flex-1 flex-col gap-4 p-4 pt-0">
+      <div className="relative flex min-w-0 flex-1 flex-col gap-5 px-3 pb-4 pt-0 md:px-4 lg:px-6">
         <MonthRouteLoadingOverlay />
         {children}
       </div>
