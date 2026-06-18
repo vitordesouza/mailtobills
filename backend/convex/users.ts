@@ -2,7 +2,7 @@ import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { query, internalQuery, mutation } from "./_generated/server";
 
-import { requirePro, requireSignedInUserId } from "./lib/requirePro";
+import { requirePro } from "./lib/requirePro";
 
 function normalizedOptionalString(value: string | undefined) {
   const trimmed = value?.trim();
@@ -83,7 +83,7 @@ export const updateExportSchedule = mutation({
     exportScheduleDay: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const userId = await requireSignedInUserId(ctx);
+    const userId = await requirePro(ctx);
     const accountantEmail = normalizedOptionalString(args.accountantEmail);
     const accountantName = normalizedOptionalString(args.accountantName);
 
