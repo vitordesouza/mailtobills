@@ -1,5 +1,7 @@
 # MailToBills
 
+![MailToBills product overview](docs/assets/readme-og.svg)
+
 Forward your invoices. We organize everything.
 
 MailToBills is a micro-SaaS that lets freelancers and small businesses forward invoice emails and get everything neatly organized in a simple dashboard.
