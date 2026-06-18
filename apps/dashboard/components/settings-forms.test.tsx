@@ -7,23 +7,40 @@ import { ExportScheduleForm } from "./export-schedule-form";
 import { ForwardingAddressesForm } from "./forwarding-addresses-form";
 
 const mocks = vi.hoisted(() => ({
+  api: {
+    users: {
+      addForwardingAddress: Symbol("addForwardingAddress"),
+      removeForwardingAddress: Symbol("removeForwardingAddress"),
+      updateExportSchedule: Symbol("updateExportSchedule"),
+    },
+  },
   refresh: vi.fn(),
   addForwardingAddress: vi.fn(() => Promise.resolve()),
   removeForwardingAddress: vi.fn(() => Promise.resolve()),
   updateExportSchedule: vi.fn(() => Promise.resolve()),
-  mutationCallCount: 0,
 }));
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ refresh: mocks.refresh }),
 }));
 
+vi.mock("@/lib/convexClient", () => ({
+  api: mocks.api,
+}));
+
 vi.mock("convex/react", () => ({
-  useMutation: vi.fn(() => {
-    mocks.mutationCallCount += 1;
-    if (mocks.mutationCallCount === 1) return mocks.addForwardingAddress;
-    if (mocks.mutationCallCount === 2) return mocks.removeForwardingAddress;
-    return mocks.updateExportSchedule;
+  useMutation: vi.fn((mutation) => {
+    if (mutation === mocks.api.users.addForwardingAddress) {
+      return mocks.addForwardingAddress;
+    }
+    if (mutation === mocks.api.users.removeForwardingAddress) {
+      return mocks.removeForwardingAddress;
+    }
+    if (mutation === mocks.api.users.updateExportSchedule) {
+      return mocks.updateExportSchedule;
+    }
+
+    throw new Error("Unexpected mutation");
   }),
 }));
 
@@ -33,7 +50,6 @@ describe("settings forms", () => {
     mocks.addForwardingAddress.mockClear();
     mocks.removeForwardingAddress.mockClear();
     mocks.updateExportSchedule.mockClear();
-    mocks.mutationCallCount = 0;
   });
 
   it("removes forwarding addresses for Pro users", async () => {
