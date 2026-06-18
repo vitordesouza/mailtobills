@@ -2,9 +2,9 @@ import { fetchQuery } from "convex/nextjs";
 import { convexAuthNextjsToken } from "@convex-dev/auth/nextjs/server";
 import { api } from "@mailtobills/convex/_generated/api";
 
+import { BillingSettings } from "@/components/billing-settings";
 import { CopyField } from "@/components/copy-field";
-import { InboxChip } from "@/components/inbox-chip";
-import { Badge } from "@mailtobills/ui/components/badge";
+import { ForwardingAddressesForm } from "@/components/forwarding-addresses-form";
 import {
 	PageHeader,
 	PageHeaderContent,
@@ -12,8 +12,6 @@ import {
 	PageHeaderTitle,
 } from "@mailtobills/ui/components/page-header";
 import { SectionLabel } from "@mailtobills/ui/components/section-label";
-import { Separator } from "@mailtobills/ui/components/separator";
-import { SidebarTrigger } from "@mailtobills/ui/components/sidebar";
 
 function SettingsRow({
 	title,
@@ -40,6 +38,11 @@ function SettingsRow({
 export default async function SettingsPage() {
 	const token = await convexAuthNextjsToken();
 	const user = await fetchQuery(api.users.viewer, {}, { token });
+	const subscription = await fetchQuery(
+		api.subscriptions.getMySubscription,
+		{},
+		{ token },
+	);
 
 	return (
 		<div className="animate-in fade-in space-y-5 duration-300">
@@ -77,15 +80,26 @@ export default async function SettingsPage() {
 			</SettingsRow>
 
 			<SettingsRow
+				title="Forwarding Addresses"
+				description="Control which email addresses can send Expense Documents to your account."
+			>
+				<ForwardingAddressesForm
+					isPro={Boolean(user?.isPro)}
+					primaryEmail={user?.email ?? undefined}
+					forwardingEmails={user?.forwardingEmails ?? []}
+				/>
+			</SettingsRow>
+
+			<SettingsRow
 				title="Billing"
 				description="Plans and invoices for your MailToBills subscription."
 			>
-				<div className="flex items-center gap-2 text-sm">
-					<Badge variant="info">Coming soon</Badge>
-					<span className="text-muted-foreground">
-						Billing management will appear here once plans launch.
-					</span>
-				</div>
+				<BillingSettings
+					isPro={Boolean(user?.isPro)}
+					subscriptionStatus={subscription?.status}
+					currentPeriodEnd={subscription?.currentPeriodEnd}
+					proPriceLabel={process.env.LEMONSQUEEZY_PRO_PRICE_LABEL ?? "Pro"}
+				/>
 			</SettingsRow>
 		</div>
 	);

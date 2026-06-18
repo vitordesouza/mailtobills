@@ -5,6 +5,7 @@ import { normalizeBase64Payload } from "@mailtobills/types";
 import { auth } from "./auth";
 import { internal } from "./_generated/api";
 import { httpAction } from "./_generated/server";
+import { lemonSqueezyWebhook } from "./subscriptions";
 
 import type { Id } from "./_generated/dataModel";
 import type { ActionCtx } from "./_generated/server";
@@ -687,6 +688,12 @@ http.route({
   path: "/file",
   method: "GET",
   handler: downloadFile,
+});
+
+http.route({
+  path: "/webhooks/lemonsqueezy",
+  method: "POST",
+  handler: lemonSqueezyWebhook,
 });
 
 export default http;
