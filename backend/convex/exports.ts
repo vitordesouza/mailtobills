@@ -11,6 +11,7 @@ import { buildAccountantExportZip } from "./lib/accountantExport";
 type AccountantExportCustomer = {
   name?: string;
   email?: string;
+  isPro?: boolean;
   accountantEmail?: string;
   accountantName?: string;
 };
@@ -34,6 +35,10 @@ export const sendManualExportToAccountant = action({
       internal.users.getAccountantExportCustomer,
       { userId },
     );
+
+    if (!customer?.isPro) {
+      throw new Error("PRO_REQUIRED");
+    }
 
     if (!customer?.accountantEmail) {
       throw new Error("ACCOUNTANT_EMAIL_NOT_CONFIGURED");

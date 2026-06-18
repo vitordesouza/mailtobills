@@ -88,6 +88,7 @@ export const getAccountantExportCustomer = internalQuery({
     return {
       name: user.name,
       email: user.email,
+      isPro: user.isPro,
       accountantEmail: user.accountantEmail,
       accountantName: user.accountantName,
     };
