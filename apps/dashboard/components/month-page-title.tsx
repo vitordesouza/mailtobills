@@ -4,7 +4,11 @@ import { usePathname } from "next/navigation";
 
 export function MonthPageTitle() {
   const pathname = usePathname();
-  const title = pathname.includes("/reports") ? "Reports" : "Dashboard";
+  const title = pathname.includes("/reports")
+    ? "Reports"
+    : pathname.includes("/settings")
+      ? "Settings"
+      : "Dashboard";
 
   return <span className="text-sm font-medium">{title}</span>;
 }
