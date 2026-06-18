@@ -36,8 +36,14 @@ export default async function DashboardPage({
   const { month } = await params;
   const monthInfo = getMonthInfo(month);
   const token = await convexAuthNextjsToken();
-  const { summary, previousSummary, totalCount, documents } =
-    await getExpenseDocuments(monthInfo.value);
+  const {
+    summary,
+    previousSummary,
+    exportSummary,
+    previousExportSummary,
+    totalCount,
+    documents,
+  } = await getExpenseDocuments(monthInfo.value);
   const user = await fetchQuery(api.users.viewer, {}, { token });
 
   if (totalCount === 0) {
@@ -85,10 +91,13 @@ export default async function DashboardPage({
             <StatLabel>Collected</StatLabel>
             <Inbox />
           </StatTileHeader>
-          <StatValue className="text-3xl">{summary.count}</StatValue>
+          <StatValue className="text-3xl">{exportSummary.pdfFileCount}</StatValue>
           <StatTileFooter>
             <TrendChip
-              delta={percentDelta(summary.count, previousSummary.count)}
+              delta={percentDelta(
+                exportSummary.pdfFileCount,
+                previousExportSummary.pdfFileCount,
+              )}
             />
             <StatTilePeriod>{vsPrevious}</StatTilePeriod>
           </StatTileFooter>

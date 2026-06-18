@@ -8,6 +8,7 @@ import { getMonthInfo } from "../months";
 import type { ExpenseDocumentsResult } from "./types";
 import {
   expenseDocumentRowsForMonth,
+  summarizeAccountantExportForMonth,
   summarizeExpenseDocuments,
 } from "./transform";
 
@@ -20,14 +21,22 @@ export async function getExpenseDocuments(
 
   const documents = expenseDocumentRowsForMonth(data, monthInfo);
   const summary = summarizeExpenseDocuments(documents);
+  const exportSummary = summarizeAccountantExportForMonth(data, monthInfo);
+  const previousMonthInfo = getMonthInfo(monthInfo.previous);
   const previousSummary = summarizeExpenseDocuments(
-    expenseDocumentRowsForMonth(data, getMonthInfo(monthInfo.previous)),
+    expenseDocumentRowsForMonth(data, previousMonthInfo),
+  );
+  const previousExportSummary = summarizeAccountantExportForMonth(
+    data,
+    previousMonthInfo,
   );
 
   return {
     documents,
     summary,
     previousSummary,
+    exportSummary,
+    previousExportSummary,
     isLoading: false,
     totalCount: data.length,
   };
