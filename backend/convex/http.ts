@@ -1,162 +1,24 @@
 import { httpRouter } from "convex/server";
 import { getAuthUserId } from "@convex-dev/auth/server";
-import {
-  isCollectionMonth,
-  normalizeBase64Payload,
-} from "@mailtobills/types";
+import { isCollectionMonth } from "@mailtobills/types";
 
 import { auth } from "./auth";
 import { internal } from "./_generated/api";
 import { httpAction } from "./_generated/server";
 import { buildAccountantExportZip } from "./lib/accountantExport";
+import {
+  buildBinaryIngestDedupeMaterial,
+  buildJsonIngestDedupeMaterial,
+  decodeBase64Payload,
+  normalizeBinaryIngestPayload,
+  normalizeJsonIngestPayload,
+  shortDedupeKey,
+} from "./lib/ingestNormalization";
 import { lemonSqueezyWebhook } from "./subscriptions";
 
 import type { Id } from "./_generated/dataModel";
 import type { ActionCtx } from "./_generated/server";
-
-type ParsedForward = {
-  originFromEmail?: string;
-  originFromName?: string;
-  originDomain?: string;
-  originSubject?: string;
-  originSentAt?: number;
-};
-
-type IngestAttachmentInput = {
-  originalFilename: string;
-  mimeType?: string;
-  fileSize?: number;
-  fileUrl?: string;
-  fileStorageId?: Id<"_storage">;
-  attachmentId?: string;
-  originalOrder: number;
-  base64Data?: string;
-};
-
-const PT_MONTHS: Record<string, string> = {
-  janeiro: "January",
-  fevereiro: "February",
-  março: "March",
-  abril: "April",
-  maio: "May",
-  junho: "June",
-  julho: "July",
-  agosto: "August",
-  setembro: "September",
-  outubro: "October",
-  novembro: "November",
-  dezembro: "December",
-};
-
-function parseForwardedDate(raw: string | undefined): number | undefined {
-  if (!raw) return undefined;
-
-  // Mail clients write forward dates Date.parse can't read:
-  // "26 May 2026 at 18:50 +0100" (Apple Mail), "Tue, May 26, 2026 at 6:50 PM"
-  // (Gmail), "26 de maio de 2026 às 18:50" (PT locales).
-  let normalized = raw
-    .replace(/\s+(?:at|às)\s+/gi, " ")
-    .replace(/\bde\s+/gi, "");
-  for (const [pt, en] of Object.entries(PT_MONTHS)) {
-    normalized = normalized.replace(new RegExp(pt, "i"), en);
-  }
-
-  for (const candidate of [raw, normalized]) {
-    const parsed = new Date(candidate);
-    if (!Number.isNaN(parsed.getTime())) return parsed.getTime();
-  }
-
-  return undefined;
-}
-
-function parseForwardedText(text: string): ParsedForward {
-  // Common forward header block (English + Portuguese labels):
-  // From:/De: Name <email>
-  // Date:/Data:/Enviado: Sun, Dec 14, 2025 at 11:37 AM
-  // Subject:/Assunto: ...
-  const fromMatch =
-    text.match(/\b(?:From|De):\s*([^\n<]+)?\s*<([^>\s]+)>/i) ||
-    text.match(/\b(?:From|De):\s*([^\n]+?)\s*(?:\n|$)/i);
-
-  let originFromName: string | undefined;
-  let originFromEmail: string | undefined;
-
-  if (fromMatch) {
-    if (fromMatch.length >= 3 && fromMatch[2]) {
-      originFromEmail = fromMatch[2].trim();
-      originFromName = (fromMatch[1] ?? "").trim() || undefined;
-    } else if (fromMatch[1]) {
-      // fallback: "From: noreply@domain.com" or "From: Endesa Energia"
-      const raw = fromMatch[1].trim();
-      if (raw.includes("@")) originFromEmail = raw;
-      else originFromName = raw;
-    }
-  }
-
-  const subjectMatch = text.match(/\b(?:Subject|Assunto):\s*(.+?)(?:\n|$)/i);
-  const originSubject = subjectMatch?.[1]?.trim() || undefined;
-
-  const dateMatch = text.match(
-    /\b(?:Date|Data|Enviada?o?):\s*(.+?)(?:\n|$)/i
-  );
-  const originSentAt = parseForwardedDate(dateMatch?.[1]?.trim());
-
-  const originDomain =
-    originFromEmail && originFromEmail.includes("@")
-      ? originFromEmail.split("@").pop()
-      : undefined;
-
-  return {
-    originFromEmail,
-    originFromName,
-    originDomain,
-    originSubject,
-    originSentAt,
-  };
-}
-
-function htmlToText(html: string): string {
-  return html
-    .replace(/<(?:style|script)[\s\S]*?<\/(?:style|script)>/gi, " ")
-    .replace(/<br\s*\/?>/gi, "\n")
-    .replace(/<\/(?:p|div|tr|li|h[1-6])>/gi, "\n")
-    .replace(/<[^>]+>/g, " ")
-    .replace(/&lt;/gi, "<")
-    .replace(/&gt;/gi, ">")
-    .replace(/&nbsp;/gi, " ")
-    .replace(/&quot;/gi, '"')
-    .replace(/&#39;/gi, "'")
-    .replace(/&amp;/gi, "&")
-    .replace(/[ \t]+/g, " ");
-}
-
-function parseForwardedBodyPreview(
-  bodyPreview: string | undefined,
-  bodyHtml?: string
-): ParsedForward {
-  const fromPreview =
-    bodyPreview && typeof bodyPreview === "string"
-      ? parseForwardedText(bodyPreview)
-      : {};
-
-  // bodyPreview is truncated (~255 chars); when it misses part of the forward
-  // header block, fall back to the full message body.
-  if (
-    bodyHtml &&
-    (!fromPreview.originFromEmail || !fromPreview.originSentAt)
-  ) {
-    const fromBody = parseForwardedText(htmlToText(bodyHtml));
-    return {
-      originFromEmail: fromPreview.originFromEmail ?? fromBody.originFromEmail,
-      originFromName: fromPreview.originFromName ?? fromBody.originFromName,
-      originDomain: fromPreview.originDomain ?? fromBody.originDomain,
-      originSubject: fromPreview.originSubject ?? fromBody.originSubject,
-      originSentAt: fromPreview.originSentAt ?? fromBody.originSentAt,
-    };
-  }
-
-  return fromPreview;
-}
+import type { IngestAttachmentInput } from "./lib/ingestNormalization";
 
 function jsonError(
   status: number,
@@ -170,26 +32,6 @@ function jsonError(
   );
 }
 
-function toBase64Url(bytes: Uint8Array) {
-  // Browser-compatible base64url
-  // Browser-compatible base64url encoding for Uint8Array
-  let binary = "";
-  for (let i = 0; i < bytes.length; i++) {
-    const byte = bytes[i];
-    // Ensure byte is defined, fallback to 0 if somehow undefined (shouldn't happen)
-    binary += String.fromCharCode(byte ?? 0);
-  }
-  const b64 = btoa(binary);
-  return b64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
-}
-
-async function shortDedupeKey(raw: string) {
-  const data = new TextEncoder().encode(raw);
-  const digest = await crypto.subtle.digest("SHA-256", data);
-  const bytes = new Uint8Array(digest).slice(0, 12); // 96 bits is enough here
-  return `d_${toBase64Url(bytes)}`;
-}
-
 async function getUserByForwardingEmail(ctx: ActionCtx, fromEmail: string) {
   const user = await ctx.runQuery(internal.users.getUserByForwardingEmail, {
     fromEmail,
@@ -200,115 +42,6 @@ async function getUserByForwardingEmail(ctx: ActionCtx, fromEmail: string) {
   }
 
   return user;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
-}
-
-function optionalString(value: unknown) {
-  return typeof value === "string" && value.trim() ? value.trim() : undefined;
-}
-
-function optionalNumber(value: unknown) {
-  if (typeof value === "number" && Number.isFinite(value)) return value;
-  if (typeof value === "string" && value.trim()) {
-    const parsed = Number(value);
-    return Number.isFinite(parsed) ? parsed : undefined;
-  }
-
-  return undefined;
-}
-
-function decodeBase64Payload(value: string) {
-  const binary = atob(normalizeBase64Payload(value));
-  const bytes = new Uint8Array(binary.length);
-
-  for (let i = 0; i < binary.length; i++) {
-    bytes[i] = binary.charCodeAt(i);
-  }
-
-  return bytes;
-}
-
-function parseJsonAttachments(body: Record<string, unknown>) {
-  const rawAttachments = Array.isArray(body.attachments)
-    ? body.attachments
-    : [];
-
-  const attachments = rawAttachments
-    .filter(isRecord)
-    .map<IngestAttachmentInput | null>((attachment, index) => {
-      const originalFilename =
-        optionalString(attachment.originalFilename) ??
-        optionalString(attachment.fileName) ??
-        optionalString(attachment.filename);
-
-      if (!originalFilename) {
-        return null;
-      }
-
-      return {
-        originalFilename,
-        mimeType: optionalString(attachment.mimeType),
-        fileSize: optionalNumber(attachment.fileSize),
-        fileUrl: optionalString(attachment.fileUrl),
-        fileStorageId: optionalString(attachment.fileStorageId) as
-          | Id<"_storage">
-          | undefined,
-        base64Data:
-          optionalString(attachment.base64Data) ??
-          optionalString(attachment.data),
-        attachmentId:
-          optionalString(attachment.attachmentId) ??
-          optionalString(attachment.id) ??
-          optionalString(attachment.key),
-        originalOrder: optionalNumber(attachment.originalOrder) ?? index,
-      };
-    })
-    .filter((attachment): attachment is IngestAttachmentInput =>
-      Boolean(attachment)
-    );
-
-  if (attachments.length > 0) {
-    return attachments;
-  }
-
-  const pdfMeta = isRecord(body.pdfMeta) ? body.pdfMeta : undefined;
-  const originalFilename =
-    optionalString(pdfMeta?.fileName) ??
-    optionalString(pdfMeta?.originalFilename) ??
-    "document.pdf";
-
-  return [
-    {
-      originalFilename,
-      mimeType: optionalString(pdfMeta?.mimeType),
-      fileSize: optionalNumber(pdfMeta?.fileSize),
-      fileUrl: optionalString(pdfMeta?.fileUrl),
-      base64Data:
-        optionalString(pdfMeta?.base64Data) ?? optionalString(pdfMeta?.data),
-      attachmentId:
-        optionalString(body.attachmentId) ??
-        optionalString(pdfMeta?.attachmentId) ??
-        optionalString(pdfMeta?.key) ??
-        optionalString(pdfMeta?.fileName),
-      originalOrder: 0,
-    },
-  ];
-}
-
-function attachmentSetIdentity(attachments: readonly IngestAttachmentInput[]) {
-  return attachments
-    .map((attachment) =>
-      [
-        attachment.originalOrder,
-        attachment.attachmentId ?? "",
-        attachment.originalFilename,
-        attachment.fileSize ?? "",
-      ].join(":")
-    )
-    .join("|");
 }
 
 async function storeBase64Attachments(
@@ -385,44 +118,19 @@ const ingestExpenseDocument = httpAction(async (ctx, request) => {
       return jsonError(400, "INVALID_JSON", "Invalid JSON");
     }
 
-    // New validation for n8n payload
-    if (!isRecord(body)) {
-      return jsonError(400, "INVALID_PAYLOAD", "Invalid payload");
+    const normalized = normalizeJsonIngestPayload(body);
+    if (!normalized.ok) {
+      const { error } = normalized;
+      return jsonError(error.status, error.code, error.message, error.context);
     }
 
-    // n8n payload (current workflow) sends these:
-    const forwarderFrom = optionalString(body.forwarderFrom);
-    if (!forwarderFrom) {
-      return jsonError(400, "MISSING_FORWARDER_FROM", "Missing forwarderFrom", {
-        messageId: optionalString(body.messageId),
-      });
-    }
-
-    const messageId = optionalString(body.messageId);
-    if (!messageId) {
-      return jsonError(400, "MISSING_MESSAGE_ID", "Missing messageId");
-    }
-
-    const receivedAtRaw = body.receivedAt;
-    const receivedAtMs =
-      typeof receivedAtRaw === "number"
-        ? receivedAtRaw
-        : typeof receivedAtRaw === "string"
-          ? new Date(receivedAtRaw).getTime()
-          : NaN;
-
-    if (!Number.isFinite(receivedAtMs)) {
-      return jsonError(400, "INVALID_RECEIVED_AT", "Invalid receivedAt", {
-        messageId,
-      });
-    }
-
-    const user = await getUserByForwardingEmail(ctx, forwarderFrom);
+    const payload = normalized.payload;
+    const user = await getUserByForwardingEmail(ctx, payload.forwarderFrom);
 
     if (!user) {
       return jsonError(400, "UNKNOWN_SENDER", "Unknown sender", {
-        messageId,
-        forwarderFrom,
+        messageId: payload.messageId,
+        forwarderFrom: payload.forwarderFrom,
       });
     }
 
@@ -431,59 +139,41 @@ const ingestExpenseDocument = httpAction(async (ctx, request) => {
     try {
       attachments = await storeBase64Attachments(
         ctx,
-        parseJsonAttachments(body)
+        payload.attachments,
       );
     } catch (error) {
       return jsonError(400, "INVALID_ATTACHMENT_DATA", "Invalid attachment data", {
-        messageId,
+        messageId: payload.messageId,
         detail: error instanceof Error ? error.message : undefined,
       });
     }
 
-    const raw = isRecord(body.raw) ? body.raw : undefined;
-
-    // bodyPreview often lives in the raw Outlook payload
-    const effectiveBodyPreview =
-      optionalString(body.bodyPreview) ??
-      (typeof raw?.bodyPreview === "string"
-        ? raw.bodyPreview
-        : undefined);
-
-    const rawBody = isRecord(raw?.body) ? raw.body : undefined;
-    const rawBodyContent =
-      typeof rawBody?.content === "string" ? rawBody.content : undefined;
-
-    const parsed = parseForwardedBodyPreview(
-      effectiveBodyPreview,
-      rawBodyContent
+    const finalDedupeKey = await shortDedupeKey(
+      buildJsonIngestDedupeMaterial({
+        userId: user._id,
+        messageId: payload.messageId,
+        receivedAt: payload.receivedAt,
+        attachments,
+        providedDedupeKey: payload.dedupeKey,
+      }),
     );
-
-    const dedupeKey = optionalString(body.dedupeKey);
-    const rawDedupe =
-      dedupeKey ??
-      `${user._id}|${messageId}|${receivedAtMs}|${attachmentSetIdentity(attachments)}`;
-
-    const finalDedupeKey = await shortDedupeKey(rawDedupe);
 
     try {
       await ctx.runMutation(
         internal.expenseDocuments.ingestCreateExpenseDocument,
         {
           userId: user._id,
-          fromEmail: forwarderFrom,
-          subject: optionalString(body.subject),
-          receivedAt: receivedAtMs,
-          messageId,
+          fromEmail: payload.forwarderFrom,
+          subject: payload.subject,
+          receivedAt: payload.receivedAt,
+          messageId: payload.messageId,
           dedupeKey: finalDedupeKey,
-          originFromEmail:
-            optionalString(body.originFromEmail) ?? parsed.originFromEmail,
-          originFromName:
-            optionalString(body.originFromName) ?? parsed.originFromName,
-          originDomain: optionalString(body.originDomain) ?? parsed.originDomain,
-          originSubject:
-            optionalString(body.originSubject) ?? parsed.originSubject,
-          originSentAt: optionalNumber(body.originSentAt) ?? parsed.originSentAt,
-          rawEmailMetadata: body.raw ?? body,
+          originFromEmail: payload.originFromEmail,
+          originFromName: payload.originFromName,
+          originDomain: payload.originDomain,
+          originSubject: payload.originSubject,
+          originSentAt: payload.originSentAt,
+          rawEmailMetadata: payload.rawEmailMetadata,
           attachments,
         }
       );
@@ -496,14 +186,14 @@ const ingestExpenseDocument = httpAction(async (ctx, request) => {
           400,
           "NO_ACCEPTABLE_PDFS",
           "No acceptable PDF attachments",
-          { messageId }
+          { messageId: payload.messageId }
         );
       }
 
       throw error;
     }
 
-    return new Response(JSON.stringify({ ok: true, messageId }), {
+    return new Response(JSON.stringify({ ok: true, messageId: payload.messageId }), {
       status: 201,
       headers: { "content-type": "application/json" },
     });
@@ -511,58 +201,33 @@ const ingestExpenseDocument = httpAction(async (ctx, request) => {
 
   // 2) Caminho binário – para o n8n com attachment_0 + Convex storage
   const url = new URL(request.url);
+  const normalized = normalizeBinaryIngestPayload(url);
 
-  const fromEmail =
-    url.searchParams.get("fromEmail") ??
-    url.searchParams.get("forwarderFrom") ??
-    undefined;
-  const subject = url.searchParams.get("subject") ?? undefined;
-  const messageId = url.searchParams.get("messageId") ?? undefined;
-  const attachmentId = url.searchParams.get("attachmentId") ?? undefined;
-  const mimeType = url.searchParams.get("mimeType") ?? undefined;
-  const fileSize = optionalNumber(url.searchParams.get("fileSize"));
-  const receivedAtParam = url.searchParams.get("receivedAt");
-  const receivedAt = receivedAtParam ? Number(receivedAtParam) : Date.now();
-  if (!Number.isFinite(receivedAt)) {
-    return jsonError(400, "INVALID_RECEIVED_AT", "Invalid receivedAt", {
-      messageId,
-    });
+  if (!normalized.ok) {
+    const { error } = normalized;
+    return jsonError(error.status, error.code, error.message, error.context);
   }
 
-  const originalFilename =
-    url.searchParams.get("originalFilename") ?? "document.pdf";
-
-  const originFromEmail = url.searchParams.get("originFromEmail") ?? undefined;
-  const originFromName = url.searchParams.get("originFromName") ?? undefined;
-  const originDomain = url.searchParams.get("originDomain") ?? undefined;
-  const originSubject = url.searchParams.get("originSubject") ?? undefined;
-  const originSentAtParam = url.searchParams.get("originSentAt");
-  const originSentAt = originSentAtParam
-    ? Number(originSentAtParam)
-    : undefined;
-
-  if (!fromEmail) {
-    return jsonError(
-      400,
-      "MISSING_FORWARDING_EMAIL",
-      "Missing forwarding email",
-      {
-        messageId,
-      }
-    );
-  }
-
-  const user = await getUserByForwardingEmail(ctx, fromEmail);
+  const payload = normalized.payload;
+  const user = await getUserByForwardingEmail(ctx, payload.fromEmail);
 
   if (!user) {
     return jsonError(400, "UNKNOWN_SENDER", "Unknown sender", {
-      messageId,
-      fromEmail,
+      messageId: payload.messageId,
+      fromEmail: payload.fromEmail,
     });
   }
 
-  const rawDedupe = `${user._id}|${messageId ?? "no-message"}|${receivedAt}|0:${attachmentId ?? ""}:${originalFilename}:${fileSize ?? ""}`;
-  const dedupeKey = await shortDedupeKey(rawDedupe);
+  const dedupeKey = await shortDedupeKey(
+    buildBinaryIngestDedupeMaterial({
+      userId: user._id,
+      messageId: payload.messageId,
+      receivedAt: payload.receivedAt,
+      attachmentId: payload.attachmentId,
+      originalFilename: payload.originalFilename,
+      fileSize: payload.fileSize,
+    }),
+  );
 
   // Aqui a mágica do Convex storage
   // Precisamos armazenar apenas o corpo do arquivo (um Blob/ArrayBuffer), não o Request inteiro
@@ -575,23 +240,23 @@ const ingestExpenseDocument = httpAction(async (ctx, request) => {
       internal.expenseDocuments.ingestCreateExpenseDocument,
       {
         userId: user._id,
-        fromEmail,
-        subject,
-        receivedAt,
-        messageId,
+        fromEmail: payload.fromEmail,
+        subject: payload.subject,
+        receivedAt: payload.receivedAt,
+        messageId: payload.messageId,
         dedupeKey,
-        originFromEmail,
-        originFromName,
-        originDomain,
-        originSubject,
-        originSentAt,
+        originFromEmail: payload.originFromEmail,
+        originFromName: payload.originFromName,
+        originDomain: payload.originDomain,
+        originSubject: payload.originSubject,
+        originSentAt: payload.originSentAt,
         attachments: [
           {
-            originalFilename,
-            mimeType,
-            fileSize,
+            originalFilename: payload.originalFilename,
+            mimeType: payload.mimeType,
+            fileSize: payload.fileSize,
             fileStorageId: storageId,
-            attachmentId,
+            attachmentId: payload.attachmentId,
             originalOrder: 0,
           },
         ],
@@ -606,14 +271,14 @@ const ingestExpenseDocument = httpAction(async (ctx, request) => {
         400,
         "NO_ACCEPTABLE_PDFS",
         "No acceptable PDF attachments",
-        { messageId }
+        { messageId: payload.messageId }
       );
     }
 
     throw error;
   }
 
-  return new Response(JSON.stringify({ ok: true, messageId }), {
+  return new Response(JSON.stringify({ ok: true, messageId: payload.messageId }), {
     status: 201,
     headers: { "content-type": "application/json" },
   });
