@@ -1,10 +1,10 @@
-import type {
-  ExpenseDocumentAttachment,
-  ExpenseDocumentRow,
+import {
+  isTimestampInCollectionMonth,
+  type ExpenseDocumentAttachment,
+  type ExpenseDocumentRow,
 } from "@mailtobills/types";
 
 import type { MonthInfo } from "../months";
-import { isInMonthRange } from "../months";
 
 type ConvexAttachment = {
   _id: string;
@@ -60,7 +60,9 @@ export function expenseDocumentRowsForMonth(
   monthInfo: MonthInfo,
 ): ExpenseDocumentRow[] {
   return data
-    .filter((document) => isInMonthRange(document.receivedAt, monthInfo))
+    .filter((document) =>
+      isTimestampInCollectionMonth(document.receivedAt, monthInfo.value),
+    )
     .sort((a, b) => b.receivedAt - a.receivedAt)
     .map<ExpenseDocumentRow>((document) => {
       const attachments = document.attachments
