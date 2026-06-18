@@ -1,138 +1,40 @@
-import {
-  isTimestampInCollectionMonth,
-  summarizeAccountantExportContents,
-  type AccountantExportContentSummary,
-  type ExpenseDocumentAttachment,
-  type ExpenseDocumentRow,
+import type {
+  CollectionMonthExpenseDocuments,
+  ExpenseDocumentAttachment,
+  ExpenseDocumentRow,
 } from "@mailtobills/types";
 
-import type { MonthInfo } from "../months";
-
-type ConvexAttachment = {
-  _id: string;
-  expenseDocumentId: string;
-  originalFilename: string;
-  mimeType?: string | null;
-  fileSize?: number | null;
-  fileUrl?: string | null;
-  fileStorageId?: string | null;
-  attachmentId?: string | null;
-  originalOrder: number;
-  createdAt: number;
-};
-
-type ConvexExpenseDocument = {
-  _id: string;
-  userId: string;
-  fromEmail?: string | null;
-  subject?: string | null;
-  messageId?: string | null;
-  receivedAt: number;
-  createdAt: number;
-  deletedAt?: number | null;
-  dedupeKey: string;
-  primaryAttachmentId?: string | null;
-  originFromEmail?: string | null;
-  originFromName?: string | null;
-  originDomain?: string | null;
-  originSubject?: string | null;
-  originSentAt?: number | null;
-  attachments: ConvexAttachment[];
-  primaryAttachment?: ConvexAttachment | null;
-};
-
-function convexExpenseDocumentsForMonth(
-  data: ConvexExpenseDocument[],
-  monthInfo: MonthInfo,
-) {
-  return data.filter((document) =>
-    isTimestampInCollectionMonth(document.receivedAt, monthInfo.value),
-  );
-}
-
-function toAttachment(attachment: ConvexAttachment): ExpenseDocumentAttachment {
+function addDownloadUrl(
+  attachment: ExpenseDocumentAttachment,
+): ExpenseDocumentAttachment {
   return {
-    id: attachment._id,
-    expenseDocumentId: attachment.expenseDocumentId,
-    originalFilename: attachment.originalFilename,
-    mimeType: attachment.mimeType ?? undefined,
-    fileSize: attachment.fileSize ?? undefined,
-    fileUrl: attachment.fileUrl ?? undefined,
-    fileStorageId: attachment.fileStorageId ?? undefined,
-    attachmentId: attachment.attachmentId ?? undefined,
-    originalOrder: attachment.originalOrder,
-    createdAt: attachment.createdAt,
-    downloadUrl: `/api/files/${attachment._id}`,
+    ...attachment,
+    downloadUrl: `/api/files/${attachment.id}`,
   };
 }
 
-export function expenseDocumentRowsForMonth(
-  data: ConvexExpenseDocument[],
-  monthInfo: MonthInfo,
-): ExpenseDocumentRow[] {
-  return convexExpenseDocumentsForMonth(data, monthInfo)
-    .sort((a, b) => b.receivedAt - a.receivedAt)
-    .map<ExpenseDocumentRow>((document) => {
-      const attachments = document.attachments
-        .slice()
-        .sort((a, b) => a.originalOrder - b.originalOrder)
-        .map((attachment) => toAttachment(attachment));
+function addRowDownloadUrls(row: ExpenseDocumentRow): ExpenseDocumentRow {
+  const attachments = row.attachments.map(addDownloadUrl);
+  const primaryAttachment = row.primaryAttachment
+    ? attachments.find(
+        (attachment) => attachment.id === row.primaryAttachment?.id,
+      ) ??
+      addDownloadUrl(row.primaryAttachment)
+    : undefined;
 
-      const primaryAttachment =
-        document.primaryAttachmentId !== undefined
-          ? attachments.find(
-              (attachment) => attachment.id === document.primaryAttachmentId,
-            )
-          : undefined;
-
-      return {
-        id: document._id,
-        userId: document.userId,
-        fromEmail: document.fromEmail ?? undefined,
-        subject: document.subject ?? undefined,
-        messageId: document.messageId ?? undefined,
-        receivedAt: document.receivedAt,
-        createdAt: document.createdAt,
-        deletedAt: document.deletedAt ?? undefined,
-        dedupeKey: document.dedupeKey,
-        primaryAttachmentId: document.primaryAttachmentId ?? undefined,
-        originFromEmail: document.originFromEmail ?? undefined,
-        originFromName: document.originFromName ?? undefined,
-        originDomain: document.originDomain ?? undefined,
-        originSubject: document.originSubject ?? undefined,
-        originSentAt: document.originSentAt ?? undefined,
-        attachments,
-        primaryAttachment:
-          primaryAttachment ??
-          attachments.find(
-            (attachment) =>
-              attachment.id === document.primaryAttachment?._id,
-          ) ??
-          attachments[0],
-      };
-    });
-}
-
-export function summarizeAccountantExportForMonth(
-  data: ConvexExpenseDocument[],
-  monthInfo: MonthInfo,
-): AccountantExportContentSummary {
-  return summarizeAccountantExportContents(
-    convexExpenseDocumentsForMonth(data, monthInfo).map((document) => ({
-      id: document._id,
-      primaryAttachment: document.primaryAttachment,
-    })),
-  );
-}
-
-export function summarizeExpenseDocuments(documents: ExpenseDocumentRow[]) {
-  const count = documents.length;
   return {
-    count,
-    attachmentCount: documents.reduce(
-      (total, document) => total + document.attachments.length,
-      0,
-    ),
+    ...row,
+    attachments,
+    primaryAttachment,
+  };
+}
+
+export function addExpenseDocumentDownloadUrls(
+  data: CollectionMonthExpenseDocuments,
+): CollectionMonthExpenseDocuments {
+  return {
+    ...data,
+    documents: data.documents.map(addRowDownloadUrls),
   };
 }
 

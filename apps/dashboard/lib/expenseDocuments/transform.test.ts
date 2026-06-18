@@ -1,213 +1,74 @@
 import { describe, expect, it } from "vitest";
 
-import type { MonthInfo } from "../months";
 import {
-  expenseDocumentRowsForMonth,
+  addExpenseDocumentDownloadUrls,
   percentDelta,
-  summarizeAccountantExportForMonth,
-  summarizeExpenseDocuments,
 } from "./transform";
 
-const january: MonthInfo = {
-  value: "2026-01",
-  label: "January 2026",
-  start: new Date(Date.UTC(2026, 0, 1)),
-  end: new Date(Date.UTC(2026, 1, 1) - 1),
-  previous: "2025-12",
-  next: "2026-02",
-};
-
-function attachment(
-  id: string,
-  originalOrder: number,
-  originalFilename = `${id}.pdf`,
-) {
-  return {
-    _id: id,
-    expenseDocumentId: "doc-1",
-    originalFilename,
-    mimeType: "application/pdf",
-    fileSize: 100_000,
-    fileUrl: null,
-    fileStorageId: null,
-    attachmentId: null,
-    originalOrder,
-    createdAt: Date.UTC(2026, 0, 5),
-  };
-}
-
-describe("expense document transforms", () => {
-  it("filters by month, sorts documents newest first, and sorts attachments by original order", () => {
-    const rows = expenseDocumentRowsForMonth(
-      [
+describe("expense document dashboard adapters", () => {
+  it("adds Next download URLs to each attachment and the resolved Primary Attachment", () => {
+    const result = addExpenseDocumentDownloadUrls({
+      documents: [
         {
-          _id: "older",
-          userId: "user-1",
-          fromEmail: "forwarder@example.com",
-          subject: null,
-          messageId: null,
-          receivedAt: Date.UTC(2026, 0, 4),
-          createdAt: Date.UTC(2026, 0, 4),
-          deletedAt: null,
-          dedupeKey: "older",
-          primaryAttachmentId: "attachment-b",
-          originFromEmail: "billing@example.com",
-          originFromName: null,
-          originDomain: null,
-          originSubject: null,
-          originSentAt: null,
-          attachments: [attachment("attachment-c", 2), attachment("attachment-b", 1)],
-          primaryAttachment: null,
-        },
-        {
-          _id: "outside-month",
-          userId: "user-1",
-          receivedAt: Date.UTC(2026, 1, 1),
-          createdAt: Date.UTC(2026, 1, 1),
-          dedupeKey: "outside-month",
-          attachments: [attachment("attachment-d", 0)],
-        },
-        {
-          _id: "newer",
+          id: "doc-1",
           userId: "user-1",
           receivedAt: Date.UTC(2026, 0, 8),
           createdAt: Date.UTC(2026, 0, 8),
-          dedupeKey: "newer",
-          attachments: [attachment("attachment-a", 0)],
-        },
-      ],
-      january,
-    );
-
-    expect(rows.map((row) => row.id)).toEqual(["newer", "older"]);
-    expect(rows[1]?.attachments.map((item) => item.id)).toEqual([
-      "attachment-b",
-      "attachment-c",
-    ]);
-    expect(rows[1]?.primaryAttachment?.id).toBe("attachment-b");
-    expect(rows[1]?.originFromEmail).toBe("billing@example.com");
-    expect(rows[1]?.subject).toBeUndefined();
-  });
-
-  it("uses the Collection Month value for half-open month membership", () => {
-    const misleadingDateBounds: MonthInfo = {
-      ...january,
-      start: new Date(Date.UTC(2025, 11, 1)),
-      end: new Date(Date.UTC(2026, 2, 1)),
-    };
-
-    const rows = expenseDocumentRowsForMonth(
-      [
-        {
-          _id: "january-end",
-          userId: "user-1",
-          receivedAt: Date.UTC(2026, 1, 1) - 1,
-          createdAt: Date.UTC(2026, 1, 1) - 1,
-          dedupeKey: "january-end",
-          attachments: [attachment("january-end-attachment", 0)],
-        },
-        {
-          _id: "february-start",
-          userId: "user-1",
-          receivedAt: Date.UTC(2026, 1, 1),
-          createdAt: Date.UTC(2026, 1, 1),
-          dedupeKey: "february-start",
-          attachments: [attachment("february-start-attachment", 0)],
-        },
-      ],
-      misleadingDateBounds,
-    );
-
-    expect(rows.map((row) => row.id)).toEqual(["january-end"]);
-  });
-
-  it("falls back to Convex primary attachment and then first attachment", () => {
-    const rows = expenseDocumentRowsForMonth(
-      [
-        {
-          _id: "convex-primary",
-          userId: "user-1",
-          receivedAt: Date.UTC(2026, 0, 8),
-          createdAt: Date.UTC(2026, 0, 8),
-          dedupeKey: "convex-primary",
-          attachments: [attachment("first", 0), attachment("second", 1)],
-          primaryAttachment: attachment("second", 1),
-        },
-        {
-          _id: "first-fallback",
-          userId: "user-1",
-          receivedAt: Date.UTC(2026, 0, 7),
-          createdAt: Date.UTC(2026, 0, 7),
-          dedupeKey: "first-fallback",
-          attachments: [attachment("fallback", 0)],
-        },
-      ],
-      january,
-    );
-
-    expect(rows[0]?.primaryAttachment?.id).toBe("second");
-    expect(rows[1]?.primaryAttachment?.id).toBe("fallback");
-  });
-
-  it("summarizes document and attachment counts", () => {
-    const rows = expenseDocumentRowsForMonth(
-      [
-        {
-          _id: "doc-1",
-          userId: "user-1",
-          receivedAt: Date.UTC(2026, 0, 1),
-          createdAt: Date.UTC(2026, 0, 1),
           dedupeKey: "doc-1",
-          attachments: [attachment("a", 0), attachment("b", 1)],
+          primaryAttachmentId: "attachment-2",
+          attachments: [
+            {
+              id: "attachment-1",
+              expenseDocumentId: "doc-1",
+              originalFilename: "terms.pdf",
+              originalOrder: 0,
+              createdAt: Date.UTC(2026, 0, 8),
+            },
+            {
+              id: "attachment-2",
+              expenseDocumentId: "doc-1",
+              originalFilename: "invoice.pdf",
+              originalOrder: 1,
+              createdAt: Date.UTC(2026, 0, 8),
+            },
+          ],
+          primaryAttachment: {
+            id: "attachment-2",
+            expenseDocumentId: "doc-1",
+            originalFilename: "invoice.pdf",
+            originalOrder: 1,
+            createdAt: Date.UTC(2026, 0, 8),
+          },
         },
       ],
-      january,
-    );
-
-    expect(summarizeExpenseDocuments(rows)).toEqual({
-      count: 1,
-      attachmentCount: 2,
+      summary: { count: 1, attachmentCount: 2 },
+      previousSummary: { count: 0, attachmentCount: 0 },
+      exportSummary: {
+        includedDocumentCount: 1,
+        pdfFileCount: 1,
+        manifestFileCount: 1,
+        fileCount: 2,
+        skippedDocumentCount: 0,
+        skippedDocuments: [],
+      },
+      previousExportSummary: {
+        includedDocumentCount: 0,
+        pdfFileCount: 0,
+        manifestFileCount: 1,
+        fileCount: 1,
+        skippedDocumentCount: 0,
+        skippedDocuments: [],
+      },
+      totalCount: 1,
     });
-  });
 
-  it("summarizes Accountant Export contents from the projected Primary Attachment", () => {
-    const summary = summarizeAccountantExportForMonth(
-      [
-        {
-          _id: "with-primary",
-          userId: "user-1",
-          receivedAt: Date.UTC(2026, 0, 1),
-          createdAt: Date.UTC(2026, 0, 1),
-          dedupeKey: "with-primary",
-          attachments: [attachment("first", 0)],
-          primaryAttachment: attachment("first", 0),
-        },
-        {
-          _id: "without-primary",
-          userId: "user-1",
-          receivedAt: Date.UTC(2026, 0, 2),
-          createdAt: Date.UTC(2026, 0, 2),
-          dedupeKey: "without-primary",
-          attachments: [attachment("fallback", 0)],
-          primaryAttachment: null,
-        },
-      ],
-      january,
+    expect(result.documents[0]?.attachments.map((item) => item.downloadUrl)).toEqual([
+      "/api/files/attachment-1",
+      "/api/files/attachment-2",
+    ]);
+    expect(result.documents[0]?.primaryAttachment?.downloadUrl).toBe(
+      "/api/files/attachment-2",
     );
-
-    expect(summary).toEqual({
-      includedDocumentCount: 1,
-      pdfFileCount: 1,
-      manifestFileCount: 1,
-      fileCount: 2,
-      skippedDocumentCount: 1,
-      skippedDocuments: [
-        {
-          id: "without-primary",
-          reason: "missing_primary_attachment",
-        },
-      ],
-    });
   });
 
   it("calculates percentage deltas with empty previous period semantics", () => {

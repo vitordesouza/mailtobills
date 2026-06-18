@@ -1,7 +1,9 @@
 export type {
+  CollectionMonthExpenseDocuments,
   ExpenseDocument,
   ExpenseDocumentAttachment,
   ExpenseDocumentRow,
+  ExpenseDocumentSummary,
 } from "./expenseDocument.js";
 export {
   choosePrimaryAttachment,
