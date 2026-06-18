@@ -18,10 +18,19 @@ export {
   toCollectionMonthValue,
 } from "./collectionMonth.js";
 export {
+  summarizeAccountantExportContents,
+} from "./accountantExportContents.js";
+export {
   buildManifestCsv,
   buildZip,
   sanitizeZipName,
 } from "./exportUtils.js";
+export type {
+  AccountantExportContentDocument,
+  AccountantExportContentSummary,
+  AccountantExportSkippedDocument,
+  AccountantExportSkippedDocumentReason,
+} from "./accountantExportContents.js";
 export type {
   AttachmentCandidateInput,
   ScoredAttachmentCandidate,

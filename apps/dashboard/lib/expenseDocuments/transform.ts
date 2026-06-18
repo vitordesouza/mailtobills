@@ -1,5 +1,7 @@
 import {
   isTimestampInCollectionMonth,
+  summarizeAccountantExportContents,
+  type AccountantExportContentSummary,
   type ExpenseDocumentAttachment,
   type ExpenseDocumentRow,
 } from "@mailtobills/types";
@@ -39,6 +41,15 @@ type ConvexExpenseDocument = {
   primaryAttachment?: ConvexAttachment | null;
 };
 
+function convexExpenseDocumentsForMonth(
+  data: ConvexExpenseDocument[],
+  monthInfo: MonthInfo,
+) {
+  return data.filter((document) =>
+    isTimestampInCollectionMonth(document.receivedAt, monthInfo.value),
+  );
+}
+
 function toAttachment(attachment: ConvexAttachment): ExpenseDocumentAttachment {
   return {
     id: attachment._id,
@@ -59,10 +70,7 @@ export function expenseDocumentRowsForMonth(
   data: ConvexExpenseDocument[],
   monthInfo: MonthInfo,
 ): ExpenseDocumentRow[] {
-  return data
-    .filter((document) =>
-      isTimestampInCollectionMonth(document.receivedAt, monthInfo.value),
-    )
+  return convexExpenseDocumentsForMonth(data, monthInfo)
     .sort((a, b) => b.receivedAt - a.receivedAt)
     .map<ExpenseDocumentRow>((document) => {
       const attachments = document.attachments
@@ -103,6 +111,18 @@ export function expenseDocumentRowsForMonth(
           attachments[0],
       };
     });
+}
+
+export function summarizeAccountantExportForMonth(
+  data: ConvexExpenseDocument[],
+  monthInfo: MonthInfo,
+): AccountantExportContentSummary {
+  return summarizeAccountantExportContents(
+    convexExpenseDocumentsForMonth(data, monthInfo).map((document) => ({
+      id: document._id,
+      primaryAttachment: document.primaryAttachment,
+    })),
+  );
 }
 
 export function summarizeExpenseDocuments(documents: ExpenseDocumentRow[]) {

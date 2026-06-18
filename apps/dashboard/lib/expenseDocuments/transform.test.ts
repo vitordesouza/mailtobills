@@ -4,6 +4,7 @@ import type { MonthInfo } from "../months";
 import {
   expenseDocumentRowsForMonth,
   percentDelta,
+  summarizeAccountantExportForMonth,
   summarizeExpenseDocuments,
 } from "./transform";
 
@@ -166,6 +167,46 @@ describe("expense document transforms", () => {
     expect(summarizeExpenseDocuments(rows)).toEqual({
       count: 1,
       attachmentCount: 2,
+    });
+  });
+
+  it("summarizes Accountant Export contents from the projected Primary Attachment", () => {
+    const summary = summarizeAccountantExportForMonth(
+      [
+        {
+          _id: "with-primary",
+          userId: "user-1",
+          receivedAt: Date.UTC(2026, 0, 1),
+          createdAt: Date.UTC(2026, 0, 1),
+          dedupeKey: "with-primary",
+          attachments: [attachment("first", 0)],
+          primaryAttachment: attachment("first", 0),
+        },
+        {
+          _id: "without-primary",
+          userId: "user-1",
+          receivedAt: Date.UTC(2026, 0, 2),
+          createdAt: Date.UTC(2026, 0, 2),
+          dedupeKey: "without-primary",
+          attachments: [attachment("fallback", 0)],
+          primaryAttachment: null,
+        },
+      ],
+      january,
+    );
+
+    expect(summary).toEqual({
+      includedDocumentCount: 1,
+      pdfFileCount: 1,
+      manifestFileCount: 1,
+      fileCount: 2,
+      skippedDocumentCount: 1,
+      skippedDocuments: [
+        {
+          id: "without-primary",
+          reason: "missing_primary_attachment",
+        },
+      ],
     });
   });
 
