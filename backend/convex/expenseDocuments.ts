@@ -14,7 +14,7 @@ import {
   query,
 } from "./_generated/server";
 
-import type { Id } from "./_generated/dataModel";
+import type { Doc, Id } from "./_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "./_generated/server";
 
 const attachmentArgs = v.object({
@@ -50,6 +50,48 @@ async function getOwnedExpenseDocument(
   return document;
 }
 
+async function projectCollectedExpenseDocument(
+  ctx: Pick<QueryCtx, "db">,
+  document: Doc<"expenseDocuments">,
+) {
+  const attachments = await ctx.db
+    .query("expenseDocumentAttachments")
+    .withIndex("expenseDocumentId", (q) =>
+      q.eq("expenseDocumentId", document._id),
+    )
+    .collect();
+
+  const orderedAttachments = attachments
+    .slice()
+    .sort((a, b) => a.originalOrder - b.originalOrder);
+
+  const primaryAttachment =
+    orderedAttachments.find(
+      (attachment) => attachment._id === document.primaryAttachmentId,
+    ) ?? null;
+
+  return {
+    _id: document._id,
+    _creationTime: document._creationTime,
+    userId: document.userId,
+    fromEmail: document.fromEmail,
+    subject: document.subject,
+    messageId: document.messageId,
+    receivedAt: document.receivedAt,
+    createdAt: document.createdAt,
+    deletedAt: document.deletedAt,
+    dedupeKey: document.dedupeKey,
+    primaryAttachmentId: document.primaryAttachmentId,
+    originFromEmail: document.originFromEmail,
+    originFromName: document.originFromName,
+    originDomain: document.originDomain,
+    originSubject: document.originSubject,
+    originSentAt: document.originSentAt,
+    attachments: orderedAttachments,
+    primaryAttachment,
+  };
+}
+
 export const listMine = query({
   args: {},
   handler: async (ctx) => {
@@ -62,39 +104,9 @@ export const listMine = query({
     const activeDocuments = documents.filter((document) => !document.deletedAt);
 
     return Promise.all(
-      activeDocuments.map(async (document) => {
-        const attachments = await ctx.db
-          .query("expenseDocumentAttachments")
-          .withIndex("expenseDocumentId", (q) =>
-            q.eq("expenseDocumentId", document._id)
-          )
-          .collect();
-
-        const primaryAttachment = document.primaryAttachmentId
-          ? await ctx.db.get(document.primaryAttachmentId)
-          : null;
-
-        return {
-          _id: document._id,
-          _creationTime: document._creationTime,
-          userId: document.userId,
-          fromEmail: document.fromEmail,
-          subject: document.subject,
-          messageId: document.messageId,
-          receivedAt: document.receivedAt,
-          createdAt: document.createdAt,
-          deletedAt: document.deletedAt,
-          dedupeKey: document.dedupeKey,
-          primaryAttachmentId: document.primaryAttachmentId,
-          originFromEmail: document.originFromEmail,
-          originFromName: document.originFromName,
-          originDomain: document.originDomain,
-          originSubject: document.originSubject,
-          originSentAt: document.originSentAt,
-          attachments,
-          primaryAttachment,
-        };
-      })
+      activeDocuments.map((document) =>
+        projectCollectedExpenseDocument(ctx, document),
+      ),
     );
   },
 });
@@ -308,28 +320,9 @@ export const listForAccountantExport = internalQuery({
       .sort((a, b) => a.receivedAt - b.receivedAt);
 
     return Promise.all(
-      activeDocuments.map(async (document) => {
-        const attachments = await ctx.db
-          .query("expenseDocumentAttachments")
-          .withIndex("expenseDocumentId", (q) =>
-            q.eq("expenseDocumentId", document._id),
-          )
-          .collect();
-
-        const primaryAttachment = document.primaryAttachmentId
-          ? await ctx.db.get(document.primaryAttachmentId)
-          : null;
-
-        return {
-          _id: document._id,
-          fromEmail: document.fromEmail,
-          subject: document.subject,
-          receivedAt: document.receivedAt,
-          originFromEmail: document.originFromEmail,
-          attachments,
-          primaryAttachment,
-        };
-      }),
+      activeDocuments.map((document) =>
+        projectCollectedExpenseDocument(ctx, document),
+      ),
     );
   },
 });
