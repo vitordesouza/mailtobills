@@ -25,7 +25,7 @@ export default convexAuthNextjsMiddleware(
       convexAuth: ConvexAuthNextjsMiddlewareContext;
     }
   ) => {
-    if (isSignInRoute(request)) {
+    if (isSignInRoute(request) && (await convexAuth.isAuthenticated())) {
       return nextjsMiddlewareRedirect(request, "/");
     }
     if (!isPublicRoute(request) && !(await convexAuth.isAuthenticated())) {
