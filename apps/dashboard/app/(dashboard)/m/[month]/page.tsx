@@ -1,4 +1,7 @@
 import { Download, FileText, Inbox, Paperclip } from "lucide-react";
+import { fetchQuery } from "convex/nextjs";
+import { convexAuthNextjsToken } from "@convex-dev/auth/nextjs/server";
+import { api } from "@mailtobills/convex/_generated/api";
 
 import { getMonthInfo } from "@/lib/months";
 import { getExpenseDocuments } from "@/lib/expenseDocuments/getExpenseDocuments";
@@ -23,6 +26,7 @@ import {
 import { TrendChip } from "@mailtobills/ui/components/trend-chip";
 import { OnboardingEmptyState } from "@/components/onboarding-empty-state";
 import { ExpenseDocumentsTable } from "@/components/expense-documents-table";
+import { SendToAccountantButton } from "@/components/send-to-accountant-button";
 
 export default async function DashboardPage({
   params,
@@ -31,8 +35,10 @@ export default async function DashboardPage({
 }) {
   const { month } = await params;
   const monthInfo = getMonthInfo(month);
+  const token = await convexAuthNextjsToken();
   const { summary, previousSummary, totalCount, documents } =
     await getExpenseDocuments(monthInfo.value);
+  const user = await fetchQuery(api.users.viewer, {}, { token });
 
   if (totalCount === 0) {
     return <OnboardingEmptyState />;
@@ -56,12 +62,20 @@ export default async function DashboardPage({
             Accountant Export.
           </PageHeaderDescription>
         </PageHeaderContent>
-        <Button asChild typography="mono" className="w-full md:w-auto">
-          <a href={`/api/exports/${monthInfo.value}`}>
-            <Download className="size-4" />
-            Export month
-          </a>
-        </Button>
+        <div className="flex w-full flex-col items-stretch gap-2 md:w-auto md:items-end">
+          <div className="flex w-full flex-col gap-2 md:w-auto md:flex-row">
+            <SendToAccountantButton
+              month={monthInfo.value}
+              accountantEmail={user?.accountantEmail}
+            />
+            <Button asChild typography="mono" className="w-full md:w-auto">
+              <a href={`/api/exports/${monthInfo.value}`}>
+                <Download className="size-4" />
+                Export month
+              </a>
+            </Button>
+          </div>
+        </div>
       </PageHeader>
 
       <StatGroup variant="row">
