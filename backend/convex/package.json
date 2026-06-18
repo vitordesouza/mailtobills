@@ -4,17 +4,22 @@
   "private": true,
   "scripts": {
     "dev": "convex dev",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
   },
   "dependencies": {
     "@auth/core": "^0.37.0",
     "@convex-dev/auth": "^0.0.90",
     "@mailtobills/types": "workspace:*",
-    "convex": "latest",
+    "convex": "^1.32.0",
     "typescript": "^5.4.5"
   },
   "devDependencies": {
+    "@edge-runtime/vm": "^5.0.0",
     "@types/node": "^20.12.12",
-    "eslint": "^9.39.1"
+    "convex-test": "^0.0.45",
+    "eslint": "^9.39.1",
+    "vitest": "^4.0.15"
   }
 }
