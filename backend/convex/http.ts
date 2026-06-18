@@ -28,18 +28,50 @@ type IngestAttachmentInput = {
   base64Data?: string;
 };
 
-function parseForwardedBodyPreview(
-  bodyPreview: string | undefined
-): ParsedForward {
-  if (!bodyPreview || typeof bodyPreview !== "string") return {};
+const PT_MONTHS: Record<string, string> = {
+  janeiro: "January",
+  fevereiro: "February",
+  março: "March",
+  abril: "April",
+  maio: "May",
+  junho: "June",
+  julho: "July",
+  agosto: "August",
+  setembro: "September",
+  outubro: "October",
+  novembro: "November",
+  dezembro: "December",
+};
 
-  // Common forward header block:
-  // From: Name <email>
-  // Date: Sun, Dec 14, 2025 at 11:37 AM
-  // Subject: ...
+function parseForwardedDate(raw: string | undefined): number | undefined {
+  if (!raw) return undefined;
+
+  // Mail clients write forward dates Date.parse can't read:
+  // "26 May 2026 at 18:50 +0100" (Apple Mail), "Tue, May 26, 2026 at 6:50 PM"
+  // (Gmail), "26 de maio de 2026 às 18:50" (PT locales).
+  let normalized = raw
+    .replace(/\s+(?:at|às)\s+/gi, " ")
+    .replace(/\bde\s+/gi, "");
+  for (const [pt, en] of Object.entries(PT_MONTHS)) {
+    normalized = normalized.replace(new RegExp(pt, "i"), en);
+  }
+
+  for (const candidate of [raw, normalized]) {
+    const parsed = new Date(candidate);
+    if (!Number.isNaN(parsed.getTime())) return parsed.getTime();
+  }
+
+  return undefined;
+}
+
+function parseForwardedText(text: string): ParsedForward {
+  // Common forward header block (English + Portuguese labels):
+  // From:/De: Name <email>
+  // Date:/Data:/Enviado: Sun, Dec 14, 2025 at 11:37 AM
+  // Subject:/Assunto: ...
   const fromMatch =
-    bodyPreview.match(/\bFrom:\s*([^\n<]+)?\s*<([^>\s]+)>/i) ||
-    bodyPreview.match(/\bFrom:\s*([^\n]+?)\s*(?:\n|$)/i);
+    text.match(/\b(?:From|De):\s*([^\n<]+)?\s*<([^>\s]+)>/i) ||
+    text.match(/\b(?:From|De):\s*([^\n]+?)\s*(?:\n|$)/i);
 
   let originFromName: string | undefined;
   let originFromEmail: string | undefined;
@@ -56,16 +88,13 @@ function parseForwardedBodyPreview(
     }
   }
 
-  const subjectMatch = bodyPreview.match(/\bSubject:\s*(.+?)(?:\n|$)/i);
+  const subjectMatch = text.match(/\b(?:Subject|Assunto):\s*(.+?)(?:\n|$)/i);
   const originSubject = subjectMatch?.[1]?.trim() || undefined;
 
-  const dateMatch = bodyPreview.match(/\bDate:\s*(.+?)(?:\n|$)/i);
-  const dateRaw = dateMatch?.[1]?.trim();
-  const parsedDate = dateRaw ? new Date(dateRaw) : null;
-  const originSentAt =
-    parsedDate && !Number.isNaN(parsedDate.getTime())
-      ? parsedDate.getTime()
-      : undefined;
+  const dateMatch = text.match(
+    /\b(?:Date|Data|Enviada?o?):\s*(.+?)(?:\n|$)/i
+  );
+  const originSentAt = parseForwardedDate(dateMatch?.[1]?.trim());
 
   const originDomain =
     originFromEmail && originFromEmail.includes("@")
@@ -79,6 +108,49 @@ function parseForwardedBodyPreview(
     originSubject,
     originSentAt,
   };
+}
+
+function htmlToText(html: string): string {
+  return html
+    .replace(/<(?:style|script)[\s\S]*?<\/(?:style|script)>/gi, " ")
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<\/(?:p|div|tr|li|h[1-6])>/gi, "\n")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/gi, "'")
+    .replace(/&amp;/gi, "&")
+    .replace(/[ \t]+/g, " ");
+}
+
+function parseForwardedBodyPreview(
+  bodyPreview: string | undefined,
+  bodyHtml?: string
+): ParsedForward {
+  const fromPreview =
+    bodyPreview && typeof bodyPreview === "string"
+      ? parseForwardedText(bodyPreview)
+      : {};
+
+  // bodyPreview is truncated (~255 chars); when it misses part of the forward
+  // header block, fall back to the full message body.
+  if (
+    bodyHtml &&
+    (!fromPreview.originFromEmail || !fromPreview.originSentAt)
+  ) {
+    const fromBody = parseForwardedText(htmlToText(bodyHtml));
+    return {
+      originFromEmail: fromPreview.originFromEmail ?? fromBody.originFromEmail,
+      originFromName: fromPreview.originFromName ?? fromBody.originFromName,
+      originDomain: fromPreview.originDomain ?? fromBody.originDomain,
+      originSubject: fromPreview.originSubject ?? fromBody.originSubject,
+      originSentAt: fromPreview.originSentAt ?? fromBody.originSentAt,
+    };
+  }
+
+  return fromPreview;
 }
 
 function jsonError(
@@ -372,7 +444,14 @@ const ingestExpenseDocument = httpAction(async (ctx, request) => {
         ? raw.bodyPreview
         : undefined);
 
-    const parsed = parseForwardedBodyPreview(effectiveBodyPreview);
+    const rawBody = isRecord(raw?.body) ? raw.body : undefined;
+    const rawBodyContent =
+      typeof rawBody?.content === "string" ? rawBody.content : undefined;
+
+    const parsed = parseForwardedBodyPreview(
+      effectiveBodyPreview,
+      rawBodyContent
+    );
 
     const dedupeKey = optionalString(body.dedupeKey);
     const rawDedupe =

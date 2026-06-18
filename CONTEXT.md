@@ -29,8 +29,20 @@ The MailToBills email address where a Customer sends Expense Documents for colle
 _Avoid_: Forwarding email when referring to the destination, user email
 
 **Accountant Export**:
-A package containing each Collected Expense Document's current Primary Attachment PDF and a metadata Manifest for a Collection Month. Accountants do not sign in to MailToBills in the MVP.
+A package containing each Collected Expense Document's current Primary Attachment PDF and a metadata Manifest for a Collection Month, delivered either manually by the Customer or automatically by an Export Schedule. Accountants do not sign in to MailToBills in the MVP.
 _Avoid_: Accountant access, accountant workspace, accountant mode
+
+**Export Schedule**:
+A Customer-configured rule that automatically sends an Accountant Export to the Accountant Address on a fixed day each month. The Export Schedule covers the previous Collection Month. If a Collection Month has no Collected Expense Documents, no Accountant Export is sent and the Customer is notified instead. The Customer is CC'd on every Accountant Export sent by an Export Schedule.
+_Avoid_: Auto-export, scheduled export, automatic invoice delivery
+
+**Accountant Address**:
+The email address of the Customer's accountant, stored as a Customer property and used as the recipient of Accountant Exports sent by an Export Schedule. A Customer has at most one Accountant Address. The Accountant Address is also available to the manual export flow.
+_Avoid_: Accountant email, recipient email, accountant account
+
+**Accountant Name**:
+An optional display name for the accountant stored alongside the Accountant Address, used in the greeting of outbound Accountant Export emails. Not a login credential or a MailToBills user.
+_Avoid_: Accountant account, accountant contact
 
 **Manifest**:
 A CSV index included in an Accountant Export with metadata MailToBills already knows, such as primary filename, sender, email subject, received timestamp, and file reference. A Manifest is not an accounting ledger and does not contain extracted supplier amounts, VAT, due dates, or invoice numbers in the MVP.

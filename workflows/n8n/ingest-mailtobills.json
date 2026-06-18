@@ -415,7 +415,11 @@
   },
   "active": false,
   "settings": {
-    "executionOrder": "v1"
+    "executionOrder": "v1",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "saveExecutionProgress": true,
+    "saveManualExecutions": true
   },
   "versionId": "a70864d2-e270-428c-bbf7-c8d6183fda78",
   "meta": {
