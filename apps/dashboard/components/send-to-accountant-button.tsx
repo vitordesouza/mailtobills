@@ -10,6 +10,7 @@ import { Button } from "@mailtobills/ui/components/button";
 
 type SendToAccountantButtonProps = {
   month: string;
+  isPro: boolean;
   accountantEmail?: string;
 };
 
@@ -18,6 +19,10 @@ function errorMessage(error: unknown) {
 
   if (message.includes("ACCOUNTANT_EMAIL_NOT_CONFIGURED")) {
     return "Configure an Accountant Address before sending.";
+  }
+
+  if (message.includes("PRO_REQUIRED")) {
+    return "Upgrade to Pro to send Accountant Exports.";
   }
 
   if (message.includes("RESEND_API_KEY is not set")) {
@@ -33,6 +38,7 @@ function errorMessage(error: unknown) {
 
 export function SendToAccountantButton({
   month,
+  isPro,
   accountantEmail,
 }: SendToAccountantButtonProps) {
   const sendManualExportToAccountant = useAction(
@@ -50,6 +56,18 @@ export function SendToAccountantButton({
       }
     };
   }, []);
+
+  if (!isPro) {
+    return (
+      <p className="text-muted-foreground text-sm">
+        Accountant Export is available on Pro.{" "}
+        <Link className="font-medium underline underline-offset-4" href="/settings">
+          Upgrade in settings
+        </Link>
+        .
+      </p>
+    );
+  }
 
   if (!accountantEmail) {
     return (

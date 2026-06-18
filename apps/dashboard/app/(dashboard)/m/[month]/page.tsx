@@ -66,6 +66,7 @@ export default async function DashboardPage({
           <div className="flex w-full flex-col gap-2 md:w-auto md:flex-row">
             <SendToAccountantButton
               month={monthInfo.value}
+              isPro={Boolean(user?.isPro)}
               accountantEmail={user?.accountantEmail}
             />
             <Button asChild typography="mono" className="w-full md:w-auto">
