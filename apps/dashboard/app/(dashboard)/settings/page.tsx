@@ -4,6 +4,7 @@ import { api } from "@mailtobills/convex/_generated/api";
 
 import { BillingSettings } from "@/components/billing-settings";
 import { CopyField } from "@/components/copy-field";
+import { ExportScheduleForm } from "@/components/export-schedule-form";
 import { ForwardingAddressesForm } from "@/components/forwarding-addresses-form";
 import {
 	PageHeader,
@@ -87,6 +88,18 @@ export default async function SettingsPage() {
 					isPro={Boolean(user?.isPro)}
 					primaryEmail={user?.email ?? undefined}
 					forwardingEmails={user?.forwardingEmails ?? []}
+				/>
+			</SettingsRow>
+
+			<SettingsRow
+				title="Export Schedule"
+				description="Automatically send a monthly Accountant Export to your accountant."
+			>
+				<ExportScheduleForm
+					isPro={Boolean(user?.isPro)}
+					accountantEmail={user?.accountantEmail ?? undefined}
+					accountantName={user?.accountantName ?? undefined}
+					exportScheduleDay={user?.exportScheduleDay ?? undefined}
 				/>
 			</SettingsRow>
 
