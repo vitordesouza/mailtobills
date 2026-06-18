@@ -73,7 +73,22 @@ export const listMine = query({
           : null;
 
         return {
-          ...document,
+          _id: document._id,
+          _creationTime: document._creationTime,
+          userId: document.userId,
+          fromEmail: document.fromEmail,
+          subject: document.subject,
+          messageId: document.messageId,
+          receivedAt: document.receivedAt,
+          createdAt: document.createdAt,
+          deletedAt: document.deletedAt,
+          dedupeKey: document.dedupeKey,
+          primaryAttachmentId: document.primaryAttachmentId,
+          originFromEmail: document.originFromEmail,
+          originFromName: document.originFromName,
+          originDomain: document.originDomain,
+          originSubject: document.originSubject,
+          originSentAt: document.originSentAt,
           attachments,
           primaryAttachment,
         };

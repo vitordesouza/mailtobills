@@ -36,6 +36,21 @@ const expenseDocumentAttachments = defineTable({
   .index("expenseDocumentId", ["expenseDocumentId"])
   .index("fileStorageId", ["fileStorageId"]);
 
+const subscriptionStatus = v.union(
+  v.literal("active"),
+  v.literal("past_due"),
+  v.literal("cancelled")
+);
+
+const subscriptions = defineTable({
+  userId: v.id("users"),
+  lemonSqueezySubscriptionId: v.string(),
+  status: subscriptionStatus,
+  currentPeriodEnd: v.number(),
+})
+  .index("userId", ["userId"])
+  .index("lemonSqueezySubscriptionId", ["lemonSqueezySubscriptionId"]);
+
 const users = defineTable({
   name: v.optional(v.string()),
   image: v.optional(v.string()),
@@ -46,6 +61,11 @@ const users = defineTable({
   isAnonymous: v.optional(v.boolean()),
   // custom fields below
   forwardingEmails: v.optional(v.array(v.string())),
+  isPro: v.optional(v.boolean()),
+  accountantEmail: v.optional(v.string()),
+  accountantName: v.optional(v.string()),
+  exportScheduleDay: v.optional(v.number()),
+  exportScheduleLastSentMonth: v.optional(v.string()),
 })
   .index("email", ["email"])
   .index("phone", ["phone"])
@@ -55,6 +75,7 @@ const users = defineTable({
 export default defineSchema({
   ...authTables,
   users,
+  subscriptions,
   expenseDocuments,
   expenseDocumentAttachments,
 });

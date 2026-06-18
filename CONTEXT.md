@@ -76,6 +76,26 @@ _Avoid_: All email attachments, inline images, email signature files
 A forwarded email that does not produce a Collected Expense Document because it cannot be matched to a Customer, has no acceptable PDF attachment, or fails during collection. Rejected Forwarded Emails are not shown in the Customer dashboard in the MVP.
 _Avoid_: Customer review item, failed invoice, pending processing
 
+**Plan**:
+The tier that determines which features a Customer can access. There are two Plans: Free and Pro. A Customer is always on exactly one Plan.
+_Avoid_: Tier, level, account type, membership
+
+**Free Plan**:
+The default Plan for all Customers. Includes unlimited Expense Document collection, dashboard browsing, and manual Accountant Export. The Free Plan has no expiry and is not a trial.
+_Avoid_: Trial, starter, basic, limited
+
+**Pro Plan**:
+The paid Plan. Includes everything in the Free Plan plus Export Schedule and Additional Forwarding Addresses. Future premium features are added to the Pro Plan, not the Free Plan.
+_Avoid_: Premium, paid tier, upgrade
+
+**Subscription**:
+A Customer's active billing relationship with MailToBills. Records the Customer's current Plan, billing status, and period end date. The Subscription is the source of truth for whether a Customer is on the Pro Plan. A Customer on the Free Plan has no Subscription.
+_Avoid_: Account, licence, seat
+
+**Lapsed Subscription**:
+A Subscription that has ended due to cancellation or payment failure. A Customer with a Lapsed Subscription reverts to the Free Plan. Pro features (Export Schedule, Additional Forwarding Addresses) are paused but their configuration is preserved. All Collected Expense Documents remain accessible and exportable regardless of Subscription state.
+_Avoid_: Expired account, banned, downgraded, deleted
+
 ## Flagged Ambiguities
 
 **Invoice**:
