@@ -1,7 +1,5 @@
 import { getAuthUserId } from "@convex-dev/auth/server";
 import {
-  choosePrimaryAttachment,
-  getAcceptedPdfAttachments,
   isCollectionMonth,
   isTimestampInCollectionMonth,
 } from "@mailtobills/types";
@@ -13,6 +11,7 @@ import {
   mutation,
   query,
 } from "./_generated/server";
+import { writeCollectedExpenseDocument } from "./lib/collectedExpenseDocumentWriter";
 
 import type { Doc, Id } from "./_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "./_generated/server";
@@ -117,30 +116,22 @@ export const createDemoExpenseDocument = mutation({
     const userId = await requireSignedInUserId(ctx);
     const now = Date.now();
 
-    const expenseDocumentId = await ctx.db.insert("expenseDocuments", {
+    return await writeCollectedExpenseDocument(ctx, {
       userId,
       fromEmail: "billing@example.com",
       subject: "Demo expense document",
       receivedAt: now,
-      createdAt: now,
-      dedupeKey: `${userId}|demo|${now}`,
+      dedupeKey: `${userId}|demo|${now}|${crypto.randomUUID()}`,
+      attachments: [
+        {
+          originalFilename: "mailtobills-demo-receipt.pdf",
+          mimeType: "application/pdf",
+          fileUrl:
+            "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+          originalOrder: 0,
+        },
+      ],
     });
-
-    const attachmentId = await ctx.db.insert("expenseDocumentAttachments", {
-      expenseDocumentId,
-      originalFilename: "mailtobills-demo-receipt.pdf",
-      mimeType: "application/pdf",
-      fileUrl:
-        "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
-      originalOrder: 0,
-      createdAt: now,
-    });
-
-    await ctx.db.patch(expenseDocumentId, {
-      primaryAttachmentId: attachmentId,
-    });
-
-    return expenseDocumentId;
   },
 });
 
@@ -161,28 +152,7 @@ export const ingestCreateExpenseDocument = internalMutation({
     attachments: v.array(attachmentArgs),
   },
   handler: async (ctx, args) => {
-    const existing = await ctx.db
-      .query("expenseDocuments")
-      .withIndex("dedupeKey", (q) => q.eq("dedupeKey", args.dedupeKey))
-      .first();
-
-    if (existing) {
-      return existing._id;
-    }
-
-    const acceptableAttachments = getAcceptedPdfAttachments(
-      args.attachments.map((attachment) => ({
-        ...attachment,
-        filename: attachment.originalFilename,
-      }))
-    );
-
-    if (acceptableAttachments.length === 0) {
-      throw new Error("NO_ACCEPTABLE_PDFS");
-    }
-
-    const now = Date.now();
-    const expenseDocumentId = await ctx.db.insert("expenseDocuments", {
+    return await writeCollectedExpenseDocument(ctx, {
       userId: args.userId,
       fromEmail: args.fromEmail,
       subject: args.subject,
@@ -195,41 +165,8 @@ export const ingestCreateExpenseDocument = internalMutation({
       originSubject: args.originSubject,
       originSentAt: args.originSentAt,
       rawEmailMetadata: args.rawEmailMetadata,
-      createdAt: now,
+      attachments: args.attachments,
     });
-
-    const insertedAttachments = await Promise.all(
-      acceptableAttachments.map(async (attachment) => {
-        const attachmentId = await ctx.db.insert("expenseDocumentAttachments", {
-          expenseDocumentId,
-          originalFilename: attachment.originalFilename,
-          mimeType: attachment.mimeType,
-          fileSize: attachment.fileSize,
-          fileUrl: attachment.fileUrl,
-          fileStorageId: attachment.fileStorageId,
-          attachmentId: attachment.attachmentId,
-          originalOrder: attachment.originalOrder,
-          createdAt: now,
-        });
-
-        return { ...attachment, _id: attachmentId };
-      })
-    );
-
-    const primary = choosePrimaryAttachment(
-      insertedAttachments.map((attachment) => ({
-        ...attachment,
-        filename: attachment.originalFilename,
-      }))
-    );
-
-    if (primary) {
-      await ctx.db.patch(expenseDocumentId, {
-        primaryAttachmentId: primary._id,
-      });
-    }
-
-    return expenseDocumentId;
   },
 });
 

@@ -145,11 +145,14 @@ describe("expense document Convex functions", () => {
     );
     expect(await authed.query(api.expenseDocuments.listMine)).toHaveLength(1);
 
+    await authed.mutation(api.expenseDocuments.createDemoExpenseDocument);
+    expect(await authed.query(api.expenseDocuments.listMine)).toHaveLength(2);
+
     await authed.mutation(api.expenseDocuments.softDelete, {
       expenseDocumentId: documentId,
     });
 
-    expect(await authed.query(api.expenseDocuments.listMine)).toHaveLength(0);
+    expect(await authed.query(api.expenseDocuments.listMine)).toHaveLength(1);
   });
 
   it("rejects primary attachment changes for attachments from another document", async () => {
