@@ -76,6 +76,25 @@ export const getUserById = internalQuery({
   },
 });
 
+export const getAccountantExportCustomer = internalQuery({
+  args: { userId: v.id("users") },
+  handler: async (ctx, args) => {
+    const user = await ctx.db.get(args.userId);
+
+    if (!user) {
+      return null;
+    }
+
+    return {
+      name: user.name,
+      email: user.email,
+      isPro: user.isPro,
+      accountantEmail: user.accountantEmail,
+      accountantName: user.accountantName,
+    };
+  },
+});
+
 export const updateExportSchedule = mutation({
   args: {
     accountantEmail: v.optional(v.string()),
