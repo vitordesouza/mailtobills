@@ -13,6 +13,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "lint": "eslint . --max-warnings 0",
+    "typecheck": "tsc --noEmit",
     "test": "node --test --import tsx 'src/**/*.test.ts'"
   },
   "devDependencies": {
