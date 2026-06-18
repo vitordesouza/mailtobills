@@ -16,6 +16,8 @@ Convex:
 
 ```text
 INGEST_SECRET=<shared-secret-used-by-n8n>
+RESEND_API_KEY=<resend-api-key-used-for-accountant-export-email>
+EMAIL_PROVIDER=resend
 SITE_URL=<dashboard-origin>
 CONVEX_SITE_URL=<dashboard-origin>
 ```

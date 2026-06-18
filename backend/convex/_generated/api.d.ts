@@ -9,6 +9,10 @@
  */
 
 import type * as auth from "../auth.js";
+import type * as email_index from "../email/index.js";
+import type * as email_resendAdapter from "../email/resendAdapter.js";
+import type * as email_templates from "../email/templates.js";
+import type * as email_types from "../email/types.js";
 import type * as expenseDocuments from "../expenseDocuments.js";
 import type * as http from "../http.js";
 import type * as lib_requirePro from "../lib/requirePro.js";
@@ -23,6 +27,10 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
+  "email/index": typeof email_index;
+  "email/resendAdapter": typeof email_resendAdapter;
+  "email/templates": typeof email_templates;
+  "email/types": typeof email_types;
   expenseDocuments: typeof expenseDocuments;
   http: typeof http;
   "lib/requirePro": typeof lib_requirePro;
