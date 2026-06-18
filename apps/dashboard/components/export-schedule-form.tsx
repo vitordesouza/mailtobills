@@ -60,6 +60,7 @@ export function ExportScheduleForm({
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const updateAccountantAddress = useMutation(api.users.updateAccountantAddress);
   const updateExportSchedule = useMutation(api.users.updateExportSchedule);
   const emailIsValid = isPlausibleEmail(email);
   const preview = useMemo(
@@ -72,17 +73,26 @@ export function ExportScheduleForm({
     setMessage(null);
     setError(null);
 
+    if (email.trim() && !emailIsValid) {
+      setError("A valid Accountant Address is required.");
+      return;
+    }
+
     if (enabled && !emailIsValid) {
       setError("A valid Accountant Address is required to enable the schedule.");
       return;
     }
 
     startTransition(() => {
-      updateExportSchedule({
+      updateAccountantAddress({
         accountantEmail: email,
         accountantName: name,
-        exportScheduleDay: enabled ? day : undefined,
       })
+        .then(() =>
+          updateExportSchedule({
+            exportScheduleDay: enabled ? day : undefined,
+          }),
+        )
         .then(() => {
           setMessage(enabled ? "Export Schedule saved." : "Export Schedule disabled.");
           router.refresh();
@@ -102,8 +112,6 @@ export function ExportScheduleForm({
     setError(null);
     startTransition(() => {
       updateExportSchedule({
-        accountantEmail: email,
-        accountantName: name,
         exportScheduleDay: undefined,
       })
         .then(() => {
@@ -122,7 +130,7 @@ export function ExportScheduleForm({
           <Lock className="mt-0.5 size-4" />
           <div className="space-y-2">
             <p>
-              Accountant Export is available on the Pro Plan.
+              Direct send and Export Schedule are available on the Pro Plan.
             </p>
             <form action="/api/billing/checkout" method="post">
               <Button type="submit" size="sm" variant="outline">

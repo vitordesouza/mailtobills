@@ -11,12 +11,14 @@ const mocks = vi.hoisted(() => ({
     users: {
       addForwardingAddress: Symbol("addForwardingAddress"),
       removeForwardingAddress: Symbol("removeForwardingAddress"),
+      updateAccountantAddress: Symbol("updateAccountantAddress"),
       updateExportSchedule: Symbol("updateExportSchedule"),
     },
   },
   refresh: vi.fn(),
   addForwardingAddress: vi.fn(() => Promise.resolve()),
   removeForwardingAddress: vi.fn(() => Promise.resolve()),
+  updateAccountantAddress: vi.fn(() => Promise.resolve()),
   updateExportSchedule: vi.fn(() => Promise.resolve()),
 }));
 
@@ -36,6 +38,9 @@ vi.mock("convex/react", () => ({
     if (mutation === mocks.api.users.removeForwardingAddress) {
       return mocks.removeForwardingAddress;
     }
+    if (mutation === mocks.api.users.updateAccountantAddress) {
+      return mocks.updateAccountantAddress;
+    }
     if (mutation === mocks.api.users.updateExportSchedule) {
       return mocks.updateExportSchedule;
     }
@@ -49,6 +54,7 @@ describe("settings forms", () => {
     mocks.refresh.mockClear();
     mocks.addForwardingAddress.mockClear();
     mocks.removeForwardingAddress.mockClear();
+    mocks.updateAccountantAddress.mockClear();
     mocks.updateExportSchedule.mockClear();
   });
 
@@ -111,9 +117,13 @@ describe("settings forms", () => {
     await user.click(screen.getByRole("button", { name: /save export schedule/i }));
 
     await waitFor(() =>
-      expect(mocks.updateExportSchedule).toHaveBeenCalledWith({
+      expect(mocks.updateAccountantAddress).toHaveBeenCalledWith({
         accountantEmail: "books@example.com",
         accountantName: "Books Team",
+      }),
+    );
+    await waitFor(() =>
+      expect(mocks.updateExportSchedule).toHaveBeenCalledWith({
         exportScheduleDay: 12,
       }),
     );
@@ -122,11 +132,10 @@ describe("settings forms", () => {
 
     await waitFor(() =>
       expect(mocks.updateExportSchedule).toHaveBeenLastCalledWith({
-        accountantEmail: "books@example.com",
-        accountantName: "Books Team",
         exportScheduleDay: undefined,
       }),
     );
+    expect(mocks.updateAccountantAddress).toHaveBeenCalledTimes(1);
   });
 
   it("validates accountant email before enabling a schedule", async () => {
@@ -150,8 +159,9 @@ describe("settings forms", () => {
     );
 
     expect(
-      screen.getByText(/valid accountant address is required/i),
+      screen.getByText(/^A valid Accountant Address is required\.$/i),
     ).toBeInTheDocument();
+    expect(mocks.updateAccountantAddress).not.toHaveBeenCalled();
     expect(mocks.updateExportSchedule).not.toHaveBeenCalled();
   });
 });

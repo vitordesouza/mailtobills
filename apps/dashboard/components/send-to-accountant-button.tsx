@@ -22,7 +22,7 @@ function errorMessage(error: unknown) {
   }
 
   if (message.includes("PRO_REQUIRED")) {
-    return "Upgrade to Pro to send Accountant Exports.";
+    return "Upgrade to Pro to send Accountant Exports directly.";
   }
 
   if (message.includes("RESEND_API_KEY is not set")) {
@@ -60,7 +60,7 @@ export function SendToAccountantButton({
   if (!isPro) {
     return (
       <p className="text-muted-foreground text-sm">
-        Accountant Export is available on Pro.{" "}
+        Direct send is available on Pro. ZIP download is still included.{" "}
         <Link className="font-medium underline underline-offset-4" href="/settings">
           Upgrade in settings
         </Link>

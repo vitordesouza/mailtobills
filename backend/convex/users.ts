@@ -102,14 +102,10 @@ export const getAccountantExportCustomer = internalQuery({
 
 export const updateExportSchedule = mutation({
   args: {
-    accountantEmail: v.optional(v.string()),
-    accountantName: v.optional(v.string()),
     exportScheduleDay: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     const userId = await requirePro(ctx);
-    const accountantEmail = normalizedOptionalString(args.accountantEmail);
-    const accountantName = normalizedOptionalString(args.accountantName);
 
     if (args.exportScheduleDay !== undefined) {
       if (
@@ -121,6 +117,22 @@ export const updateExportSchedule = mutation({
       }
     }
 
+    await ctx.db.patch(userId, {
+      exportScheduleDay: args.exportScheduleDay,
+    });
+  },
+});
+
+export const updateAccountantAddress = mutation({
+  args: {
+    accountantEmail: v.optional(v.string()),
+    accountantName: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const userId = await requirePro(ctx);
+    const accountantEmail = normalizedOptionalString(args.accountantEmail);
+    const accountantName = normalizedOptionalString(args.accountantName);
+
     if (accountantEmail && !isPlausibleEmail(accountantEmail)) {
       throw new Error("INVALID_ACCOUNTANT_EMAIL");
     }
@@ -128,7 +140,6 @@ export const updateExportSchedule = mutation({
     await ctx.db.patch(userId, {
       accountantEmail,
       accountantName,
-      exportScheduleDay: args.exportScheduleDay,
     });
   },
 });

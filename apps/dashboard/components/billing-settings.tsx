@@ -62,7 +62,7 @@ export function BillingSettings({
           )}
           <span>
             {isProLike
-              ? "Welcome to Pro. Export Schedule and Additional Forwarding Addresses are now unlocked."
+              ? "Welcome to Pro. Direct send, Export Schedule, and Additional Forwarding Addresses are now unlocked."
               : "Checkout completed. Waiting for the Lemon Squeezy subscription webhook to confirm Pro access."}
           </span>
         </div>
@@ -89,7 +89,7 @@ export function BillingSettings({
                 ? renewalDate
                   ? `Renews ${renewalDate}.`
                   : "Your Pro subscription is active."
-              : "Manual Accountant Export is included for free."}
+              : "Manual ZIP download is included for free."}
           </p>
         </div>
 
@@ -125,14 +125,14 @@ export function BillingSettings({
           <div className="rounded-md border px-3 py-2">
             <div className="font-medium">Free</div>
             <p className="text-muted-foreground">
-              Unlimited collection, dashboard browsing, and manual Accountant
-              Export.
+              Unlimited collection, dashboard browsing, and manual ZIP export.
             </p>
           </div>
           <div className="rounded-md border px-3 py-2">
             <div className="font-medium">Pro</div>
             <p className="text-muted-foreground">
-              Adds Export Schedule and Additional Forwarding Addresses.
+              Adds direct send, Export Schedule, and Additional Forwarding
+              Addresses.
             </p>
             <p className="text-muted-foreground mt-1 font-mono text-xs">
               {proPriceLabel}

@@ -73,8 +73,12 @@ describe("user settings Convex functions", () => {
     ).rejects.toThrow("PRO_REQUIRED");
     await expect(
       authed.mutation(api.users.updateExportSchedule, {
-        accountantEmail: "accountant@example.com",
         exportScheduleDay: 5,
+      }),
+    ).rejects.toThrow("PRO_REQUIRED");
+    await expect(
+      authed.mutation(api.users.updateAccountantAddress, {
+        accountantEmail: "accountant@example.com",
       }),
     ).rejects.toThrow("PRO_REQUIRED");
   });
@@ -96,7 +100,7 @@ describe("user settings Convex functions", () => {
     expect(user?.forwardingEmails).toEqual(["two@example.com"]);
   });
 
-  it("validates and clears export schedule fields", async () => {
+  it("validates export schedules without touching the Accountant Address", async () => {
     const t = convexTest({ schema, modules });
     const userId = await insertUser(t, {
       email: "owner@example.com",
@@ -106,32 +110,53 @@ describe("user settings Convex functions", () => {
 
     await expect(
       authed.mutation(api.users.updateExportSchedule, {
-        accountantEmail: "accountant@example.com",
         exportScheduleDay: 29,
       }),
     ).rejects.toThrow("EXPORT_SCHEDULE_DAY_OUT_OF_RANGE");
-    await expect(
-      authed.mutation(api.users.updateExportSchedule, {
-        accountantEmail: "not-an-email",
-        exportScheduleDay: 5,
-      }),
-    ).rejects.toThrow("INVALID_ACCOUNTANT_EMAIL");
 
-    await authed.mutation(api.users.updateExportSchedule, {
+    await authed.mutation(api.users.updateAccountantAddress, {
       accountantEmail: " accountant@example.com ",
       accountantName: " Marta ",
+    });
+    await authed.mutation(api.users.updateExportSchedule, {
       exportScheduleDay: 5,
     });
     await authed.mutation(api.users.updateExportSchedule, {
+      exportScheduleDay: undefined,
+    });
+
+    const user = await t.run((ctx) => ctx.db.get(userId));
+    expect(user?.accountantEmail).toBe("accountant@example.com");
+    expect(user?.accountantName).toBe("Marta");
+    expect(user?.exportScheduleDay).toBeUndefined();
+  });
+
+  it("validates and clears the Accountant Address", async () => {
+    const t = convexTest({ schema, modules });
+    const userId = await insertUser(t, {
+      email: "owner@example.com",
+      isPro: true,
+    });
+    const authed = t.withIdentity(asIdentity(userId));
+
+    await expect(
+      authed.mutation(api.users.updateAccountantAddress, {
+        accountantEmail: "not-an-email",
+      }),
+    ).rejects.toThrow("INVALID_ACCOUNTANT_EMAIL");
+
+    await authed.mutation(api.users.updateAccountantAddress, {
+      accountantEmail: " accountant@example.com ",
+      accountantName: " Marta ",
+    });
+    await authed.mutation(api.users.updateAccountantAddress, {
       accountantEmail: " ",
       accountantName: " ",
-      exportScheduleDay: undefined,
     });
 
     const user = await t.run((ctx) => ctx.db.get(userId));
     expect(user?.accountantEmail).toBeUndefined();
     expect(user?.accountantName).toBeUndefined();
-    expect(user?.exportScheduleDay).toBeUndefined();
   });
 
   it("finds users by primary or Pro forwarding email and lists due exports", async () => {
