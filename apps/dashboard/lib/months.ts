@@ -1,3 +1,10 @@
+import {
+  getCollectionMonthRange,
+  isCollectionMonth,
+  shiftCollectionMonth,
+  toCollectionMonthValue,
+} from "@mailtobills/types";
+
 export type MonthInfo = {
   value: string;
   label: string;
@@ -7,45 +14,29 @@ export type MonthInfo = {
   next: string;
 };
 
-// Validates YYYY-MM format where month is 01-12
-const MONTH_FORMAT = /^\d{4}-(0[1-9]|1[0-2])$/;
-
-const toMonthValue = (date: Date) => {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  return `${year}-${month}`;
-};
-
-const shiftMonth = (value: string, delta: number) => {
-  const [yearText, monthText] = value.split("-");
-  const year = Number(yearText);
-  const month = Number(monthText);
-  const date = new Date(year, month - 1 + delta, 1);
-  return toMonthValue(date);
-};
-
 const buildMonthRange = (value: string) => {
-  const [yearText, monthText] = value.split("-");
-  const year = Number(yearText);
-  const month = Number(monthText);
-  const start = new Date(year, month - 1, 1, 0, 0, 0, 0);
-  const end = new Date(year, month, 0, 23, 59, 59, 999);
+  const { startMs, endExclusiveMs } = getCollectionMonthRange(value);
+  const start = new Date(startMs);
+  const end = new Date(endExclusiveMs - 1);
   return { start, end };
 };
 
 export const getMonthInfo = (monthParam?: string): MonthInfo => {
-  const fallback = toMonthValue(new Date());
-  const value =
-    monthParam && MONTH_FORMAT.test(monthParam) ? monthParam : fallback;
+  const fallback = toCollectionMonthValue(new Date());
+  const value = monthParam && isCollectionMonth(monthParam) ? monthParam : fallback;
   const { start, end } = buildMonthRange(value);
 
   return {
     value,
-    label: start.toLocaleString("en-US", { month: "long", year: "numeric" }),
+    label: start.toLocaleString("en-US", {
+      month: "long",
+      timeZone: "UTC",
+      year: "numeric",
+    }),
     start,
     end,
-    previous: shiftMonth(value, -1),
-    next: shiftMonth(value, 1),
+    previous: shiftCollectionMonth(value, -1),
+    next: shiftCollectionMonth(value, 1),
   };
 };
 
