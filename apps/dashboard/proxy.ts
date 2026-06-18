@@ -14,6 +14,8 @@ const isPublicRoute = createRouteMatcher([
   "/images(.*)",
 ]);
 
+const isSignInRoute = createRouteMatcher(["/signin(.*)"]);
+
 export default convexAuthNextjsMiddleware(
   async (
     request: NextRequest,
@@ -23,6 +25,9 @@ export default convexAuthNextjsMiddleware(
       convexAuth: ConvexAuthNextjsMiddlewareContext;
     }
   ) => {
+    if (isSignInRoute(request)) {
+      return nextjsMiddlewareRedirect(request, "/");
+    }
     if (!isPublicRoute(request) && !(await convexAuth.isAuthenticated())) {
       return nextjsMiddlewareRedirect(request, "/signin");
     }
