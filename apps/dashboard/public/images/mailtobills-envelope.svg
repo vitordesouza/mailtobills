@@ -1,0 +1,195 @@
+<svg
+  width="896"
+  height="512"
+  viewBox="0 0 896 512"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <defs>
+    <filter
+      id="soft-shadow"
+      x="170"
+      y="112"
+      width="566"
+      height="304"
+      color-interpolation-filters="sRGB"
+      filterUnits="userSpaceOnUse"
+    >
+      <feDropShadow
+        dx="0"
+        dy="10"
+        flood-color="#2A2A26"
+        flood-opacity="0.08"
+        stdDeviation="8"
+      />
+    </filter>
+  </defs>
+
+  <g filter="url(#soft-shadow)">
+    <path
+      d="M350 284L252 350V224L350 284Z"
+      fill="#2F684D"
+      opacity="0.92"
+      stroke="#2F684D"
+      stroke-linejoin="round"
+      stroke-width="3"
+    />
+    <path
+      d="M546 284L644 350V224L546 284Z"
+      fill="#2F684D"
+      opacity="0.92"
+      stroke="#2F684D"
+      stroke-linejoin="round"
+      stroke-width="3"
+    />
+
+    <path
+      d="M500 132H638L674 168V336H500V132Z"
+      fill="#F6F1E5"
+      stroke="#A79F91"
+      stroke-linejoin="round"
+      stroke-width="3"
+    />
+    <path
+      d="M638 132V168H674"
+      stroke="#A79F91"
+      stroke-linejoin="round"
+      stroke-width="3"
+    />
+    <path
+      d="M526 160H628"
+      stroke="#B9B0A0"
+      stroke-dasharray="2 12"
+      stroke-linecap="round"
+      stroke-width="4"
+    />
+    <path
+      d="M538 220H626M538 238H610M538 296H626M538 322H626"
+      stroke="#CFC7B9"
+      stroke-linecap="round"
+      stroke-width="5"
+    />
+    <path
+      d="M638 192H650V224H638V192Z"
+      fill="#D5A43B"
+      opacity="0.85"
+    />
+
+    <path
+      d="M306 156C306 142.745 316.745 132 330 132H502L556 186V340H306V156Z"
+      fill="#FBF8EF"
+      stroke="#A79F91"
+      stroke-linejoin="round"
+      stroke-width="3"
+    />
+    <path
+      d="M502 132V186H556"
+      fill="#2F684D"
+      stroke="#2F684D"
+      stroke-linejoin="round"
+      stroke-width="3"
+    />
+    <rect
+      x="340"
+      y="164"
+      width="58"
+      height="58"
+      rx="10"
+      fill="#2F684D"
+    />
+    <path
+      d="M362 178H379L388 187V210H362V178Z"
+      stroke="#F6F1E5"
+      stroke-linejoin="round"
+      stroke-width="3"
+    />
+    <path d="M379 178V187H388" stroke="#F6F1E5" stroke-linejoin="round" stroke-width="3" />
+    <path
+      d="M340 250H456M340 270H432"
+      stroke="#C9C1B4"
+      stroke-linecap="round"
+      stroke-width="6"
+    />
+    <path
+      d="M340 304H522"
+      stroke="#2F684D"
+      stroke-linecap="round"
+      stroke-width="6"
+    />
+    <path
+      d="M340 330H522M340 360H522"
+      stroke="#DED7CB"
+      stroke-linecap="round"
+      stroke-width="3"
+    />
+    <path
+      d="M340 304V382M420 304V382M472 304V382M522 304V382"
+      stroke="#DED7CB"
+      stroke-linecap="round"
+      stroke-width="3"
+    />
+
+    <path
+      d="M252 224H644V352C644 365.255 633.255 376 620 376H276C262.745 376 252 365.255 252 352V224Z"
+      fill="#F7F2E7"
+      stroke="#948B7C"
+      stroke-linejoin="round"
+      stroke-width="3"
+    />
+    <path
+      d="M252 224L344 302C353.068 309.686 364.573 313.906 376.461 313.906H519.539C531.427 313.906 542.932 309.686 552 302L644 224"
+      stroke="#B7AE9F"
+      stroke-linejoin="round"
+      stroke-width="3"
+    />
+    <path
+      d="M252 352H644"
+      stroke="#2F684D"
+      stroke-linecap="round"
+      stroke-width="7"
+    />
+    <circle cx="592" cy="320" r="34" fill="#F4EFE4" stroke="#2F684D" stroke-width="3" />
+    <path
+      d="M576 320L588 332L610 304"
+      stroke="#2F684D"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="7"
+    />
+  </g>
+
+  <g>
+    <circle cx="196" cy="210" r="48" fill="#F5F1E7" stroke="#2F684D" stroke-width="4" />
+    <rect
+      x="168"
+      y="192"
+      width="56"
+      height="40"
+      rx="4"
+      stroke="#2F684D"
+      stroke-linejoin="round"
+      stroke-width="5"
+    />
+    <path
+      d="M170 196L196 216L222 196"
+      stroke="#2F684D"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="5"
+    />
+    <path
+      d="M254 212C286 212 292 236 302 252"
+      stroke="#2F684D"
+      stroke-dasharray="2 11"
+      stroke-linecap="round"
+      stroke-width="5"
+    />
+    <path
+      d="M304 253L278 247M304 253L296 228"
+      stroke="#2F684D"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="5"
+    />
+  </g>
+</svg>

@@ -104,10 +104,10 @@ export const OnboardingEmptyState = () => {
 
         <div className="bg-sidebar flex min-h-[280px] items-center justify-center border-t p-6 lg:border-t-0 lg:border-l">
           <Image
-            src="/images/mailtobills-envelope.png"
+            src="/images/mailtobills-envelope.svg"
             alt="Expense document in an envelope"
-            width={420}
-            height={280}
+            width={896}
+            height={512}
             className="h-auto w-full max-w-md"
             priority
           />
