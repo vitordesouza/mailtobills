@@ -88,6 +88,38 @@ describe("expense document transforms", () => {
     expect(rows[1]?.subject).toBeUndefined();
   });
 
+  it("uses the Collection Month value for half-open month membership", () => {
+    const misleadingDateBounds: MonthInfo = {
+      ...january,
+      start: new Date(Date.UTC(2025, 11, 1)),
+      end: new Date(Date.UTC(2026, 2, 1)),
+    };
+
+    const rows = expenseDocumentRowsForMonth(
+      [
+        {
+          _id: "january-end",
+          userId: "user-1",
+          receivedAt: Date.UTC(2026, 1, 1) - 1,
+          createdAt: Date.UTC(2026, 1, 1) - 1,
+          dedupeKey: "january-end",
+          attachments: [attachment("january-end-attachment", 0)],
+        },
+        {
+          _id: "february-start",
+          userId: "user-1",
+          receivedAt: Date.UTC(2026, 1, 1),
+          createdAt: Date.UTC(2026, 1, 1),
+          dedupeKey: "february-start",
+          attachments: [attachment("february-start-attachment", 0)],
+        },
+      ],
+      misleadingDateBounds,
+    );
+
+    expect(rows.map((row) => row.id)).toEqual(["january-end"]);
+  });
+
   it("falls back to Convex primary attachment and then first attachment", () => {
     const rows = expenseDocumentRowsForMonth(
       [
