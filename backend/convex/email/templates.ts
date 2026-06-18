@@ -27,6 +27,11 @@ type ExportFailureEmailParams = EmailMonthParams & {
   dashboardUrl: string;
 };
 
+type LapseNotificationEmailParams = {
+  customerName: string;
+  settingsUrl: string;
+};
+
 function escapeHtml(value: string) {
   return value
     .replaceAll("&", "&amp;")
@@ -99,6 +104,24 @@ export function buildExportFailureEmail(params: ExportFailureEmailParams) {
         period,
       )}.</p>`,
       `<p>Pode rever e exportar os documentos no dashboard: <a href="${escapedDashboardUrl}">${escapedDashboardUrl}</a></p>`,
+      "<p>MailToBills</p>",
+    ].join(""),
+  };
+}
+
+export function buildLapseNotificationEmail(
+  params: LapseNotificationEmailParams,
+) {
+  const escapedCustomerName = escapeHtml(params.customerName);
+  const escapedSettingsUrl = escapeHtml(params.settingsUrl);
+
+  return {
+    subject: "MailToBills - O seu plano Pro terminou",
+    bodyHtml: [
+      `<p>Olá ${escapedCustomerName},</p>`,
+      "<p>O seu plano Pro terminou. O envio automático para o seu contabilista (Export Schedule) e os endereços de reencaminhamento adicionais foram pausados.</p>",
+      "<p>Os seus documentos e definições foram preservados. Pode continuar a exportar manualmente e reativar o plano Pro a qualquer momento.</p>",
+      `<p>Reativar o plano Pro: <a href="${escapedSettingsUrl}">${escapedSettingsUrl}</a></p>`,
       "<p>MailToBills</p>",
     ].join(""),
   };

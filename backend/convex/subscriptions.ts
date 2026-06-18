@@ -4,10 +4,13 @@ import { getAuthUserId } from "@convex-dev/auth/server";
 import { internal } from "./_generated/api";
 import {
   httpAction,
+  internalAction,
   internalMutation,
   internalQuery,
   query,
 } from "./_generated/server";
+import { getEmailSender } from "./email";
+import { buildLapseNotificationEmail } from "./email/templates";
 
 import type { Id } from "./_generated/dataModel";
 
@@ -252,8 +255,52 @@ export const syncSubscription = internalMutation({
       });
     }
 
+    const user = await ctx.db.get(args.userId);
+    const wasPro = user?.isPro === true;
+    const willBePro = args.status === "active";
+
     await ctx.db.patch(args.userId, {
-      isPro: args.status === "active",
+      isPro: willBePro,
+    });
+
+    // Notify exactly once, on the Pro -> Free transition. A repeated lapse
+    // webhook (already not Pro) has wasPro === false, so it won't re-notify.
+    if (wasPro && !willBePro) {
+      await ctx.scheduler.runAfter(
+        0,
+        internal.subscriptions.sendLapseNotification,
+        { userId: args.userId }
+      );
+    }
+  },
+});
+
+export const sendLapseNotification = internalAction({
+  args: {
+    userId: v.id("users"),
+  },
+  handler: async (ctx, args) => {
+    const customer = await ctx.runQuery(
+      internal.users.getAccountantExportCustomer,
+      { userId: args.userId }
+    );
+
+    if (!customer?.email) {
+      return;
+    }
+
+    const customerName = customer.name ?? customer.email;
+    const siteUrl = process.env.SITE_URL ?? "https://app.mailtobills.com";
+    const email = buildLapseNotificationEmail({
+      customerName,
+      settingsUrl: `${siteUrl.replace(/\/+$/, "")}/settings`,
+    });
+
+    await getEmailSender().send({
+      to: customer.email,
+      fromName: customerName,
+      subject: email.subject,
+      bodyHtml: email.bodyHtml,
     });
   },
 });

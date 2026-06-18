@@ -1,6 +1,11 @@
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
-import { query, internalQuery, mutation } from "./_generated/server";
+import {
+  query,
+  internalQuery,
+  internalMutation,
+  mutation,
+} from "./_generated/server";
 
 import { requirePro } from "./lib/requirePro";
 
@@ -170,6 +175,35 @@ export const removeForwardingAddress = mutation({
       forwardingEmails: (user?.forwardingEmails ?? []).filter(
         (forwardingEmail) => forwardingEmail !== email
       ),
+    });
+  },
+});
+
+export const getUsersDueForExport = internalQuery({
+  args: { day: v.number() },
+  handler: async (ctx, args) => {
+    // Pro Customers whose Export Schedule day matches today and who have an
+    // Accountant Address configured. Table scan is acceptable at current scale;
+    // add an index on exportScheduleDay when the user count grows.
+    const users = await ctx.db.query("users").collect();
+
+    return users.filter(
+      (user) =>
+        user.isPro === true &&
+        user.exportScheduleDay === args.day &&
+        !!user.accountantEmail
+    );
+  },
+});
+
+export const markExportScheduleSent = internalMutation({
+  args: {
+    userId: v.id("users"),
+    month: v.string(),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.userId, {
+      exportScheduleLastSentMonth: args.month,
     });
   },
 });

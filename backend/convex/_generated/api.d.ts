@@ -9,6 +9,7 @@
  */
 
 import type * as auth from "../auth.js";
+import type * as crons from "../crons.js";
 import type * as email_index from "../email/index.js";
 import type * as email_resendAdapter from "../email/resendAdapter.js";
 import type * as email_templates from "../email/templates.js";
@@ -29,6 +30,7 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
+  crons: typeof crons;
   "email/index": typeof email_index;
   "email/resendAdapter": typeof email_resendAdapter;
   "email/templates": typeof email_templates;
