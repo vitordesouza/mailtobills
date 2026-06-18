@@ -1,6 +1,12 @@
 import { httpRouter } from "convex/server";
 import { getAuthUserId } from "@convex-dev/auth/server";
-import { normalizeBase64Payload } from "@mailtobills/types";
+import {
+  buildManifestCsv,
+  buildZip,
+  isCollectionMonth,
+  normalizeBase64Payload,
+  sanitizeZipName,
+} from "@mailtobills/types";
 
 import { auth } from "./auth";
 import { internal } from "./_generated/api";
@@ -674,6 +680,97 @@ const downloadFile = httpAction(async (ctx, request) => {
   }
 });
 
+const downloadAccountantExport = httpAction(async (ctx, request) => {
+  const url = new URL(request.url);
+  const month = url.searchParams.get("month");
+
+  if (!month || !isCollectionMonth(month)) {
+    return new Response("Invalid Collection Month", { status: 400 });
+  }
+
+  try {
+    const userId = await getAuthUserId(ctx);
+
+    if (!userId) {
+      return new Response("Unauthorized", { status: 401 });
+    }
+
+    const documents = await ctx.runQuery(
+      internal.expenseDocuments.listForAccountantExport,
+      {
+        userId,
+        month,
+      },
+    );
+
+    const manifestRows = [];
+    const files: Array<{ name: string; bytes: Uint8Array }> = [];
+
+    for (const document of documents) {
+      const primary = document.primaryAttachment;
+
+      if (!primary) {
+        continue;
+      }
+
+      let bytes: Uint8Array | null = null;
+
+      if (primary.fileStorageId) {
+        const file = await ctx.storage.get(primary.fileStorageId);
+        if (file) {
+          bytes = new Uint8Array(await file.arrayBuffer());
+        }
+      } else if (primary.fileUrl) {
+        const response = await fetch(primary.fileUrl);
+        if (response.ok) {
+          bytes = new Uint8Array(await response.arrayBuffer());
+        }
+      }
+
+      if (!bytes) {
+        continue;
+      }
+
+      const filename = `${sanitizeZipName(document._id)}-${sanitizeZipName(
+        primary.originalFilename,
+      )}`;
+
+      files.push({
+        name: `pdfs/${filename}`,
+        bytes,
+      });
+
+      manifestRows.push({
+        id: document._id,
+        filename: primary.originalFilename,
+        sender: document.originFromEmail ?? document.fromEmail,
+        subject: document.subject,
+        receivedAt: document.receivedAt,
+        attachmentCount: document.attachments.length,
+      });
+    }
+
+    files.push({
+      name: "manifest.csv",
+      bytes: new TextEncoder().encode(buildManifestCsv(manifestRows)),
+    });
+
+    const zip = buildZip(files);
+
+    return new Response(zip, {
+      status: 200,
+      headers: {
+        "content-type": "application/zip",
+        "cache-control": "private, max-age=0, must-revalidate",
+        "content-disposition": `attachment; filename="mailtobills-${month}.zip"`,
+      },
+    });
+  } catch (error) {
+    console.error("Error building accountant export", error);
+    return new Response("Internal Server Error", { status: 500 });
+  }
+});
+
 const http = httpRouter();
 
 auth.addHttpRoutes(http);
@@ -688,6 +785,12 @@ http.route({
   path: "/file",
   method: "GET",
   handler: downloadFile,
+});
+
+http.route({
+  path: "/export",
+  method: "GET",
+  handler: downloadAccountantExport,
 });
 
 http.route({

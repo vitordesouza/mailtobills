@@ -2,6 +2,8 @@ import { getAuthUserId } from "@convex-dev/auth/server";
 import {
   choosePrimaryAttachment,
   getAcceptedPdfAttachments,
+  isCollectionMonth,
+  isTimestampInCollectionMonth,
 } from "@mailtobills/types";
 import { v } from "convex/values";
 
@@ -279,5 +281,55 @@ export const getOwnedAttachmentForDownload = internalQuery({
       attachment,
       document,
     };
+  },
+});
+
+export const listForAccountantExport = internalQuery({
+  args: {
+    userId: v.id("users"),
+    month: v.string(),
+  },
+  handler: async (ctx, args) => {
+    if (!isCollectionMonth(args.month)) {
+      throw new Error("INVALID_COLLECTION_MONTH");
+    }
+
+    const documents = await ctx.db
+      .query("expenseDocuments")
+      .withIndex("userId", (q) => q.eq("userId", args.userId))
+      .collect();
+
+    const activeDocuments = documents
+      .filter(
+        (document) =>
+          !document.deletedAt &&
+          isTimestampInCollectionMonth(document.receivedAt, args.month),
+      )
+      .sort((a, b) => a.receivedAt - b.receivedAt);
+
+    return Promise.all(
+      activeDocuments.map(async (document) => {
+        const attachments = await ctx.db
+          .query("expenseDocumentAttachments")
+          .withIndex("expenseDocumentId", (q) =>
+            q.eq("expenseDocumentId", document._id),
+          )
+          .collect();
+
+        const primaryAttachment = document.primaryAttachmentId
+          ? await ctx.db.get(document.primaryAttachmentId)
+          : null;
+
+        return {
+          _id: document._id,
+          fromEmail: document.fromEmail,
+          subject: document.subject,
+          receivedAt: document.receivedAt,
+          originFromEmail: document.originFromEmail,
+          attachments,
+          primaryAttachment,
+        };
+      }),
+    );
   },
 });
