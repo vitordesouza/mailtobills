@@ -17,24 +17,26 @@ function isPlausibleEmail(value: string) {
 function monthLabel(date: Date) {
   return new Intl.DateTimeFormat("en-US", {
     month: "long",
+    timeZone: "UTC",
     year: "numeric",
   }).format(date);
 }
 
 function nextExportPreview(today: Date, scheduleDay: number) {
   const sendDate =
-    today.getDate() < scheduleDay
-      ? new Date(today.getFullYear(), today.getMonth(), scheduleDay)
-      : new Date(today.getFullYear(), today.getMonth() + 1, scheduleDay);
+    today.getUTCDate() < scheduleDay
+      ? new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), scheduleDay))
+      : new Date(
+          Date.UTC(today.getUTCFullYear(), today.getUTCMonth() + 1, scheduleDay)
+        );
   const coveringMonth = new Date(
-    sendDate.getFullYear(),
-    sendDate.getMonth() - 1,
-    1
+    Date.UTC(sendDate.getUTCFullYear(), sendDate.getUTCMonth() - 1, 1)
   );
 
-  return `Next export: ${new Intl.DateTimeFormat("en-US", {
+  return `Next export (UTC): ${new Intl.DateTimeFormat("en-US", {
     day: "numeric",
     month: "short",
+    timeZone: "UTC",
     year: "numeric",
   }).format(sendDate)}, covering ${monthLabel(coveringMonth)}`;
 }
@@ -120,8 +122,7 @@ export function ExportScheduleForm({
           <Lock className="mt-0.5 size-4" />
           <div className="space-y-2">
             <p>
-              Export Schedule is available on the Pro Plan. Manual Accountant
-              Export remains available on Free.
+              Accountant Export is available on the Pro Plan.
             </p>
             <form action="/api/billing/checkout" method="post">
               <Button type="submit" size="sm" variant="outline">
@@ -160,7 +161,7 @@ export function ExportScheduleForm({
 
         <div className="grid gap-3 md:grid-cols-[160px_1fr]">
           <div className="space-y-2">
-            <Label htmlFor="export-day">Send on day</Label>
+            <Label htmlFor="export-day">Send on day (UTC)</Label>
             <select
               id="export-day"
               value={day}
