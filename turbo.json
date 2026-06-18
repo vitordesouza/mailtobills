@@ -3,6 +3,7 @@
   "ui": "tui",
   "globalEnv": [
     "CONVEX_SITE_URL",
+    "EMAIL_PROVIDER",
     "GITHUB_CLIENT_ID",
     "GITHUB_CLIENT_SECRET",
     "GOOGLE_CLIENT_ID",
@@ -16,6 +17,7 @@
     "NEXT_PUBLIC_DEV_AUTH_EMAIL",
     "NEXT_PUBLIC_DEV_AUTH_PASSWORD",
     "NODE_ENV",
+    "RESEND_API_KEY",
     "SITE_URL"
   ],
   "tasks": {
