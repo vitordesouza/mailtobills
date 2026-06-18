@@ -125,6 +125,10 @@ export default async function ReportsPage({
               included.
             </li>
           ) : null}
+          <li>
+            This estimate uses stored document metadata. The downloaded ZIP is
+            authoritative if a Primary Attachment cannot be read.
+          </li>
         </ul>
       </section>
     </div>
