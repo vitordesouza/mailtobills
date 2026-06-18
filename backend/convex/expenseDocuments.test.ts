@@ -180,6 +180,69 @@ describe("expense document Convex functions", () => {
     ).rejects.toThrow("ATTACHMENT_NOT_FOUND");
   });
 
+  it("projects collected expense documents with ordered attachments and resolved primary attachment", async () => {
+    const t = convexTest({ schema, modules });
+    const userId = await insertUser(t, "owner@example.com");
+    const receivedAt = Date.UTC(2026, 0, 10);
+    const documentId = await t.run((ctx) =>
+      ctx.db.insert("expenseDocuments", {
+        userId,
+        fromEmail: "forwarder@example.com",
+        subject: "January receipts",
+        receivedAt,
+        createdAt: receivedAt,
+        dedupeKey: "owner|projection",
+      }),
+    );
+    const secondAttachmentId = await t.run((ctx) =>
+      ctx.db.insert("expenseDocumentAttachments", {
+        expenseDocumentId: documentId,
+        originalFilename: "second.pdf",
+        mimeType: "application/pdf",
+        fileUrl: "https://example.com/second.pdf",
+        originalOrder: 2,
+        createdAt: receivedAt,
+      }),
+    );
+    const firstAttachmentId = await t.run((ctx) =>
+      ctx.db.insert("expenseDocumentAttachments", {
+        expenseDocumentId: documentId,
+        originalFilename: "first.pdf",
+        mimeType: "application/pdf",
+        fileUrl: "https://example.com/first.pdf",
+        originalOrder: 1,
+        createdAt: receivedAt,
+      }),
+    );
+
+    await t.run((ctx) =>
+      ctx.db.patch(documentId, {
+        primaryAttachmentId: firstAttachmentId,
+      }),
+    );
+
+    const authed = t.withIdentity(asIdentity(userId));
+    const mine = await authed.query(api.expenseDocuments.listMine);
+    const exportDocuments = await t.query(
+      internal.expenseDocuments.listForAccountantExport,
+      {
+        userId,
+        month: "2026-01",
+      },
+    );
+
+    expect(mine[0]?.attachments.map((item) => item._id)).toEqual([
+      firstAttachmentId,
+      secondAttachmentId,
+    ]);
+    expect(mine[0]?.primaryAttachment?._id).toBe(firstAttachmentId);
+    expect(exportDocuments[0]?.attachments.map((item) => item._id)).toEqual([
+      firstAttachmentId,
+      secondAttachmentId,
+    ]);
+    expect(exportDocuments[0]?.primaryAttachment?._id).toBe(firstAttachmentId);
+  });
+
   it("scopes download lookup and accountant export listing by owner and month", async () => {
     const t = convexTest({ schema, modules });
     const ownerId = await insertUser(t, "owner@example.com");
