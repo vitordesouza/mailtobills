@@ -2,13 +2,18 @@ import {
   buildManifestCsv,
   buildZip,
   sanitizeZipName,
+  summarizeAccountantExportContents,
 } from "@mailtobills/types";
 
 import { internal } from "../_generated/api";
 
 import type { Id } from "../_generated/dataModel";
 import type { ActionCtx } from "../_generated/server";
-import type { ExportManifestRow, ZipFileInput } from "@mailtobills/types";
+import type {
+  AccountantExportSkippedDocument,
+  ExportManifestRow,
+  ZipFileInput,
+} from "@mailtobills/types";
 
 type BuildAccountantExportZipParams = {
   userId: Id<"users">;
@@ -46,6 +51,15 @@ export async function buildAccountantExportZip(
 
   const manifestRows: ExportManifestRow[] = [];
   const files: ZipFileInput[] = [];
+  const initialSummary = summarizeAccountantExportContents(
+    documents.map((document) => ({
+      id: document._id,
+      primaryAttachment: document.primaryAttachment,
+    })),
+  );
+  const skippedDocuments: AccountantExportSkippedDocument[] = [
+    ...initialSummary.skippedDocuments,
+  ];
 
   for (const document of documents) {
     const primary = document.primaryAttachment;
@@ -57,6 +71,10 @@ export async function buildAccountantExportZip(
     const bytes = await readAttachmentBytes(ctx, primary);
 
     if (!bytes) {
+      skippedDocuments.push({
+        id: document._id,
+        reason: "unreadable_primary_attachment",
+      });
       continue;
     }
 
@@ -88,5 +106,11 @@ export async function buildAccountantExportZip(
     filename: `mailtobills-${params.month}.zip`,
     zipBytes: buildZip(files),
     documentCount: manifestRows.length,
+    includedDocumentCount: manifestRows.length,
+    pdfFileCount: manifestRows.length,
+    manifestFileCount: 1,
+    fileCount: manifestRows.length + 1,
+    skippedDocumentCount: skippedDocuments.length,
+    skippedDocuments,
   };
 }

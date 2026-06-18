@@ -29,9 +29,8 @@ export default async function ReportsPage({
 }) {
   const { month } = await params;
   const monthInfo = getMonthInfo(month);
-  const { summary, previousSummary } = await getExpenseDocuments(
-    monthInfo.value,
-  );
+  const { summary, previousSummary, exportSummary, previousExportSummary } =
+    await getExpenseDocuments(monthInfo.value);
 
   const previousShortLabel = getMonthInfo(
     monthInfo.previous,
@@ -94,10 +93,13 @@ export default async function ReportsPage({
             <StatLabel>Files in Export</StatLabel>
             <FileArchive />
           </StatTileHeader>
-          <StatValue className="text-3xl">{summary.count + 1}</StatValue>
+          <StatValue className="text-3xl">{exportSummary.fileCount}</StatValue>
           <StatTileFooter>
             <TrendChip
-              delta={percentDelta(summary.count, previousSummary.count)}
+              delta={percentDelta(
+                exportSummary.fileCount,
+                previousExportSummary.fileCount,
+              )}
             />
             <StatTilePeriod>{vsPrevious}</StatTilePeriod>
           </StatTileFooter>
@@ -108,12 +110,24 @@ export default async function ReportsPage({
         <SectionLabel>What is inside the ZIP</SectionLabel>
         <ul className="text-muted-foreground space-y-1.5 text-sm">
           <li>
-            One PDF per collected document — the attachment currently marked as
-            Primary.
+            One PDF for each collected document with a Primary Attachment.
           </li>
           <li>
             A CSV manifest with sender, subject, received date, and filename
-            for every document.
+            for every included document.
+          </li>
+          {exportSummary.skippedDocumentCount > 0 ? (
+            <li>
+              {exportSummary.skippedDocumentCount} collected document
+              {exportSummary.skippedDocumentCount === 1 ? "" : "s"} without a
+              Primary Attachment{" "}
+              {exportSummary.skippedDocumentCount === 1 ? "is" : "are"} not
+              included.
+            </li>
+          ) : null}
+          <li>
+            This estimate uses stored document metadata. The downloaded ZIP is
+            authoritative if a Primary Attachment cannot be read.
           </li>
         </ul>
       </section>

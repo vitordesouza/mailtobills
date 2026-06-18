@@ -52,6 +52,14 @@ describe("buildAccountantExportZip", () => {
               originalFilename: "missing.pdf",
             },
           },
+          {
+            _id: "doc-no-primary",
+            fromEmail: "no-primary@example.com",
+            subject: "No primary",
+            receivedAt: Date.UTC(2026, 0, 8),
+            attachments: [{}],
+            primaryAttachment: null,
+          },
         ]),
       ),
       storage: {
@@ -67,6 +75,20 @@ describe("buildAccountantExportZip", () => {
 
     expect(result.filename).toBe("mailtobills-2026-01.zip");
     expect(result.documentCount).toBe(2);
+    expect(result.includedDocumentCount).toBe(2);
+    expect(result.pdfFileCount).toBe(2);
+    expect(result.manifestFileCount).toBe(1);
+    expect(result.fileCount).toBe(3);
+    expect(result.skippedDocuments).toEqual([
+      {
+        id: "doc-no-primary",
+        reason: "missing_primary_attachment",
+      },
+      {
+        id: "doc-missing",
+        reason: "unreadable_primary_attachment",
+      },
+    ]);
     expect(ctx.storage.get).toHaveBeenCalledWith("storage-1");
     expect(fetchMock).toHaveBeenCalledWith("https://files.example.com/remote.pdf");
     expect(zipText).toContain("pdfs/doc-storage-stored_invoice.pdf");
