@@ -29,7 +29,7 @@ The MailToBills email address where a Customer sends Expense Documents for colle
 _Avoid_: Forwarding email when referring to the destination, user email
 
 **Accountant Export**:
-A package containing each Collected Expense Document's current Primary Attachment PDF and a metadata Manifest for a Collection Month, delivered either manually by the Customer or automatically by an Export Schedule. Accountants do not sign in to MailToBills in the MVP.
+A package containing each Collected Expense Document's current Primary Attachment PDF and a metadata Manifest for a Collection Month. Customers on the Free Plan can download an Accountant Export ZIP manually. Customers on the Pro Plan can also send an Accountant Export directly to the Accountant Address, either manually or automatically through an Export Schedule. Accountants do not sign in to MailToBills in the MVP.
 _Avoid_: Accountant access, accountant workspace, accountant mode
 
 **Export Schedule**:
@@ -37,7 +37,7 @@ A Customer-configured rule that automatically sends an Accountant Export to the 
 _Avoid_: Auto-export, scheduled export, automatic invoice delivery
 
 **Accountant Address**:
-The email address of the Customer's accountant, stored as a Customer property and used as the recipient of Accountant Exports sent by an Export Schedule. A Customer has at most one Accountant Address. The Accountant Address is also available to the manual export flow.
+The email address of the Customer's accountant, stored as a Customer property and used as the recipient of Accountant Exports sent directly on the Pro Plan. A Customer has at most one Accountant Address. The Accountant Address is not required for Free Plan ZIP download.
 _Avoid_: Accountant email, recipient email, accountant account
 
 **Accountant Name**:
@@ -81,11 +81,11 @@ The tier that determines which features a Customer can access. There are two Pla
 _Avoid_: Tier, level, account type, membership
 
 **Free Plan**:
-The default Plan for all Customers. Includes unlimited Expense Document collection, dashboard browsing, and manual Accountant Export. The Free Plan has no expiry and is not a trial.
+The default Plan for all Customers. Includes unlimited Expense Document collection, dashboard browsing, and manual Accountant Export ZIP download. The Free Plan has no expiry and is not a trial.
 _Avoid_: Trial, starter, basic, limited
 
 **Pro Plan**:
-The paid Plan. Includes everything in the Free Plan plus Export Schedule and Additional Forwarding Addresses. Future premium features are added to the Pro Plan, not the Free Plan.
+The paid Plan. Includes everything in the Free Plan plus direct Accountant Export sending, Export Schedule, and Additional Forwarding Addresses. Future premium features are added to the Pro Plan, not the Free Plan.
 _Avoid_: Premium, paid tier, upgrade
 
 **Subscription**:

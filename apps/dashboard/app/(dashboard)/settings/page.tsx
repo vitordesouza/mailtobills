@@ -92,8 +92,8 @@ export default async function SettingsPage() {
 			</SettingsRow>
 
 			<SettingsRow
-				title="Export Schedule"
-				description="Automatically send a monthly Accountant Export to your accountant."
+				title="Accountant Delivery"
+				description="Send Accountant Exports directly or schedule monthly delivery on Pro."
 			>
 				<ExportScheduleForm
 					isPro={Boolean(user?.isPro)}
