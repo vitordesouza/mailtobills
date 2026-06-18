@@ -2,6 +2,16 @@
   "name": "@mailtobills/convex",
   "version": "0.0.0",
   "private": true,
+  "exports": {
+    "./_generated/api": {
+      "types": "./_generated/api.d.ts",
+      "default": "./_generated/api.js"
+    },
+    "./_generated/dataModel": {
+      "types": "./_generated/dataModel.d.ts"
+    }
+  },
+  "sideEffects": false,
   "scripts": {
     "dev": "convex dev",
     "lint": "eslint .",
