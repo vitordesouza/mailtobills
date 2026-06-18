@@ -198,7 +198,7 @@ export async function GET(
     manifestRows.push({
       id: document.id,
       filename: primary.originalFilename,
-      sender: document.fromEmail,
+      sender: document.originFromEmail ?? document.fromEmail,
       subject: document.subject,
       receivedAt: document.receivedAt,
       attachmentCount: document.attachments.length,

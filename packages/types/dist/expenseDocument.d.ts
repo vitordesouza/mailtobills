@@ -22,6 +22,11 @@ export type ExpenseDocument = {
     deletedAt?: number;
     dedupeKey: string;
     primaryAttachmentId?: string;
+    originFromEmail?: string;
+    originFromName?: string;
+    originDomain?: string;
+    originSubject?: string;
+    originSentAt?: number;
 };
 export type ExpenseDocumentRow = ExpenseDocument & {
     attachments: ExpenseDocumentAttachment[];

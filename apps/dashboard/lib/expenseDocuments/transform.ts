@@ -30,6 +30,11 @@ type ConvexExpenseDocument = {
   deletedAt?: number | null;
   dedupeKey: string;
   primaryAttachmentId?: string | null;
+  originFromEmail?: string | null;
+  originFromName?: string | null;
+  originDomain?: string | null;
+  originSubject?: string | null;
+  originSentAt?: number | null;
   attachments: ConvexAttachment[];
   primaryAttachment?: ConvexAttachment | null;
 };
@@ -81,6 +86,11 @@ export function expenseDocumentRowsForMonth(
         deletedAt: document.deletedAt ?? undefined,
         dedupeKey: document.dedupeKey,
         primaryAttachmentId: document.primaryAttachmentId ?? undefined,
+        originFromEmail: document.originFromEmail ?? undefined,
+        originFromName: document.originFromName ?? undefined,
+        originDomain: document.originDomain ?? undefined,
+        originSubject: document.originSubject ?? undefined,
+        originSentAt: document.originSentAt ?? undefined,
         attachments,
         primaryAttachment:
           primaryAttachment ??

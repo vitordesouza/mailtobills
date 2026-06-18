@@ -39,8 +39,14 @@ import {
 } from "@mailtobills/ui/components/table";
 import { cn } from "@mailtobills/ui/lib/utils";
 
+const getSenderEmail = (document: ExpenseDocumentRow) =>
+  document.originFromEmail ?? document.fromEmail;
+
 const getSenderName = (document: ExpenseDocumentRow) => {
-  const email = document.fromEmail;
+  const originName = document.originFromName?.trim();
+  if (originName) return originName;
+
+  const email = getSenderEmail(document);
   if (email?.includes("@")) {
     const domain = email.split("@")[1]?.split(".")[0];
     if (domain) return domain.charAt(0).toUpperCase() + domain.slice(1);
@@ -248,8 +254,15 @@ export function ExpenseDocumentsTable({
                         </div>
                         <div className="min-w-0">
                           <div className="truncate font-medium">{sender}</div>
-                          <div className="text-muted-foreground truncate text-xs">
-                            {document.fromEmail ?? "Forwarded email"}
+                          <div
+                            className="text-muted-foreground truncate text-xs"
+                            title={
+                              document.originFromEmail && document.fromEmail
+                                ? `Forwarded by ${document.fromEmail}`
+                                : undefined
+                            }
+                          >
+                            {getSenderEmail(document) ?? "Forwarded email"}
                           </div>
                         </div>
                       </div>
@@ -268,7 +281,12 @@ export function ExpenseDocumentsTable({
                       </div>
                     </TableCell>
                     <TableCell className="text-muted-foreground border-l font-mono text-xs whitespace-nowrap tabular-nums">
-                      {formatReceivedAt(document.receivedAt)}
+                      <div>{formatReceivedAt(document.receivedAt)}</div>
+                      {document.originSentAt ? (
+                        <div className="text-muted-foreground/70 text-[11px]">
+                          Sent {formatReceivedAt(document.originSentAt)}
+                        </div>
+                      ) : null}
                     </TableCell>
                     <TableCell className="border-l">
                       <Badge
