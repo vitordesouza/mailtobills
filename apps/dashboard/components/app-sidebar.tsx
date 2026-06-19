@@ -114,7 +114,7 @@ export function AppSidebar({
                     MailToBills
                   </span>
                   <span className="text-muted-foreground truncate font-mono text-[10px] font-medium tracking-[0.08em] uppercase">
-                    Workspace
+                    Customer
                   </span>
                 </div>
               </Link>

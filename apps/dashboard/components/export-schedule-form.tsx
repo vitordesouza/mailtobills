@@ -1,11 +1,12 @@
 "use client";
 
-import { CalendarClock, Lock } from "lucide-react";
+import { CalendarClock, CheckCircle2, Lock, Send } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { FormEvent, useMemo, useState, useTransition } from "react";
 
 import { api } from "@/lib/convexClient";
 import { useMutation } from "convex/react";
+import { Badge } from "@mailtobills/ui/components/badge";
 import { Button } from "@mailtobills/ui/components/button";
 import { Input } from "@mailtobills/ui/components/input";
 import { Label } from "@mailtobills/ui/components/label";
@@ -148,12 +149,18 @@ export function ExportScheduleForm({
   return (
     <div className="space-y-4">
       {!isPro ? (
-        <div className="flex items-start gap-2 rounded-md border border-amber-500/25 bg-amber-500/10 px-3 py-2 text-sm text-amber-700 dark:text-amber-300">
-          <Lock className="mt-0.5 size-4" />
-          <div className="space-y-2">
-            <p>
-              Direct send and Export Schedule are available on the Pro Plan.
-            </p>
+        <div className="flex items-start gap-3 rounded-md border border-amber-500/25 bg-amber-500/10 px-3 py-3 text-sm text-amber-800 dark:text-amber-200">
+          <Lock className="mt-0.5 size-4 shrink-0" />
+          <div className="space-y-3">
+            <div className="space-y-1">
+              <p className="font-medium">
+                Pro turns month-end handoff into a saved delivery route.
+              </p>
+              <p>
+                Send Accountant Exports directly to the Accountant Address and
+                schedule monthly delivery for the previous Collection Month.
+              </p>
+            </div>
             <form action="/api/billing/checkout" method="post">
               <Button type="submit" size="sm" variant="outline">
                 Upgrade to Pro
@@ -161,7 +168,18 @@ export function ExportScheduleForm({
             </form>
           </div>
         </div>
-      ) : null}
+      ) : (
+        <div className="grid gap-2 rounded-md border border-emerald-500/25 bg-emerald-500/10 px-3 py-3 text-sm text-emerald-700 dark:text-emerald-300 sm:grid-cols-2">
+          <div className="flex items-center gap-2">
+            <Send className="size-4" />
+            Direct Accountant Export sending is unlocked.
+          </div>
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="size-4" />
+            Export Schedule settings are preserved.
+          </div>
+        </div>
+      )}
 
       <form className="space-y-4" onSubmit={submit}>
         <div className="grid gap-3 md:grid-cols-2">
@@ -218,6 +236,9 @@ export function ExportScheduleForm({
               className="size-4"
             />
             Enable monthly Export Schedule
+            <Badge variant={enabled ? "success" : "secondary"}>
+              {enabled ? "On" : "Off"}
+            </Badge>
           </label>
         </div>
 

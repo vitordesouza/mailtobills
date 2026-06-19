@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ExportScheduleForm } from "./export-schedule-form";
 import { ForwardingAddressesForm } from "./forwarding-addresses-form";
+import { PreferencesSettings } from "./preferences-settings";
 
 const mocks = vi.hoisted(() => ({
   api: {
@@ -22,6 +23,7 @@ const mocks = vi.hoisted(() => ({
   removeForwardingAddress: vi.fn(() => Promise.resolve()),
   updateAccountantDeliverySettings: vi.fn(() => Promise.resolve()),
   updateExportSchedule: vi.fn(() => Promise.resolve()),
+  setTheme: vi.fn(),
 }));
 
 vi.mock("next/navigation", () => ({
@@ -51,6 +53,13 @@ vi.mock("convex/react", () => ({
   }),
 }));
 
+vi.mock("next-themes", () => ({
+  useTheme: () => ({
+    theme: "system",
+    setTheme: mocks.setTheme,
+  }),
+}));
+
 describe("settings forms", () => {
   beforeEach(() => {
     mocks.refresh.mockClear();
@@ -58,6 +67,7 @@ describe("settings forms", () => {
     mocks.removeForwardingAddress.mockClear();
     mocks.updateAccountantDeliverySettings.mockClear();
     mocks.updateExportSchedule.mockClear();
+    mocks.setTheme.mockClear();
   });
 
   it("removes forwarding addresses for Pro users", async () => {
@@ -164,5 +174,16 @@ describe("settings forms", () => {
     ).toBeInTheDocument();
     expect(mocks.updateAccountantDeliverySettings).not.toHaveBeenCalled();
     expect(mocks.updateExportSchedule).not.toHaveBeenCalled();
+  });
+
+  it("lets the Customer choose a dashboard theme", async () => {
+    const user = userEvent.setup();
+    render(<PreferencesSettings />);
+
+    await user.click(screen.getByRole("button", { name: /dark/i }));
+
+    expect(mocks.setTheme).toHaveBeenCalledWith("dark");
+    expect(screen.getByLabelText(/language/i)).toBeDisabled();
+    expect(screen.getByText(/current locale/i)).toBeInTheDocument();
   });
 });
