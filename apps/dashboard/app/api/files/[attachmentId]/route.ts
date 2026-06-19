@@ -1,4 +1,4 @@
-import { getCustomerAuthToken } from "@/features/customer/read-model/getCurrentCustomer";
+import { readCustomerAuthToken } from "@/features/customer/read-model/getCurrentCustomer";
 
 const getConvexHttpBase = () =>
   process.env.NEXT_PUBLIC_CONVEX_HTTP_URL ??
@@ -10,7 +10,7 @@ export async function GET(
   { params }: { params: Promise<{ attachmentId: string }> },
 ) {
   const { attachmentId } = await params;
-  const token = await getCustomerAuthToken();
+  const token = await readCustomerAuthToken();
   const convexHttpBase = getConvexHttpBase();
 
   if (!token || !convexHttpBase) {

@@ -1,8 +1,8 @@
-import { getCurrentCustomer } from "@/features/customer/read-model/getCurrentCustomer";
+import { readCurrentCustomer } from "@/features/customer/read-model/getCurrentCustomer";
 import { createProCheckout } from "@/lib/lemonsqueezy";
 
 export async function POST(request: Request) {
-  const session = await getCurrentCustomer();
+  const session = await readCurrentCustomer();
   const customer = session?.customer;
 
   if (!customer?.email) {

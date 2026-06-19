@@ -5,7 +5,7 @@ const auth = vi.hoisted(() => ({
 }));
 
 vi.mock("@/features/customer/read-model/getCurrentCustomer", () => ({
-  getCustomerAuthToken: vi.fn(() => Promise.resolve(auth.token)),
+  readCustomerAuthToken: vi.fn(() => Promise.resolve(auth.token)),
 }));
 
 describe("file download API route", () => {

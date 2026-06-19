@@ -1,6 +1,6 @@
 import { isCollectionMonth } from "@mailtobills/domain";
 
-import { getCustomerAuthToken } from "@/features/customer/read-model/getCurrentCustomer";
+import { readCustomerAuthToken } from "@/features/customer/read-model/getCurrentCustomer";
 const getConvexHttpBase = () =>
   process.env.NEXT_PUBLIC_CONVEX_HTTP_URL ??
   process.env.NEXT_PUBLIC_CONVEX_URL?.replace(".cloud", ".site") ??
@@ -16,7 +16,7 @@ export async function GET(
     return new Response("Invalid Collection Month", { status: 400 });
   }
 
-  const token = await getCustomerAuthToken();
+  const token = await readCustomerAuthToken();
   const convexHttpBase = getConvexHttpBase();
 
   if (!token || !convexHttpBase) {
