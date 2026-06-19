@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.0.1",
   "scripts": {
-    "dev": "turbo dev",
+    "dev": "pnpm --filter @mailtobills/domain build && turbo dev",
     "lint": "turbo lint",
     "build": "turbo build",
     "typecheck": "turbo typecheck",
