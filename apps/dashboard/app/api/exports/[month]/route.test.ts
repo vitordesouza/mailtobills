@@ -10,10 +10,12 @@ vi.mock("@/features/customer/read-model/getCurrentCustomer", () => ({
 
 describe("accountant export API route", () => {
   const originalConvexHttpUrl = process.env.NEXT_PUBLIC_CONVEX_HTTP_URL;
+  const originalConvexUrl = process.env.NEXT_PUBLIC_CONVEX_URL;
 
   beforeEach(() => {
     auth.token = "auth-token";
     process.env.NEXT_PUBLIC_CONVEX_HTTP_URL = "https://convex.example.site";
+    delete process.env.NEXT_PUBLIC_CONVEX_URL;
     vi.restoreAllMocks();
   });
 
@@ -40,6 +42,22 @@ describe("accountant export API route", () => {
     });
 
     expect(response.status).toBe(401);
+    expect(response.headers.get("cache-control")).toBe(
+      "private, max-age=0, must-revalidate",
+    );
+  });
+
+  it("returns unavailable when Convex HTTP is not configured", async () => {
+    delete process.env.NEXT_PUBLIC_CONVEX_HTTP_URL;
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const { GET } = await import("./route");
+
+    const response = await GET(new Request("http://dashboard.test"), {
+      params: Promise.resolve({ month: "2026-01" }),
+    });
+
+    expect(response.status).toBe(503);
+    expect(await response.text()).toBe("File service unavailable");
   });
 
   it("proxies successful export responses with fallback headers", async () => {
@@ -52,7 +70,7 @@ describe("accountant export API route", () => {
     });
 
     expect(fetchMock).toHaveBeenCalledWith(
-      "https://convex.example.site/export?month=2026-01",
+      new URL("https://convex.example.site/export?month=2026-01"),
       {
         headers: {
           authorization: "Bearer auth-token",
@@ -74,6 +92,12 @@ describe("accountant export API route", () => {
       delete process.env.NEXT_PUBLIC_CONVEX_HTTP_URL;
     } else {
       process.env.NEXT_PUBLIC_CONVEX_HTTP_URL = originalConvexHttpUrl;
+    }
+
+    if (originalConvexUrl === undefined) {
+      delete process.env.NEXT_PUBLIC_CONVEX_URL;
+    } else {
+      process.env.NEXT_PUBLIC_CONVEX_URL = originalConvexUrl;
     }
   });
 });

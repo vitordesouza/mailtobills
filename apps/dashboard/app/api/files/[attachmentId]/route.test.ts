@@ -51,7 +51,7 @@ describe("file download API route", () => {
     });
 
     expect(fetchMock).toHaveBeenCalledWith(
-      "https://convex.example.site/file?attachmentId=attachment%201",
+      new URL("https://convex.example.site/file?attachmentId=attachment+1"),
       {
         headers: {
           authorization: "Bearer auth-token",
@@ -81,8 +81,27 @@ describe("file download API route", () => {
     });
 
     expect(fetchMock).toHaveBeenCalledWith(
-      "https://project.convex.site/file?attachmentId=attachment-1",
+      new URL("https://project.convex.site/file?attachmentId=attachment-1"),
       expect.any(Object),
+    );
+  });
+
+  it("returns unavailable when the upstream request fails", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(() => Promise.reject(new Error("network down"))),
+    );
+    const { GET } = await import("./route");
+
+    const response = await GET(new Request("http://dashboard.test"), {
+      params: Promise.resolve({ attachmentId: "attachment-1" }),
+    });
+
+    expect(response.status).toBe(502);
+    expect(await response.text()).toBe("File service unavailable");
+    expect(response.headers.get("cache-control")).toBe(
+      "private, max-age=0, must-revalidate",
     );
   });
 
