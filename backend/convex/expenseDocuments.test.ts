@@ -307,4 +307,158 @@ describe("expense document Convex functions", () => {
     expect(januaryExport[0]?.primaryAttachment?._id).toBe(attachmentId);
     expect(februaryExport).toHaveLength(0);
   });
+
+  it("returns Collection Month dashboard data from one deep query", async () => {
+    const t = convexTest({ schema, modules });
+    const userId = await insertUser(t, "owner@example.com");
+    const authed = t.withIdentity(asIdentity(userId));
+
+    const januaryOlderId = await t.run((ctx) =>
+      ctx.db.insert("expenseDocuments", {
+        userId,
+        fromEmail: "forwarder@example.com",
+        subject: "January older",
+        receivedAt: Date.UTC(2026, 0, 8),
+        createdAt: Date.UTC(2026, 0, 8),
+        dedupeKey: "owner|january-older",
+      }),
+    );
+    const januarySecondAttachmentId = await t.run((ctx) =>
+      ctx.db.insert("expenseDocumentAttachments", {
+        expenseDocumentId: januaryOlderId,
+        originalFilename: "second.pdf",
+        mimeType: "application/pdf",
+        originalOrder: 2,
+        createdAt: Date.UTC(2026, 0, 8),
+      }),
+    );
+    const januaryFirstAttachmentId = await t.run((ctx) =>
+      ctx.db.insert("expenseDocumentAttachments", {
+        expenseDocumentId: januaryOlderId,
+        originalFilename: "first.pdf",
+        mimeType: "application/pdf",
+        originalOrder: 1,
+        createdAt: Date.UTC(2026, 0, 8),
+      }),
+    );
+    await t.run((ctx) =>
+      ctx.db.patch(januaryOlderId, {
+        primaryAttachmentId: januaryFirstAttachmentId,
+      }),
+    );
+
+    const januaryWithoutPrimaryId = await t.run((ctx) =>
+      ctx.db.insert("expenseDocuments", {
+        userId,
+        fromEmail: "forwarder@example.com",
+        subject: "January missing primary",
+        receivedAt: Date.UTC(2026, 0, 10),
+        createdAt: Date.UTC(2026, 0, 10),
+        dedupeKey: "owner|january-missing-primary",
+      }),
+    );
+    await t.run((ctx) =>
+      ctx.db.insert("expenseDocumentAttachments", {
+        expenseDocumentId: januaryWithoutPrimaryId,
+        originalFilename: "fallback.pdf",
+        mimeType: "application/pdf",
+        originalOrder: 0,
+        createdAt: Date.UTC(2026, 0, 10),
+      }),
+    );
+
+    const decemberId = await t.run((ctx) =>
+      ctx.db.insert("expenseDocuments", {
+        userId,
+        receivedAt: Date.UTC(2025, 11, 5),
+        createdAt: Date.UTC(2025, 11, 5),
+        dedupeKey: "owner|december",
+      }),
+    );
+    const decemberAttachmentId = await t.run((ctx) =>
+      ctx.db.insert("expenseDocumentAttachments", {
+        expenseDocumentId: decemberId,
+        originalFilename: "december.pdf",
+        mimeType: "application/pdf",
+        originalOrder: 0,
+        createdAt: Date.UTC(2025, 11, 5),
+      }),
+    );
+    await t.run((ctx) =>
+      ctx.db.patch(decemberId, {
+        primaryAttachmentId: decemberAttachmentId,
+      }),
+    );
+
+    await t.mutation(internal.expenseDocuments.ingestCreateExpenseDocument, {
+      userId,
+      receivedAt: Date.UTC(2026, 1, 1),
+      dedupeKey: "owner|february",
+      attachments: [
+        {
+          originalFilename: "february.pdf",
+          mimeType: "application/pdf",
+          originalOrder: 0,
+        },
+      ],
+    });
+    const deletedId = await t.mutation(
+      internal.expenseDocuments.ingestCreateExpenseDocument,
+      {
+        userId,
+        receivedAt: Date.UTC(2026, 0, 15),
+        dedupeKey: "owner|deleted",
+        attachments: [
+          {
+            originalFilename: "deleted.pdf",
+            mimeType: "application/pdf",
+            originalOrder: 0,
+          },
+        ],
+      },
+    );
+    await t.run((ctx) =>
+      ctx.db.patch(deletedId, {
+        deletedAt: Date.UTC(2026, 0, 16),
+      }),
+    );
+
+    const result = await authed.query(
+      api.expenseDocuments.getCollectionMonthDashboard,
+      { month: "2026-01" },
+    );
+
+    expect(result.documents.map((document) => document.id)).toEqual([
+      januaryWithoutPrimaryId,
+      januaryOlderId,
+    ]);
+    expect(result.documents[1]?.attachments.map((item) => item.id)).toEqual([
+      januaryFirstAttachmentId,
+      januarySecondAttachmentId,
+    ]);
+    expect(result.documents[1]?.primaryAttachment?.id).toBe(
+      januaryFirstAttachmentId,
+    );
+    expect(result.documents[0]?.primaryAttachment).toBeUndefined();
+    expect(result.summary).toEqual({ count: 2, attachmentCount: 3 });
+    expect(result.previousSummary).toEqual({
+      count: 1,
+      attachmentCount: 1,
+    });
+    expect(result.exportSummary).toEqual({
+      includedDocumentCount: 1,
+      pdfFileCount: 1,
+      manifestFileCount: 1,
+      fileCount: 2,
+      skippedDocumentCount: 1,
+      skippedDocuments: [
+        {
+          id: januaryWithoutPrimaryId,
+          reason: "missing_primary_attachment",
+        },
+      ],
+    });
+    expect(result.previousExportSummary.includedDocumentCount).toBe(1);
+    expect(result.totalCount).toBe(4);
+  });
 });
