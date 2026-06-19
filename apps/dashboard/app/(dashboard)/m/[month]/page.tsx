@@ -27,6 +27,7 @@ import {
 import { TrendChip } from "@mailtobills/ui/components/trend-chip";
 import { OnboardingEmptyState } from "@/components/onboarding-empty-state";
 import { SendToAccountantButton } from "@/components/send-to-accountant-button";
+import { getCollectionMonthRoute } from "@/lib/collection-month-route";
 
 export default async function DashboardPage({
   params,
@@ -34,7 +35,7 @@ export default async function DashboardPage({
   params: Promise<{ month: string }>;
 }) {
   const { month } = await params;
-  const monthInfo = getMonthInfo(month);
+  const monthInfo = getCollectionMonthRoute(month);
   const token = await convexAuthNextjsToken();
   const { summary, previousSummary, totalCount, documents } =
     await getExpenseDocuments(monthInfo.value);

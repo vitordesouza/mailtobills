@@ -27,16 +27,17 @@ import {
   EmptyStateIcon,
   EmptyStateTitle,
 } from "@mailtobills/ui/components/empty-state";
-import { SectionLabel } from "@mailtobills/ui/components/section-label";
-import { Skeleton } from "@mailtobills/ui/components/skeleton";
 import {
   Table,
   TableBody,
   TableCell,
-  TableHead,
-  TableHeader,
   TableRow,
 } from "@mailtobills/ui/components/table";
+import {
+  ExpenseDocumentsTableColumns,
+  ExpenseDocumentsTableHeader,
+  ExpenseDocumentsTableHeading,
+} from "./expense-documents-table-chrome";
 import { cn } from "@mailtobills/ui/lib/utils";
 
 const getSenderEmail = (document: ExpenseDocumentRow) =>
@@ -102,62 +103,6 @@ function ViewPdfButton({
   );
 }
 
-const tableColumns = (
-  <colgroup>
-    <col className="w-[52px]" />
-    <col className="w-[220px]" />
-    <col />
-    <col className="w-[150px]" />
-    <col className="w-[120px]" />
-    <col className="w-[190px]" />
-  </colgroup>
-);
-
-function TableHeading({
-  count,
-}: {
-  count?: number;
-}) {
-  return (
-    <div className="bg-card flex flex-col gap-1 border-b px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-      <div className="min-w-0 space-y-0.5">
-        <SectionLabel withRule={false} className="text-foreground">
-          Collected Expense Documents
-        </SectionLabel>
-        <p className="text-muted-foreground text-xs">
-          One row per accepted forwarded email.
-        </p>
-      </div>
-      {count !== undefined ? (
-        <div className="text-muted-foreground font-mono text-[11px] font-medium tracking-[0.08em] uppercase tabular-nums">
-          {count} {count === 1 ? "doc" : "docs"}
-        </div>
-      ) : null}
-    </div>
-  );
-}
-
-const monoHeadClass = "font-mono text-[11px] tracking-[0.08em] uppercase";
-
-function DocumentsTableHeader() {
-  return (
-    <TableHeader>
-      <TableRow className="hover:bg-transparent">
-        <TableHead className="sr-only">Expand</TableHead>
-        <TableHead className={monoHeadClass}>Sender</TableHead>
-        <TableHead className={monoHeadClass}>Document</TableHead>
-        <TableHead className={cn(monoHeadClass, "border-l")}>
-          Received
-        </TableHead>
-        <TableHead className={cn(monoHeadClass, "border-l")}>PDFs</TableHead>
-        <TableHead className={cn(monoHeadClass, "border-l text-right")}>
-          Actions
-        </TableHead>
-      </TableRow>
-    </TableHeader>
-  );
-}
-
 export function ExpenseDocumentsTable({
   documents,
   emptyLabel,
@@ -201,11 +146,11 @@ export function ExpenseDocumentsTable({
 
   return (
     <Card className="min-w-0 gap-0 overflow-hidden rounded-lg py-0 shadow-xs">
-      <TableHeading count={documents.length} />
+      <ExpenseDocumentsTableHeading count={documents.length} />
       <CardContent className="p-0">
         <Table className="min-w-[920px] table-fixed">
-          {tableColumns}
-          <DocumentsTableHeader />
+          <ExpenseDocumentsTableColumns />
+          <ExpenseDocumentsTableHeader />
           <TableBody>
             {documents.map((document) => {
               const sender = getSenderName(document);
@@ -401,56 +346,6 @@ export function ExpenseDocumentsTable({
                 </Fragment>
               );
             })}
-          </TableBody>
-        </Table>
-      </CardContent>
-    </Card>
-  );
-}
-
-export function ExpenseDocumentsTableSkeleton({ rows = 6 }: { rows?: number }) {
-  return (
-    <Card className="min-w-0 gap-0 overflow-hidden rounded-lg py-0 shadow-xs">
-      <TableHeading />
-      <CardContent className="p-0">
-        <Table className="min-w-[920px] table-fixed">
-          {tableColumns}
-          <DocumentsTableHeader />
-          <TableBody>
-            {Array.from({ length: rows }).map((_, idx) => (
-              <TableRow key={idx} className="hover:bg-transparent">
-                <TableCell>
-                  <Skeleton className="size-8 rounded-md" />
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-3">
-                    <Skeleton className="size-9 rounded-lg" />
-                    <div className="space-y-2">
-                      <Skeleton className="h-4 w-28" />
-                      <Skeleton className="h-3 w-36" />
-                    </div>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <div className="space-y-2">
-                    <Skeleton className="h-4 w-[22rem] max-w-full" />
-                    <Skeleton className="h-3 w-[18rem] max-w-full" />
-                  </div>
-                </TableCell>
-                <TableCell className="border-l">
-                  <Skeleton className="h-4 w-20" />
-                </TableCell>
-                <TableCell className="border-l">
-                  <Skeleton className="h-4 w-10" />
-                </TableCell>
-                <TableCell className="border-l">
-                  <div className="flex justify-end gap-2">
-                    <Skeleton className="h-8 w-20 rounded-md" />
-                    <Skeleton className="size-8 rounded-md" />
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
           </TableBody>
         </Table>
       </CardContent>
