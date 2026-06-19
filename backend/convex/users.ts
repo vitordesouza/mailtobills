@@ -8,19 +8,17 @@ import {
 } from "./_generated/server";
 
 import { requirePro } from "./lib/requirePro";
-
-function normalizedOptionalString(value: string | undefined) {
-  const trimmed = value?.trim();
-  return trimmed ? trimmed : undefined;
-}
-
-function isPlausibleEmail(value: string) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
-}
-
-function normalizeEmail(value: string) {
-  return value.trim().toLowerCase();
-}
+import {
+  addForwardingAddress as addForwardingAddressToCustomer,
+  findCustomerByForwardingAddress,
+  normalizeEmailAddress,
+  removeForwardingAddress as removeForwardingAddressFromCustomer,
+} from "./lib/forwardingAddresses";
+import {
+  buildAccountantAddressPatch,
+  buildAccountantDeliverySettingsPatch,
+  buildExportSchedulePatch,
+} from "./lib/accountantDeliverySettings";
 
 export const viewer = query({
   args: {},
@@ -37,11 +35,13 @@ export const viewer = query({
 export const getUserByForwardingEmail = internalQuery({
   args: { fromEmail: v.string() },
   handler: async (ctx, args) => {
-    // First, try to find by primary email using the index
-    if (args.fromEmail) {
+    const fromEmail = normalizeEmailAddress(args.fromEmail);
+
+    // First, try to find by normalized primary email using the index.
+    if (fromEmail) {
       const byPrimaryEmail = await ctx.db
         .query("users")
-        .withIndex("email", (q) => q.eq("email", args.fromEmail))
+        .withIndex("email", (q) => q.eq("email", fromEmail))
         .first();
 
       if (byPrimaryEmail) {
@@ -53,14 +53,7 @@ export const getUserByForwardingEmail = internalQuery({
     // Note: We need to query all users since we can't efficiently index array membership
     const allUsers = await ctx.db.query("users").collect();
 
-    const byForwarding = allUsers.find(
-      (user) =>
-        user.isPro &&
-        Array.isArray(user.forwardingEmails) &&
-        user.forwardingEmails.includes(args.fromEmail)
-    );
-
-    return byForwarding ?? null;
+    return findCustomerByForwardingAddress(allUsers, fromEmail);
   },
 });
 
@@ -106,19 +99,10 @@ export const updateExportSchedule = mutation({
   },
   handler: async (ctx, args) => {
     const userId = await requirePro(ctx);
-
-    if (args.exportScheduleDay !== undefined) {
-      if (
-        !Number.isInteger(args.exportScheduleDay) ||
-        args.exportScheduleDay < 1 ||
-        args.exportScheduleDay > 28
-      ) {
-        throw new Error("EXPORT_SCHEDULE_DAY_OUT_OF_RANGE");
-      }
-    }
+    const user = await ctx.db.get(userId);
 
     await ctx.db.patch(userId, {
-      exportScheduleDay: args.exportScheduleDay,
+      ...buildExportSchedulePatch(user, args),
     });
   },
 });
@@ -130,16 +114,25 @@ export const updateAccountantAddress = mutation({
   },
   handler: async (ctx, args) => {
     const userId = await requirePro(ctx);
-    const accountantEmail = normalizedOptionalString(args.accountantEmail);
-    const accountantName = normalizedOptionalString(args.accountantName);
-
-    if (accountantEmail && !isPlausibleEmail(accountantEmail)) {
-      throw new Error("INVALID_ACCOUNTANT_EMAIL");
-    }
+    const user = await ctx.db.get(userId);
 
     await ctx.db.patch(userId, {
-      accountantEmail,
-      accountantName,
+      ...buildAccountantAddressPatch(args, user),
+    });
+  },
+});
+
+export const updateAccountantDeliverySettings = mutation({
+  args: {
+    accountantEmail: v.string(),
+    accountantName: v.string(),
+    exportScheduleDay: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const userId = await requirePro(ctx);
+
+    await ctx.db.patch(userId, {
+      ...buildAccountantDeliverySettingsPatch(args),
     });
   },
 });
@@ -150,25 +143,10 @@ export const addForwardingAddress = mutation({
   },
   handler: async (ctx, args) => {
     const userId = await requirePro(ctx);
-    const email = normalizeEmail(args.email);
-
-    if (!isPlausibleEmail(email)) {
-      throw new Error("INVALID_FORWARDING_EMAIL");
-    }
-
     const user = await ctx.db.get(userId);
-    const forwardingEmails = user?.forwardingEmails ?? [];
-
-    if (user?.email && normalizeEmail(user.email) === email) {
-      throw new Error("FORWARDING_EMAIL_IS_PRIMARY");
-    }
-
-    if (forwardingEmails.includes(email)) {
-      return;
-    }
 
     await ctx.db.patch(userId, {
-      forwardingEmails: [...forwardingEmails, email],
+      forwardingEmails: addForwardingAddressToCustomer(user, args.email),
     });
   },
 });
@@ -179,13 +157,10 @@ export const removeForwardingAddress = mutation({
   },
   handler: async (ctx, args) => {
     const userId = await requirePro(ctx);
-    const email = normalizeEmail(args.email);
     const user = await ctx.db.get(userId);
 
     await ctx.db.patch(userId, {
-      forwardingEmails: (user?.forwardingEmails ?? []).filter(
-        (forwardingEmail) => forwardingEmail !== email
-      ),
+      forwardingEmails: removeForwardingAddressFromCustomer(user, args.email),
     });
   },
 });
@@ -202,7 +177,7 @@ export const getUsersDueForExport = internalQuery({
       (user) =>
         user.isPro === true &&
         user.exportScheduleDay === args.day &&
-        !!user.accountantEmail
+        !!user.accountantEmail,
     );
   },
 });

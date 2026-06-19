@@ -20,6 +20,9 @@ async function insertUser(
     email: string;
     isPro?: boolean;
     forwardingEmails?: string[];
+    accountantEmail?: string;
+    accountantName?: string;
+    exportScheduleDay?: number;
   },
 ) {
   return t.run((ctx) => ctx.db.insert("users", user));
@@ -113,6 +116,11 @@ describe("user settings Convex functions", () => {
         exportScheduleDay: 29,
       }),
     ).rejects.toThrow("EXPORT_SCHEDULE_DAY_OUT_OF_RANGE");
+    await expect(
+      authed.mutation(api.users.updateExportSchedule, {
+        exportScheduleDay: 5,
+      }),
+    ).rejects.toThrow("ACCOUNTANT_ADDRESS_REQUIRED_FOR_EXPORT_SCHEDULE");
 
     await authed.mutation(api.users.updateAccountantAddress, {
       accountantEmail: " accountant@example.com ",
@@ -129,6 +137,45 @@ describe("user settings Convex functions", () => {
     expect(user?.accountantEmail).toBe("accountant@example.com");
     expect(user?.accountantName).toBe("Marta");
     expect(user?.exportScheduleDay).toBeUndefined();
+  });
+
+  it("saves Accountant Delivery settings atomically", async () => {
+    const t = convexTest({ schema, modules });
+    const userId = await insertUser(t, {
+      email: "owner@example.com",
+      isPro: true,
+    });
+    const authed = t.withIdentity(asIdentity(userId));
+
+    await expect(
+      authed.mutation(api.users.updateAccountantDeliverySettings, {
+        accountantEmail: "",
+        accountantName: "Books",
+        exportScheduleDay: 5,
+      }),
+    ).rejects.toThrow("ACCOUNTANT_ADDRESS_REQUIRED_FOR_EXPORT_SCHEDULE");
+
+    await authed.mutation(api.users.updateAccountantDeliverySettings, {
+      accountantEmail: " accountant@example.com ",
+      accountantName: " Marta ",
+      exportScheduleDay: 5,
+    });
+
+    const enabled = await t.run((ctx) => ctx.db.get(userId));
+    expect(enabled?.accountantEmail).toBe("accountant@example.com");
+    expect(enabled?.accountantName).toBe("Marta");
+    expect(enabled?.exportScheduleDay).toBe(5);
+
+    await authed.mutation(api.users.updateAccountantDeliverySettings, {
+      accountantEmail: " accountant@example.com ",
+      accountantName: " Marta ",
+      exportScheduleDay: undefined,
+    });
+
+    const disabled = await t.run((ctx) => ctx.db.get(userId));
+    expect(disabled?.accountantEmail).toBe("accountant@example.com");
+    expect(disabled?.accountantName).toBe("Marta");
+    expect(disabled?.exportScheduleDay).toBeUndefined();
   });
 
   it("validates and clears the Accountant Address", async () => {
@@ -159,12 +206,41 @@ describe("user settings Convex functions", () => {
     expect(user?.accountantName).toBeUndefined();
   });
 
+  it("does not clear the Accountant Address while an Export Schedule is enabled", async () => {
+    const t = convexTest({ schema, modules });
+    const userId = await insertUser(t, {
+      email: "owner@example.com",
+      isPro: true,
+      accountantEmail: "accountant@example.com",
+      accountantName: "Marta",
+      exportScheduleDay: 5,
+    });
+    const authed = t.withIdentity(asIdentity(userId));
+
+    await expect(
+      authed.mutation(api.users.updateAccountantAddress, {
+        accountantEmail: " ",
+        accountantName: " ",
+      }),
+    ).rejects.toThrow("ACCOUNTANT_ADDRESS_REQUIRED_FOR_EXPORT_SCHEDULE");
+
+    await authed.mutation(api.users.updateAccountantAddress, {
+      accountantEmail: " books@example.com ",
+      accountantName: " Books ",
+    });
+
+    const user = await t.run((ctx) => ctx.db.get(userId));
+    expect(user?.accountantEmail).toBe("books@example.com");
+    expect(user?.accountantName).toBe("Books");
+    expect(user?.exportScheduleDay).toBe(5);
+  });
+
   it("finds users by primary or Pro forwarding email and lists due exports", async () => {
     const t = convexTest({ schema, modules });
     const proId = await insertUser(t, {
-      email: "owner@example.com",
+      email: "Owner@Example.com",
       isPro: true,
-      forwardingEmails: ["billing@example.com"],
+      forwardingEmails: ["Billing@Example.com"],
     });
     await t.run((ctx) =>
       ctx.db.patch(proId, {
@@ -179,11 +255,14 @@ describe("user settings Convex functions", () => {
     });
 
     const byPrimary = await t.query(internal.users.getUserByForwardingEmail, {
-      fromEmail: "owner@example.com",
+      fromEmail: " OWNER@EXAMPLE.COM ",
     });
-    const byForwarding = await t.query(internal.users.getUserByForwardingEmail, {
-      fromEmail: "billing@example.com",
-    });
+    const byForwarding = await t.query(
+      internal.users.getUserByForwardingEmail,
+      {
+        fromEmail: " BILLING@EXAMPLE.COM ",
+      },
+    );
     const ignoredFreeForwarding = await t.query(
       internal.users.getUserByForwardingEmail,
       {
