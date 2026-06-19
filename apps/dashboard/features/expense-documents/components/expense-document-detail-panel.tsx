@@ -66,6 +66,8 @@ export type ExpenseDocumentDetailPanelProps = {
   documentIndex: number;
   documentCount: number;
   isBusy?: boolean;
+  errorMessage?: string | null;
+  returnFocusTo?: HTMLElement | null;
   onOpenChange: (open: boolean) => void;
   onPrevious: () => void;
   onNext: () => void;
@@ -97,6 +99,8 @@ export function ExpenseDocumentDetailPanel({
   documentIndex,
   documentCount,
   isBusy = false,
+  errorMessage,
+  returnFocusTo,
   onOpenChange,
   onPrevious,
   onNext,
@@ -147,6 +151,10 @@ export function ExpenseDocumentDetailPanel({
         <SheetContent
           ref={setSheetContentElement}
           className="w-full gap-0 overflow-hidden p-0 sm:max-w-[720px]"
+          onCloseAutoFocus={(event) => {
+            event.preventDefault();
+            returnFocusTo?.focus();
+          }}
         >
           <SheetHeader className="gap-4 border-b px-5 pt-5 pb-4 sm:px-6">
             <div className="flex items-center justify-between gap-4 pr-8">
@@ -162,7 +170,7 @@ export function ExpenseDocumentDetailPanel({
                   variant="ghost"
                   size="icon-sm"
                   onClick={onPrevious}
-                  disabled={documentIndex <= 0}
+                  disabled={isBusy || documentIndex <= 0}
                   aria-label={t("previousDocument")}
                 >
                   <ChevronLeft />
@@ -172,7 +180,7 @@ export function ExpenseDocumentDetailPanel({
                   variant="ghost"
                   size="icon-sm"
                   onClick={onNext}
-                  disabled={documentIndex >= documentCount - 1}
+                  disabled={isBusy || documentIndex >= documentCount - 1}
                   aria-label={t("nextDocument")}
                 >
                   <ChevronRight />
@@ -246,6 +254,15 @@ export function ExpenseDocumentDetailPanel({
                 </DropdownMenu>
               </div>
             </div>
+
+            {errorMessage ? (
+              <div
+                role="alert"
+                className="border-destructive/30 bg-destructive/10 text-destructive rounded-md border px-3 py-2 text-sm"
+              >
+                {errorMessage}
+              </div>
+            ) : null}
           </SheetHeader>
 
           <div className="min-h-0 flex-1 overflow-y-auto">
@@ -408,6 +425,7 @@ export function ExpenseDocumentDetailPanel({
                             "border-foreground/30 bg-accent/50",
                         )}
                         onClick={() => onSelectAttachment(attachment.id)}
+                        disabled={isBusy}
                         aria-pressed={attachmentIsSelected}
                         aria-label={t("previewAttachment", {
                           filename: attachment.originalFilename,

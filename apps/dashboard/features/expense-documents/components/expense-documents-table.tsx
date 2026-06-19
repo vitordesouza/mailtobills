@@ -2,7 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
-import { Fragment, useState, useTransition } from "react";
+import type { MouseEventHandler } from "react";
+import { Fragment, useState } from "react";
 
 import type {
   ExpenseDocumentAttachment,
@@ -77,23 +78,23 @@ function ViewPdfButton({
 }: {
   attachment: ExpenseDocumentAttachment | undefined;
   label: string;
-  onClick?: () => void;
   children: string;
+  onClick?: MouseEventHandler<HTMLButtonElement>;
 }) {
   const url = attachment?.downloadUrl ?? attachment?.fileUrl;
 
-  if (onClick) {
+  if (!url) {
     return (
-      <Button type="button" variant="outline" size="sm" onClick={onClick}>
+      <Button variant="outline" size="sm" disabled>
         <ExternalLink className="size-3.5" />
         {children}
       </Button>
     );
   }
 
-  if (!url) {
+  if (onClick) {
     return (
-      <Button variant="outline" size="sm" disabled>
+      <Button type="button" variant="outline" size="sm" onClick={onClick}>
         <ExternalLink className="size-3.5" />
         {label}
       </Button>
@@ -129,8 +130,11 @@ export function ExpenseDocumentsTable({
   const [selectedAttachmentId, setSelectedAttachmentId] = useState<
     string | null
   >(null);
+  const [panelTrigger, setPanelTrigger] = useState<HTMLButtonElement | null>(
+    null,
+  );
+  const [actionError, setActionError] = useState<string | null>(null);
   const [pendingId, setPendingId] = useState<string | null>(null);
-  const [isPending, startTransition] = useTransition();
   const setPrimaryAttachment = useMutation(
     api.expenseDocuments.setPrimaryAttachment,
   );
@@ -140,16 +144,20 @@ export function ExpenseDocumentsTable({
     id: string,
     action: () => Promise<unknown>,
     onSuccess?: () => void,
+    failureMessage = "The action could not be completed. Please try again.",
   ) => {
     setPendingId(id);
-    startTransition(() => {
-      action()
-        .then(() => {
-          onSuccess?.();
-          router.refresh();
-        })
-        .finally(() => setPendingId(null));
-    });
+    setActionError(null);
+    void action()
+      .then(() => {
+        onSuccess?.();
+        router.refresh();
+      })
+      .catch((error: unknown) => {
+        console.error("expense_document_action_failed", { id, error });
+        setActionError(failureMessage);
+      })
+      .finally(() => setPendingId(null));
   };
 
   const selectedDocument = documents.find(
@@ -170,8 +178,13 @@ export function ExpenseDocumentsTable({
     setSelectedAttachmentId(document.primaryAttachment?.id ?? null);
   };
 
-  const openDocument = (document: ExpenseDocumentRow) => {
+  const openDocument = (
+    document: ExpenseDocumentRow,
+    trigger: HTMLButtonElement,
+  ) => {
     selectDocument(document);
+    setPanelTrigger(trigger);
+    setActionError(null);
     setPanelOpen(true);
   };
 
@@ -200,6 +213,7 @@ export function ExpenseDocumentsTable({
           setPanelOpen(false);
         }
       },
+      "The document could not be deleted. Please try again.",
     );
   };
 
@@ -232,11 +246,10 @@ export function ExpenseDocumentsTable({
               const primary = document.primaryAttachment;
               const isExpanded = expandedId === document.id;
               const isBusy =
-                isPending &&
-                (pendingId === document.id ||
-                  document.attachments.some(
-                    (attachment) => attachment.id === pendingId,
-                  ));
+                pendingId === document.id ||
+                document.attachments.some(
+                  (attachment) => attachment.id === pendingId,
+                );
 
               return (
                 <Fragment key={document.id}>
@@ -328,7 +341,9 @@ export function ExpenseDocumentsTable({
                         <ViewPdfButton
                           attachment={primary}
                           label={t("viewPdf")}
-                          onClick={() => openDocument(document)}
+                          onClick={(event) =>
+                            openDocument(document, event.currentTarget)
+                          }
                         >
                           {t("viewPdf")}
                         </ViewPdfButton>
@@ -452,18 +467,25 @@ export function ExpenseDocumentsTable({
         selectedAttachment={selectedAttachment}
         documentIndex={Math.max(selectedDocumentIndex, 0)}
         documentCount={documents.length}
-        isBusy={isPending}
+        isBusy={pendingId !== null}
+        errorMessage={actionError}
+        returnFocusTo={panelTrigger}
         onOpenChange={setPanelOpen}
         onPrevious={() => selectDocumentAt(selectedDocumentIndex - 1)}
         onNext={() => selectDocumentAt(selectedDocumentIndex + 1)}
         onSelectAttachment={setSelectedAttachmentId}
         onMakePrimary={(attachmentId) => {
           if (!selectedDocument) return;
-          runAction(attachmentId, () =>
-            setPrimaryAttachment({
-              expenseDocumentId: selectedDocument.id as Id<"expenseDocuments">,
-              attachmentId: attachmentId as Id<"expenseDocumentAttachments">,
-            }),
+          runAction(
+            attachmentId,
+            () =>
+              setPrimaryAttachment({
+                expenseDocumentId:
+                  selectedDocument.id as Id<"expenseDocuments">,
+                attachmentId: attachmentId as Id<"expenseDocumentAttachments">,
+              }),
+            undefined,
+            "The primary PDF could not be changed. Please try again.",
           );
         }}
         onDelete={deleteSelectedDocument}
