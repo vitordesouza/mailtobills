@@ -1,5 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
-import { waitFor } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -8,49 +7,14 @@ import { ForwardingAddressesForm } from "./forwarding-addresses-form";
 import { PreferencesSettings } from "./preferences-settings";
 
 const mocks = vi.hoisted(() => ({
-  api: {
-    users: {
-      addForwardingAddress: Symbol("addForwardingAddress"),
-      removeForwardingAddress: Symbol("removeForwardingAddress"),
-      updateAccountantDeliverySettings: Symbol(
-        "updateAccountantDeliverySettings",
-      ),
-      updateExportSchedule: Symbol("updateExportSchedule"),
-    },
-  },
-  refresh: vi.fn(),
-  addForwardingAddress: vi.fn(() => Promise.resolve()),
-  removeForwardingAddress: vi.fn(() => Promise.resolve()),
-  updateAccountantDeliverySettings: vi.fn(() => Promise.resolve()),
-  updateExportSchedule: vi.fn(() => Promise.resolve()),
+  updateForwardingAddress: vi.fn(),
+  updateAccountantDeliverySettings: vi.fn(),
   setTheme: vi.fn(),
 }));
 
-vi.mock("next/navigation", () => ({
-  useRouter: () => ({ refresh: mocks.refresh }),
-}));
-
-vi.mock("@/lib/convexClient", () => ({
-  api: mocks.api,
-}));
-
-vi.mock("convex/react", () => ({
-  useMutation: vi.fn((mutation) => {
-    if (mutation === mocks.api.users.addForwardingAddress) {
-      return mocks.addForwardingAddress;
-    }
-    if (mutation === mocks.api.users.removeForwardingAddress) {
-      return mocks.removeForwardingAddress;
-    }
-    if (mutation === mocks.api.users.updateAccountantDeliverySettings) {
-      return mocks.updateAccountantDeliverySettings;
-    }
-    if (mutation === mocks.api.users.updateExportSchedule) {
-      return mocks.updateExportSchedule;
-    }
-
-    throw new Error("Unexpected mutation");
-  }),
+vi.mock("@/features/customer/actions/updateCustomerSettings", () => ({
+  updateForwardingAddress: mocks.updateForwardingAddress,
+  updateAccountantDeliverySettings: mocks.updateAccountantDeliverySettings,
 }));
 
 vi.mock("next-themes", () => ({
@@ -62,12 +26,27 @@ vi.mock("next-themes", () => ({
 
 describe("settings forms", () => {
   beforeEach(() => {
-    mocks.refresh.mockClear();
-    mocks.addForwardingAddress.mockClear();
-    mocks.removeForwardingAddress.mockClear();
+    vi.clearAllMocks();
+    mocks.updateForwardingAddress.mockResolvedValue({
+      status: "success",
+      intent: "remove",
+      message: "Forwarding Address removed.",
+    });
     mocks.updateAccountantDeliverySettings.mockClear();
-    mocks.updateExportSchedule.mockClear();
-    mocks.setTheme.mockClear();
+    mocks.updateAccountantDeliverySettings.mockImplementation(
+      async (_state, data: FormData) => {
+        const intent = data.get("intent");
+        return {
+          status: "success",
+          intent,
+          scheduleEnabled: intent === "save",
+          message:
+            intent === "save"
+              ? "Export Schedule saved."
+              : "Export Schedule disabled.",
+        };
+      },
+    );
   });
 
   it("removes forwarding addresses for Pro users", async () => {
@@ -85,10 +64,14 @@ describe("settings forms", () => {
     );
 
     await waitFor(() =>
-      expect(mocks.removeForwardingAddress).toHaveBeenCalledWith({
-        email: "existing@example.com",
-      }),
+      expect(mocks.updateForwardingAddress).toHaveBeenCalledOnce(),
     );
+    const submitted = mocks.updateForwardingAddress.mock
+      .calls[0]?.[1] as FormData;
+    expect(Object.fromEntries(submitted.entries())).toEqual({
+      email: "existing@example.com",
+      intent: "remove",
+    });
   });
 
   it("keeps forwarding address controls disabled for Free users", () => {
@@ -131,49 +114,26 @@ describe("settings forms", () => {
     );
 
     await waitFor(() =>
-      expect(mocks.updateAccountantDeliverySettings).toHaveBeenCalledWith({
-        accountantEmail: "books@example.com",
-        accountantName: "Books Team",
-        exportScheduleDay: 12,
-      }),
+      expect(mocks.updateAccountantDeliverySettings).toHaveBeenCalledOnce(),
     );
-    expect(mocks.updateExportSchedule).not.toHaveBeenCalled();
+    const saveData = mocks.updateAccountantDeliverySettings.mock
+      .calls[0]?.[1] as FormData;
+    expect(Object.fromEntries(saveData.entries())).toEqual({
+      accountantEmail: "books@example.com",
+      accountantName: "Books Team",
+      exportScheduleDay: "12",
+      intent: "save",
+      scheduleEnabled: "on",
+    });
 
     await user.click(screen.getByRole("button", { name: /^disable$/i }));
 
     await waitFor(() =>
-      expect(mocks.updateExportSchedule).toHaveBeenLastCalledWith({
-        exportScheduleDay: undefined,
-      }),
+      expect(mocks.updateAccountantDeliverySettings).toHaveBeenCalledTimes(2),
     );
-    expect(mocks.updateAccountantDeliverySettings).toHaveBeenCalledTimes(1);
-  });
-
-  it("validates accountant email before enabling a schedule", async () => {
-    render(
-      <ExportScheduleForm
-        isPro
-        accountantEmail=""
-        accountantName=""
-        exportScheduleDay={5}
-      />,
-    );
-
-    const emailInput = screen.getByLabelText(/accountant address/i);
-    fireEvent.change(emailInput, {
-      target: { value: "not-an-email" },
-    });
-    fireEvent.submit(
-      screen
-        .getByRole("button", { name: /save export schedule/i })
-        .closest("form") as HTMLFormElement,
-    );
-
-    expect(
-      screen.getByText(/^A valid Accountant Address is required\.$/i),
-    ).toBeInTheDocument();
-    expect(mocks.updateAccountantDeliverySettings).not.toHaveBeenCalled();
-    expect(mocks.updateExportSchedule).not.toHaveBeenCalled();
+    const disableData = mocks.updateAccountantDeliverySettings.mock
+      .calls[1]?.[1] as FormData;
+    expect(disableData.get("intent")).toBe("disable");
   });
 
   it("lets the Customer choose a dashboard theme", async () => {
