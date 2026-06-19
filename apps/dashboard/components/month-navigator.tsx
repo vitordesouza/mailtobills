@@ -8,7 +8,13 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
 
 import { getMonthInfo } from "@/lib/months";
+import { MonthPicker } from "@/components/month-picker";
 import { useNavigationProgress } from "@/components/navigation-progress";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@mailtobills/ui/components/popover";
 import { Separator } from "@mailtobills/ui/components/separator";
 
 const buildMonthHref = (pathname: string, month: string) => {
@@ -27,6 +33,13 @@ export const MonthNavigator = () => {
     typeof params.month === "string" ? params.month : undefined;
   const monthInfo = getMonthInfo(monthParam);
   const { navigate, isNavigating } = useNavigationProgress();
+  const [isPickerOpen, setIsPickerOpen] = React.useState(false);
+
+  const handlePick = (monthValue: string) => {
+    setIsPickerOpen(false);
+    if (monthValue === monthInfo.value) return;
+    navigate(buildMonthHref(pathname, monthValue));
+  };
 
   const previous2 = getMonthInfo(monthInfo.previous).previous;
   const next2 = getMonthInfo(monthInfo.next).next;
@@ -61,9 +74,17 @@ export const MonthNavigator = () => {
             <ChevronLeft className="size-4" />
           </Link>
           <Separator orientation="vertical" className="h-8" />
-          <div className="text-foreground px-3 py-1 font-mono text-xs font-medium tracking-[0.06em] uppercase tabular-nums">
-            {monthInfo.label}
-          </div>
+          <Popover open={isPickerOpen} onOpenChange={setIsPickerOpen}>
+            <PopoverTrigger
+              aria-label="Choose month"
+              className="text-foreground hover:bg-accent hover:text-accent-foreground focus-visible:ring-ring/50 inline-flex h-8 items-center px-3 py-1 font-mono text-xs font-medium tracking-[0.06em] uppercase tabular-nums transition outline-none focus-visible:ring-[3px] data-[state=open]:bg-accent"
+            >
+              {monthInfo.label}
+            </PopoverTrigger>
+            <PopoverContent align="center" className="w-64">
+              <MonthPicker value={monthInfo.value} onSelect={handlePick} />
+            </PopoverContent>
+          </Popover>
           <Separator orientation="vertical" className="h-8" />
           <Link
             href={nextHref}

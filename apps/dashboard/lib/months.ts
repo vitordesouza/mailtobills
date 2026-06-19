@@ -52,3 +52,29 @@ export const getMonthInfo = (monthParam?: string): MonthInfo => {
 export const isInMonthRange = (timestamp: number, month: MonthInfo) => {
   return timestamp >= month.start.getTime() && timestamp <= month.end.getTime();
 };
+
+export const SHORT_MONTH_LABELS = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+] as const;
+
+// Splits a "YYYY-MM" value into its numeric year and 1-12 month.
+export const monthValueParts = (value: string) => {
+  const [yearText, monthText] = value.split("-");
+  return { year: Number(yearText), month: Number(monthText) };
+};
+
+export const buildMonthValue = (year: number, month: number) =>
+  toMonthValue(new Date(year, month - 1, 1));
+
+export const getCurrentMonthValue = () => toMonthValue(new Date());
