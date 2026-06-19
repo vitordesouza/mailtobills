@@ -144,7 +144,7 @@ export function ExpenseDocumentsTable({
     id: string,
     action: () => Promise<unknown>,
     onSuccess?: () => void,
-    failureMessage = "The action could not be completed. Please try again.",
+    failureMessage = t("errors.fallback"),
   ) => {
     setPendingId(id);
     setActionError(null);
@@ -176,6 +176,7 @@ export function ExpenseDocumentsTable({
   const selectDocument = (document: ExpenseDocumentRow) => {
     setSelectedDocumentId(document.id);
     setSelectedAttachmentId(document.primaryAttachment?.id ?? null);
+    setActionError(null);
   };
 
   const openDocument = (
@@ -213,7 +214,7 @@ export function ExpenseDocumentsTable({
           setPanelOpen(false);
         }
       },
-      "The document could not be deleted. Please try again.",
+      t("errors.delete"),
     );
   };
 
@@ -236,6 +237,14 @@ export function ExpenseDocumentsTable({
   return (
     <Card className="min-w-0 gap-0 overflow-hidden rounded-lg py-0 shadow-xs">
       <ExpenseDocumentsTableHeading count={documents.length} />
+      {actionError && !panelOpen ? (
+        <div
+          role="alert"
+          className="border-destructive/30 bg-destructive/10 text-destructive border-b px-4 py-2 text-sm"
+        >
+          {actionError}
+        </div>
+      ) : null}
       <CardContent className="p-0">
         <Table className="min-w-[920px] table-fixed">
           <ExpenseDocumentsTableColumns />
@@ -470,7 +479,10 @@ export function ExpenseDocumentsTable({
         isBusy={pendingId !== null}
         errorMessage={actionError}
         returnFocusTo={panelTrigger}
-        onOpenChange={setPanelOpen}
+        onOpenChange={(open) => {
+          if (!open && pendingId !== null) return;
+          setPanelOpen(open);
+        }}
         onPrevious={() => selectDocumentAt(selectedDocumentIndex - 1)}
         onNext={() => selectDocumentAt(selectedDocumentIndex + 1)}
         onSelectAttachment={setSelectedAttachmentId}
@@ -483,9 +495,9 @@ export function ExpenseDocumentsTable({
                 expenseDocumentId:
                   selectedDocument.id as Id<"expenseDocuments">,
                 attachmentId: attachmentId as Id<"expenseDocumentAttachments">,
-              }),
+            }),
             undefined,
-            "The primary PDF could not be changed. Please try again.",
+            t("errors.primary"),
           );
         }}
         onDelete={deleteSelectedDocument}

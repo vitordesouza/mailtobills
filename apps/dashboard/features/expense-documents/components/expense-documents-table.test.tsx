@@ -1,7 +1,7 @@
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { NextIntlClientProvider } from "next-intl";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { ExpenseDocumentRow } from "@mailtobills/domain";
 
@@ -100,6 +100,17 @@ async function confirmDrawerDelete(user: ReturnType<typeof userEvent.setup>) {
   await user.click(screen.getByRole("button", { name: "Delete document" }));
 }
 
+function renderTable(documents: ExpenseDocumentRow[]) {
+  return render(
+    <NextIntlClientProvider locale="en" messages={messages}>
+      <ExpenseDocumentsTable
+        documents={documents}
+        emptyLabel="No documents this month."
+      />
+    </NextIntlClientProvider>,
+  );
+}
+
 describe("ExpenseDocumentsTable", () => {
   beforeEach(() => {
     mocks.refresh.mockClear();
@@ -108,19 +119,16 @@ describe("ExpenseDocumentsTable", () => {
     mocks.mutationCallCount = 0;
   });
 
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it("renders rows, expands attachments, and marks a secondary attachment primary", async () => {
     const user = userEvent.setup();
-    render(
-      <NextIntlClientProvider locale="en" messages={messages}>
-        <ExpenseDocumentsTable
-          documents={[documentRow()]}
-          emptyLabel="No documents this month."
-        />
-      </NextIntlClientProvider>,
-    );
+    renderTable([documentRow()]);
 
     expect(screen.getByText("invoice-primary.pdf")).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: /view pdf/i }));
+    await user.click(screen.getAllByRole("button", { name: /view pdf/i })[0]!);
 
     expect(
       screen.getByRole("dialog", { name: "invoice-primary.pdf" }),
@@ -156,12 +164,7 @@ describe("ExpenseDocumentsTable", () => {
   it("moves between documents without closing the drawer", async () => {
     const user = userEvent.setup();
 
-    render(
-      <ExpenseDocumentsTable
-        documents={[documentRow(), secondDocumentRow()]}
-        emptyLabel="No documents this month."
-      />,
-    );
+    renderTable([documentRow(), secondDocumentRow()]);
 
     await user.click(screen.getAllByRole("button", { name: /view pdf/i })[0]!);
     await user.click(screen.getByRole("button", { name: "Next document" }));
@@ -177,12 +180,7 @@ describe("ExpenseDocumentsTable", () => {
 
   it("restores focus to the view action when the drawer closes", async () => {
     const user = userEvent.setup();
-    render(
-      <ExpenseDocumentsTable
-        documents={[documentRow()]}
-        emptyLabel="No documents this month."
-      />,
-    );
+    renderTable([documentRow()]);
     const viewAction = screen.getByRole("button", { name: /view pdf/i });
 
     await user.click(viewAction);
@@ -193,12 +191,7 @@ describe("ExpenseDocumentsTable", () => {
 
   it("advances to the next document after deletion succeeds", async () => {
     const user = userEvent.setup();
-    render(
-      <ExpenseDocumentsTable
-        documents={[documentRow(), secondDocumentRow()]}
-        emptyLabel="No documents this month."
-      />,
-    );
+    renderTable([documentRow(), secondDocumentRow()]);
 
     await user.click(screen.getAllByRole("button", { name: /view pdf/i })[0]!);
     await confirmDrawerDelete(user);
@@ -213,12 +206,7 @@ describe("ExpenseDocumentsTable", () => {
 
   it("closes the drawer after deleting the final document", async () => {
     const user = userEvent.setup();
-    render(
-      <ExpenseDocumentsTable
-        documents={[documentRow()]}
-        emptyLabel="No documents this month."
-      />,
-    );
+    renderTable([documentRow()]);
 
     await user.click(screen.getByRole("button", { name: /view pdf/i }));
     await confirmDrawerDelete(user);
@@ -235,14 +223,9 @@ describe("ExpenseDocumentsTable", () => {
     const consoleError = vi
       .spyOn(console, "error")
       .mockImplementation(() => {});
-    render(
-      <ExpenseDocumentsTable
-        documents={[documentRow()]}
-        emptyLabel="No documents this month."
-      />,
-    );
+    renderTable([documentRow(), secondDocumentRow()]);
 
-    await user.click(screen.getByRole("button", { name: /view pdf/i }));
+    await user.click(screen.getAllByRole("button", { name: /view pdf/i })[0]!);
     await confirmDrawerDelete(user);
 
     expect(await screen.findByRole("alert")).toHaveTextContent(
@@ -255,7 +238,12 @@ describe("ExpenseDocumentsTable", () => {
       "expense_document_action_failed",
       { id: "doc-1", error },
     );
-    consoleError.mockRestore();
+
+    await user.click(screen.getByRole("button", { name: "Next document" }));
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("dialog", { name: "second-invoice.pdf" }),
+    ).toBeInTheDocument();
   });
 
   it("disables navigation while deletion is pending", async () => {
@@ -267,12 +255,7 @@ describe("ExpenseDocumentsTable", () => {
           resolveDelete = resolve;
         }),
     );
-    render(
-      <ExpenseDocumentsTable
-        documents={[documentRow(), secondDocumentRow()]}
-        emptyLabel="No documents this month."
-      />,
-    );
+    renderTable([documentRow(), secondDocumentRow()]);
 
     await user.click(screen.getAllByRole("button", { name: /view pdf/i })[0]!);
     await confirmDrawerDelete(user);
@@ -280,8 +263,36 @@ describe("ExpenseDocumentsTable", () => {
     expect(
       screen.getByRole("button", { name: "Next document" }),
     ).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Close" })).toBeDisabled();
+    await user.keyboard("{Escape}");
+    expect(
+      screen.getByRole("dialog", { name: "invoice-primary.pdf" }),
+    ).toBeInTheDocument();
     resolveDelete?.();
     await waitFor(() => expect(mocks.refresh).toHaveBeenCalled());
+  });
+
+  it("reports a failed expanded attachment action above the table", async () => {
+    const user = userEvent.setup();
+    const error = new Error("primary failed");
+    mocks.setPrimaryAttachment.mockRejectedValueOnce(error);
+    const consoleError = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+    renderTable([documentRow()]);
+
+    await user.click(
+      screen.getByRole("button", { name: /expand attachments/i }),
+    );
+    await user.click(screen.getByRole("button", { name: /make primary/i }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "The action could not be completed. Please try again.",
+    );
+    expect(consoleError).toHaveBeenCalledWith(
+      "expense_document_action_failed",
+      { id: "attachment-secondary", error },
+    );
   });
 
   it("disables the PDF action when no primary file is available", () => {
@@ -290,12 +301,7 @@ describe("ExpenseDocumentsTable", () => {
     document.primaryAttachmentId = undefined;
     document.attachments = [];
 
-    render(
-      <ExpenseDocumentsTable
-        documents={[document]}
-        emptyLabel="No documents this month."
-      />,
-    );
+    renderTable([document]);
 
     expect(screen.getByRole("button", { name: /view pdf/i })).toBeDisabled();
   });

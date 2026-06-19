@@ -150,7 +150,14 @@ export function ExpenseDocumentDetailPanel({
       <Sheet open={open} onOpenChange={onOpenChange}>
         <SheetContent
           ref={setSheetContentElement}
+          closeDisabled={isBusy}
           className="w-full gap-0 overflow-hidden p-0 sm:max-w-[720px]"
+          onEscapeKeyDown={(event) => {
+            if (isBusy) event.preventDefault();
+          }}
+          onPointerDownOutside={(event) => {
+            if (isBusy) event.preventDefault();
+          }}
           onCloseAutoFocus={(event) => {
             event.preventDefault();
             returnFocusTo?.focus();
