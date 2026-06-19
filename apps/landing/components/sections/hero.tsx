@@ -1,11 +1,14 @@
 import { ArrowRight, Mail } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 
 import { Button } from "@mailtobills/ui/components/button";
 
 import { DashboardPreview } from "@/components/dashboard-preview";
 import { signUpUrl } from "@/lib/links";
 
-export function Hero() {
+export async function Hero() {
+  const t = await getTranslations("Hero");
+
   return (
     <section className="bg-sidebar/60 relative overflow-hidden border-b">
       <div
@@ -16,31 +19,29 @@ export function Hero() {
         <div className="animate-in fade-in slide-in-from-bottom-2 max-w-2xl space-y-7 duration-500">
           <div className="bg-background text-muted-foreground inline-flex items-center gap-1.5 rounded-full border px-3 py-1 font-mono text-[11px] font-medium tracking-[0.08em] uppercase shadow-xs">
             <Mail className="text-primary size-3.5" />
-            Email-first expense collection
+            {t("eyebrow")}
           </div>
           <div className="space-y-4">
             <h1 className="text-4xl font-semibold tracking-tight text-balance sm:text-5xl lg:text-6xl">
-              Stop chasing expense PDFs every month.
+              {t("title")}
             </h1>
             <p className="text-muted-foreground max-w-xl text-lg leading-8 text-pretty">
-              Forward any invoice, receipt, or fatura to your private
-              MailToBills address. It is filed into the right month — and your
-              accountant gets one clean ZIP with every PDF and a CSV manifest.
+              {t("description")}
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <Button asChild size="lg" typography="mono">
               <a href={signUpUrl}>
-                Start collecting free
+                {t("primaryCta")}
                 <ArrowRight className="size-4" />
               </a>
             </Button>
             <Button asChild variant="outline" size="lg" typography="mono">
-              <a href="#how-it-works">See how it works</a>
+              <a href="#how-it-works">{t("secondaryCta")}</a>
             </Button>
           </div>
           <p className="text-muted-foreground font-mono text-[11px] font-medium tracking-[0.08em] uppercase">
-            Free to start · No credit card · 2-minute setup
+            {t("note")}
           </p>
         </div>
 

@@ -1,44 +1,30 @@
 import { FileArchive, FolderCheck, Mail } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 
 import { SectionEyebrow } from "@/components/section-eyebrow";
 
-const steps = [
-  {
-    icon: Mail,
-    step: "01",
-    title: "Forward the email",
-    copy: "Send supplier invoices, receipts, bills, or faturas from your trusted email to your private collection address.",
-  },
-  {
-    icon: FolderCheck,
-    step: "02",
-    title: "We file it by month",
-    copy: "Each accepted email becomes one document row, with its PDF attachments stored in the right Collection Month.",
-  },
-  {
-    icon: FileArchive,
-    step: "03",
-    title: "Export for your accountant",
-    copy: "Download a ZIP with the primary PDFs and a CSV manifest — sender, subject, date, and filename for every document.",
-  },
-];
+export async function HowItWorks() {
+  const t = await getTranslations("HowItWorks");
+  const steps = [
+    { icon: Mail, step: "01", key: "forward" },
+    { icon: FolderCheck, step: "02", key: "file" },
+    { icon: FileArchive, step: "03", key: "export" },
+  ] as const;
 
-export function HowItWorks() {
   return (
     <section id="how-it-works" className="scroll-mt-14 border-b">
       <div className="mx-auto max-w-6xl px-6 py-16 sm:py-20">
         <div className="mx-auto max-w-2xl space-y-3 text-center">
-          <SectionEyebrow>How it works</SectionEyebrow>
+          <SectionEyebrow>{t("eyebrow")}</SectionEyebrow>
           <h2 className="text-3xl font-semibold tracking-tight text-balance">
-            From inbox chaos to a clean monthly package
+            {t("title")}
           </h2>
           <p className="text-muted-foreground text-pretty">
-            No apps to install, no receipts to scan, no folders to maintain.
-            If you can forward an email, you are done.
+            {t("description")}
           </p>
         </div>
         <div className="mt-12 grid gap-4 md:grid-cols-3">
-          {steps.map(({ icon: Icon, step, title, copy }) => (
+          {steps.map(({ icon: Icon, step, key }) => (
             <div
               key={step}
               className="bg-card hover:border-ring/40 rounded-lg border p-6 shadow-xs transition-colors"
@@ -47,13 +33,15 @@ export function HowItWorks() {
                 <span className="bg-muted/40 flex size-10 items-center justify-center rounded-lg border">
                   <Icon className="size-5" />
                 </span>
-                <span className="text-muted-foreground/60 font-mono text-sm font-semibold tabular-nums">
+                <span className="text-muted-foreground font-mono text-sm font-semibold tabular-nums">
                   {step}
                 </span>
               </div>
-              <h3 className="mt-4 text-base font-semibold">{title}</h3>
+              <h3 className="mt-4 text-base font-semibold">
+                {t(`steps.${key}.title`)}
+              </h3>
               <p className="text-muted-foreground mt-2 text-sm leading-6">
-                {copy}
+                {t(`steps.${key}.copy`)}
               </p>
             </div>
           ))}

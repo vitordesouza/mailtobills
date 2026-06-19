@@ -1,0 +1,177 @@
+{
+  "Accessibility": {
+    "skipToContent": "Skip to main content"
+  },
+  "Metadata": {
+    "title": "MailToBills — Stop chasing expense PDFs every month",
+    "description": "Forward any invoice, receipt, or fatura to your private MailToBills address. We file it by month and hand your accountant one clean ZIP with every PDF and a CSV manifest.",
+    "openGraphDescription": "Forward expense PDFs, collect them by month, and export a clean package for your accountant."
+  },
+  "Navigation": {
+    "homeLabel": "MailToBills home",
+    "primaryLabel": "Primary navigation",
+    "languageLabel": "Choose language",
+    "howItWorks": "How it works",
+    "features": "Features",
+    "pricing": "Pricing",
+    "faq": "FAQ",
+    "signIn": "Sign in",
+    "getStarted": "Get started"
+  },
+  "Hero": {
+    "eyebrow": "Email-first expense collection",
+    "title": "Stop chasing expense PDFs every month.",
+    "description": "Forward any invoice, receipt, or fatura to your private MailToBills address. It is filed into the right month — and your accountant gets one clean ZIP with every PDF and a CSV manifest.",
+    "primaryCta": "Start collecting free",
+    "secondaryCta": "See how it works",
+    "note": "Free to start · No credit card · 2-minute setup"
+  },
+  "DashboardPreview": {
+    "month": "May 2026",
+    "exportMonth": "Export month",
+    "previousPeriod": "VS APR",
+    "primary": "Primary",
+    "stats": {
+      "collected": "Collected",
+      "attachments": "Attachments",
+      "primaryPdfs": "Primary PDFs"
+    },
+    "rows": {
+      "energy": {
+        "subject": "Fwd: Your electricity bill",
+        "date": "May 3"
+      },
+      "hosting": {
+        "subject": "Fwd: Your receipt from Acme Hosting",
+        "date": "May 12"
+      },
+      "hotel": {
+        "subject": "Fwd: Booking confirmation and receipt",
+        "date": "May 21"
+      }
+    }
+  },
+  "HowItWorks": {
+    "eyebrow": "How it works",
+    "title": "From inbox chaos to a clean monthly package",
+    "description": "No apps to install, no receipts to scan, no folders to maintain. If you can forward an email, you are done.",
+    "steps": {
+      "forward": {
+        "title": "Forward the email",
+        "copy": "Send supplier invoices, receipts, bills, or faturas from your trusted email to your private collection address."
+      },
+      "file": {
+        "title": "We file it by month",
+        "copy": "Each accepted email becomes one document row, with its PDF attachments stored in the right Collection Month."
+      },
+      "export": {
+        "title": "Export for your accountant",
+        "copy": "Download a ZIP with the primary PDFs and a CSV manifest — sender, subject, date, and filename for every document."
+      }
+    }
+  },
+  "Features": {
+    "eyebrow": "Features",
+    "title": "Built for people who'd rather not do bookkeeping",
+    "description": "MailToBills does one job extremely well: collecting expense documents and handing them over in order.",
+    "items": {
+      "monthly": {
+        "title": "Monthly collections",
+        "copy": "Every accepted email is filed into the month it arrives. Browse months like a ledger, not a folder tree."
+      },
+      "primary": {
+        "title": "Primary PDF detection",
+        "copy": "Emails with several attachments? Mark the one that counts so exports only contain the real document."
+      },
+      "export": {
+        "title": "Accountant-ready export",
+        "copy": "One ZIP per month: the primary PDFs plus a CSV manifest your accountant can open anywhere."
+      },
+      "trusted": {
+        "title": "Trusted senders only",
+        "copy": "Only forwards from your registered email address are accepted. Nobody can stuff your collection."
+      },
+      "inbox": {
+        "title": "Works with any inbox",
+        "copy": "Gmail, Outlook, iCloud, your company mail — if it can forward an email, it works with MailToBills."
+      },
+      "install": {
+        "title": "Nothing to install",
+        "copy": "No browser extensions, no mobile apps, no scanner hardware. Your email client is the integration."
+      }
+    }
+  },
+  "Pricing": {
+    "eyebrow": "Pricing",
+    "title": "Cheaper than an hour of bookkeeping",
+    "description": "Start free. Upgrade when MailToBills is collecting more than it costs.",
+    "highlight": "Early-bird price",
+    "note": "Prices in EUR, VAT excluded. Cancel anytime — your exports stay yours.",
+    "starter": {
+      "name": "Starter",
+      "price": "€0",
+      "period": "forever",
+      "description": "Try the full forward-and-collect flow on real documents.",
+      "cta": "Start free",
+      "features": {
+        "address": "Your private collection address",
+        "limit": "Up to 10 documents per month",
+        "dashboard": "Monthly dashboard with primary PDFs",
+        "export": "Manual ZIP + CSV export"
+      }
+    },
+    "pro": {
+      "name": "Pro",
+      "price": "€9",
+      "period": "per month",
+      "description": "For businesses that close every month with an accountant.",
+      "cta": "Get Pro",
+      "features": {
+        "starter": "Everything in Starter",
+        "unlimited": "Unlimited documents and attachments",
+        "export": "Accountant export for every month",
+        "support": "Priority support",
+        "access": "Early access to new features"
+      }
+    }
+  },
+  "Faq": {
+    "eyebrow": "FAQ",
+    "title": "Questions, answered",
+    "items": {
+      "forward": {
+        "question": "What happens when I forward an email?",
+        "answer": "MailToBills checks that it comes from your trusted email address, stores the PDF attachments, and files everything into the Collection Month it arrives in. One forwarded email becomes one document row on your dashboard."
+      },
+      "accountant": {
+        "question": "What does my accountant actually receive?",
+        "answer": "A single ZIP per month containing the primary PDF of every collected document, plus a CSV manifest listing sender, subject, received date, and filename. No logins, no new tools on their side."
+      },
+      "files": {
+        "question": "Which file types are supported?",
+        "answer": "PDF attachments. That covers the overwhelming majority of invoices, receipts, bills, and faturas sent by suppliers today."
+      },
+      "senders": {
+        "question": "Who can send documents to my collection address?",
+        "answer": "Only you. Forwards are accepted exclusively from the trusted email addresses on your account, so spam and strangers never reach your collection."
+      },
+      "demo": {
+        "question": "Can I try it without forwarding real documents?",
+        "answer": "Yes — the dashboard includes a one-click demo document, so you can see the full collect-and-export flow before sending anything real."
+      }
+    }
+  },
+  "FinalCta": {
+    "title": "Make next month's close the easy one",
+    "description": "Set up your collection address now, forward the next invoice that lands in your inbox, and you are already done for the month.",
+    "cta": "Start collecting free",
+    "note": "Free to start · No credit card required"
+  },
+  "Footer": {
+    "tagline": "Expense documents. Organized.",
+    "howItWorks": "How it works",
+    "pricing": "Pricing",
+    "faq": "FAQ",
+    "copyright": "© {year} MailToBills"
+  }
+}
