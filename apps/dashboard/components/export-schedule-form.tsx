@@ -25,12 +25,18 @@ function monthLabel(date: Date) {
 function nextExportPreview(today: Date, scheduleDay: number) {
   const sendDate =
     today.getUTCDate() < scheduleDay
-      ? new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), scheduleDay))
+      ? new Date(
+          Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), scheduleDay),
+        )
       : new Date(
-          Date.UTC(today.getUTCFullYear(), today.getUTCMonth() + 1, scheduleDay)
+          Date.UTC(
+            today.getUTCFullYear(),
+            today.getUTCMonth() + 1,
+            scheduleDay,
+          ),
         );
   const coveringMonth = new Date(
-    Date.UTC(sendDate.getUTCFullYear(), sendDate.getUTCMonth() - 1, 1)
+    Date.UTC(sendDate.getUTCFullYear(), sendDate.getUTCMonth() - 1, 1),
   );
 
   return `Next export (UTC): ${new Intl.DateTimeFormat("en-US", {
@@ -60,12 +66,14 @@ export function ExportScheduleForm({
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
-  const updateAccountantAddress = useMutation(api.users.updateAccountantAddress);
+  const updateAccountantDeliverySettings = useMutation(
+    api.users.updateAccountantDeliverySettings,
+  );
   const updateExportSchedule = useMutation(api.users.updateExportSchedule);
   const emailIsValid = isPlausibleEmail(email);
   const preview = useMemo(
     () => (enabled && emailIsValid ? nextExportPreview(new Date(), day) : null),
-    [day, emailIsValid, enabled]
+    [day, emailIsValid, enabled],
   );
 
   const submit = (event: FormEvent<HTMLFormElement>) => {
@@ -79,27 +87,41 @@ export function ExportScheduleForm({
     }
 
     if (enabled && !emailIsValid) {
-      setError("A valid Accountant Address is required to enable the schedule.");
+      setError(
+        "A valid Accountant Address is required to enable the schedule.",
+      );
       return;
     }
 
     startTransition(() => {
-      updateAccountantAddress({
+      updateAccountantDeliverySettings({
         accountantEmail: email,
         accountantName: name,
+        exportScheduleDay: enabled ? day : undefined,
       })
-        .then(() =>
-          updateExportSchedule({
-            exportScheduleDay: enabled ? day : undefined,
-          }),
-        )
         .then(() => {
-          setMessage(enabled ? "Export Schedule saved." : "Export Schedule disabled.");
+          setMessage(
+            enabled ? "Export Schedule saved." : "Export Schedule disabled.",
+          );
           router.refresh();
         })
         .catch((caught) => {
-          if (caught instanceof Error && caught.message.includes("PRO_REQUIRED")) {
+          if (
+            caught instanceof Error &&
+            caught.message.includes("PRO_REQUIRED")
+          ) {
             setError("Upgrade to Pro to configure Export Schedule.");
+            return;
+          }
+          if (
+            caught instanceof Error &&
+            caught.message.includes(
+              "ACCOUNTANT_ADDRESS_REQUIRED_FOR_EXPORT_SCHEDULE",
+            )
+          ) {
+            setError(
+              "A valid Accountant Address is required to enable the schedule.",
+            );
             return;
           }
           setError("Could not save Export Schedule.");
@@ -182,7 +204,7 @@ export function ExportScheduleForm({
                   <option key={option} value={option}>
                     {option}
                   </option>
-                )
+                ),
               )}
             </select>
           </div>

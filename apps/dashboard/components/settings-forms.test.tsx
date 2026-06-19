@@ -11,14 +11,16 @@ const mocks = vi.hoisted(() => ({
     users: {
       addForwardingAddress: Symbol("addForwardingAddress"),
       removeForwardingAddress: Symbol("removeForwardingAddress"),
-      updateAccountantAddress: Symbol("updateAccountantAddress"),
+      updateAccountantDeliverySettings: Symbol(
+        "updateAccountantDeliverySettings",
+      ),
       updateExportSchedule: Symbol("updateExportSchedule"),
     },
   },
   refresh: vi.fn(),
   addForwardingAddress: vi.fn(() => Promise.resolve()),
   removeForwardingAddress: vi.fn(() => Promise.resolve()),
-  updateAccountantAddress: vi.fn(() => Promise.resolve()),
+  updateAccountantDeliverySettings: vi.fn(() => Promise.resolve()),
   updateExportSchedule: vi.fn(() => Promise.resolve()),
 }));
 
@@ -38,8 +40,8 @@ vi.mock("convex/react", () => ({
     if (mutation === mocks.api.users.removeForwardingAddress) {
       return mocks.removeForwardingAddress;
     }
-    if (mutation === mocks.api.users.updateAccountantAddress) {
-      return mocks.updateAccountantAddress;
+    if (mutation === mocks.api.users.updateAccountantDeliverySettings) {
+      return mocks.updateAccountantDeliverySettings;
     }
     if (mutation === mocks.api.users.updateExportSchedule) {
       return mocks.updateExportSchedule;
@@ -54,7 +56,7 @@ describe("settings forms", () => {
     mocks.refresh.mockClear();
     mocks.addForwardingAddress.mockClear();
     mocks.removeForwardingAddress.mockClear();
-    mocks.updateAccountantAddress.mockClear();
+    mocks.updateAccountantDeliverySettings.mockClear();
     mocks.updateExportSchedule.mockClear();
   });
 
@@ -114,19 +116,18 @@ describe("settings forms", () => {
     await user.clear(screen.getByLabelText(/accountant name/i));
     await user.type(screen.getByLabelText(/accountant name/i), "Books Team");
     await user.selectOptions(screen.getByLabelText(/send on day/i), "12");
-    await user.click(screen.getByRole("button", { name: /save export schedule/i }));
+    await user.click(
+      screen.getByRole("button", { name: /save export schedule/i }),
+    );
 
     await waitFor(() =>
-      expect(mocks.updateAccountantAddress).toHaveBeenCalledWith({
+      expect(mocks.updateAccountantDeliverySettings).toHaveBeenCalledWith({
         accountantEmail: "books@example.com",
         accountantName: "Books Team",
-      }),
-    );
-    await waitFor(() =>
-      expect(mocks.updateExportSchedule).toHaveBeenCalledWith({
         exportScheduleDay: 12,
       }),
     );
+    expect(mocks.updateExportSchedule).not.toHaveBeenCalled();
 
     await user.click(screen.getByRole("button", { name: /^disable$/i }));
 
@@ -135,7 +136,7 @@ describe("settings forms", () => {
         exportScheduleDay: undefined,
       }),
     );
-    expect(mocks.updateAccountantAddress).toHaveBeenCalledTimes(1);
+    expect(mocks.updateAccountantDeliverySettings).toHaveBeenCalledTimes(1);
   });
 
   it("validates accountant email before enabling a schedule", async () => {
@@ -161,7 +162,7 @@ describe("settings forms", () => {
     expect(
       screen.getByText(/^A valid Accountant Address is required\.$/i),
     ).toBeInTheDocument();
-    expect(mocks.updateAccountantAddress).not.toHaveBeenCalled();
+    expect(mocks.updateAccountantDeliverySettings).not.toHaveBeenCalled();
     expect(mocks.updateExportSchedule).not.toHaveBeenCalled();
   });
 });
