@@ -1,11 +1,18 @@
 "use client";
 
-import { Lock, MailPlus, Trash2 } from "lucide-react";
+import {
+  CheckCircle2,
+  Lock,
+  MailPlus,
+  ShieldCheck,
+  Trash2,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState, useTransition } from "react";
 
 import { api } from "@/lib/convexClient";
 import { useMutation } from "convex/react";
+import { Badge } from "@mailtobills/ui/components/badge";
 import { Button } from "@mailtobills/ui/components/button";
 import { Input } from "@mailtobills/ui/components/input";
 import { Label } from "@mailtobills/ui/components/label";
@@ -29,7 +36,9 @@ export function ForwardingAddressesForm({
   const [pendingEmail, setPendingEmail] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const addForwardingAddress = useMutation(api.users.addForwardingAddress);
-  const removeForwardingAddress = useMutation(api.users.removeForwardingAddress);
+  const removeForwardingAddress = useMutation(
+    api.users.removeForwardingAddress,
+  );
   const canSubmit = isPro && isPlausibleEmail(email) && !isPending;
 
   const submit = (event: FormEvent<HTMLFormElement>) => {
@@ -67,13 +76,19 @@ export function ForwardingAddressesForm({
   return (
     <div className="space-y-4">
       {!isPro ? (
-        <div className="flex items-start gap-2 rounded-md border border-amber-500/25 bg-amber-500/10 px-3 py-2 text-sm text-amber-700 dark:text-amber-300">
-          <Lock className="mt-0.5 size-4" />
-          <div className="space-y-2">
-            <p>
-              Additional Forwarding Addresses are available on the Pro Plan.
-              Your Primary Forwarding Address keeps working on Free.
-            </p>
+        <div className="flex items-start gap-3 rounded-md border border-amber-500/25 bg-amber-500/10 px-3 py-3 text-sm text-amber-800 dark:text-amber-200">
+          <Lock className="mt-0.5 size-4 shrink-0" />
+          <div className="space-y-3">
+            <div className="space-y-1">
+              <p className="font-medium">
+                Pro collects from every sender you actually use.
+              </p>
+              <p>
+                Keep your Primary Forwarding Address on Free, or upgrade to add
+                business, personal, and assistant addresses without changing
+                sign-in.
+              </p>
+            </div>
             <form action="/api/billing/checkout" method="post">
               <Button type="submit" size="sm" variant="outline">
                 Upgrade to Pro
@@ -81,12 +96,23 @@ export function ForwardingAddressesForm({
             </form>
           </div>
         </div>
-      ) : null}
+      ) : (
+        <div className="flex items-center gap-2 rounded-md border border-emerald-500/25 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-700 dark:text-emerald-300">
+          <CheckCircle2 className="size-4" />
+          Additional Forwarding Addresses are unlocked for this Customer.
+        </div>
+      )}
 
       <div className="space-y-2">
         <Label>Primary Forwarding Address</Label>
-        <div className="bg-muted/40 rounded-md border px-3 py-2 text-sm">
-          {primaryEmail ?? "No primary email on file"}
+        <div className="bg-muted/40 flex items-center justify-between gap-3 rounded-md border px-3 py-2 text-sm">
+          <span className="min-w-0 truncate">
+            {primaryEmail ?? "No primary email on file"}
+          </span>
+          <Badge variant="secondary">
+            <ShieldCheck className="size-3" />
+            Trusted
+          </Badge>
         </div>
       </div>
 
@@ -114,9 +140,9 @@ export function ForwardingAddressesForm({
             ))}
           </div>
         ) : (
-          <p className="text-muted-foreground text-sm">
-            No additional addresses configured.
-          </p>
+          <div className="text-muted-foreground rounded-md border border-dashed px-3 py-3 text-sm">
+            No additional Forwarding Addresses configured.
+          </div>
         )}
       </div>
 

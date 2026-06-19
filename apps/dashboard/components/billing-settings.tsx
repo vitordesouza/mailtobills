@@ -1,6 +1,13 @@
 "use client";
 
-import { CheckCircle2, Clock3, CreditCard, TriangleAlert } from "lucide-react";
+import {
+  CheckCircle2,
+  Clock3,
+  CreditCard,
+  MailPlus,
+  Send,
+  TriangleAlert,
+} from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -37,6 +44,23 @@ export function BillingSettings({
   const renewalDate = formatDate(currentPeriodEnd);
   const isPastDue = subscriptionStatus === "past_due";
   const isProLike = isPro || isPastDue;
+  const proFeatures = [
+    {
+      label: "Additional Forwarding Addresses",
+      description: "Collect from more than the Primary Forwarding Address.",
+      icon: MailPlus,
+    },
+    {
+      label: "Direct Accountant Export sending",
+      description: "Send the ZIP and Manifest to the Accountant Address.",
+      icon: Send,
+    },
+    {
+      label: "Export Schedule",
+      description: "Deliver the previous Collection Month automatically.",
+      icon: Clock3,
+    },
+  ];
 
   useEffect(() => {
     if (searchParams.get("upgraded") !== "1") return;
@@ -78,7 +102,9 @@ export function BillingSettings({
                   ? "You are on the Pro Plan"
                   : "You are on the Free Plan"}
             </span>
-            <Badge variant={isPastDue ? "warning" : isPro ? "success" : "secondary"}>
+            <Badge
+              variant={isPastDue ? "warning" : isPro ? "success" : "secondary"}
+            >
               {isPastDue ? "Past due" : isPro ? "Pro" : "Free"}
             </Badge>
           </div>
@@ -89,7 +115,7 @@ export function BillingSettings({
                 ? renewalDate
                   ? `Renews ${renewalDate}.`
                   : "Your Pro subscription is active."
-              : "Manual ZIP download is included for free."}
+                : "Manual ZIP download is included for free."}
           </p>
         </div>
 
@@ -121,25 +147,56 @@ export function BillingSettings({
       ) : null}
 
       {!isProLike ? (
-        <div className="grid gap-2 text-sm md:grid-cols-2">
-          <div className="rounded-md border px-3 py-2">
-            <div className="font-medium">Free</div>
-            <p className="text-muted-foreground">
-              Unlimited collection, dashboard browsing, and manual ZIP export.
+        <div className="grid gap-3 text-sm lg:grid-cols-[0.85fr_1.15fr]">
+          <div className="rounded-md border bg-muted/30 px-3 py-3">
+            <div className="flex items-center justify-between gap-3">
+              <div className="font-medium">Free Plan</div>
+              <Badge variant="secondary">Current</Badge>
+            </div>
+            <p className="text-muted-foreground mt-1">
+              Unlimited collection, dashboard browsing, and manual Accountant
+              Export ZIP download.
             </p>
           </div>
-          <div className="rounded-md border px-3 py-2">
-            <div className="font-medium">Pro</div>
-            <p className="text-muted-foreground">
-              Adds direct send, Export Schedule, and Additional Forwarding
-              Addresses.
-            </p>
-            <p className="text-muted-foreground mt-1 font-mono text-xs">
-              {proPriceLabel}
-            </p>
+          <div className="divide-y rounded-md border border-primary/25 bg-primary/5">
+            <div className="flex items-center justify-between gap-3 px-3 py-3">
+              <div>
+                <div className="font-medium">Pro Plan</div>
+                <p className="text-muted-foreground text-xs">
+                  Removes the repeated month-end handoff work.
+                </p>
+              </div>
+              <span className="text-muted-foreground shrink-0 font-mono text-xs">
+                {proPriceLabel}
+              </span>
+            </div>
+            {proFeatures.map(({ label, description, icon: Icon }) => (
+              <div key={label} className="flex gap-3 px-3 py-2.5">
+                <Icon className="text-primary mt-0.5 size-4 shrink-0" />
+                <div>
+                  <div className="font-medium">{label}</div>
+                  <p className="text-muted-foreground text-xs">{description}</p>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
-      ) : null}
+      ) : (
+        <div className="divide-y rounded-md border text-sm">
+          {proFeatures.map(({ label, description, icon: Icon }) => (
+            <div key={label} className="flex items-start gap-3 px-3 py-2.5">
+              <Icon className="text-primary mt-0.5 size-4 shrink-0" />
+              <div className="min-w-0 flex-1">
+                <div className="font-medium">{label}</div>
+                <p className="text-muted-foreground text-xs">{description}</p>
+              </div>
+              <Badge variant={isPastDue ? "warning" : "success"}>
+                {isPastDue ? "Paused" : "Active"}
+              </Badge>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
