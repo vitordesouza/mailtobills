@@ -9,12 +9,11 @@ const mocks = vi.hoisted(() => ({
   pathname: "/m/2026-03/reports",
   params: { month: "2026-03" as string | undefined },
   prefetch: vi.fn(),
-  navigate: vi.fn(),
-  isNavigating: false,
+  push: vi.fn(),
 }));
 
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({ prefetch: mocks.prefetch }),
+  useRouter: () => ({ prefetch: mocks.prefetch, push: mocks.push }),
   usePathname: () => mocks.pathname,
   useParams: () => mocks.params,
 }));
@@ -40,22 +39,14 @@ vi.mock("next/link", () => ({
   },
 }));
 
-vi.mock("@/components/navigation-progress", () => ({
-  useNavigationProgress: () => ({
-    navigate: mocks.navigate,
-    isNavigating: mocks.isNavigating,
-  }),
-}));
-
 describe("MonthNavigator", () => {
   beforeEach(() => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-06-19T12:00:00.000Z"));
     mocks.pathname = "/m/2026-03/reports";
     mocks.params = { month: "2026-03" };
-    mocks.isNavigating = false;
     mocks.prefetch.mockClear();
-    mocks.navigate.mockClear();
+    mocks.push.mockClear();
   });
 
   afterEach(() => {
@@ -94,7 +85,7 @@ describe("MonthNavigator", () => {
       }),
     );
 
-    expect(mocks.navigate).toHaveBeenCalledWith("/m/2026-06/reports");
+    expect(mocks.push).toHaveBeenCalledWith("/m/2026-06/reports");
   });
 
   it("opens a month grid and navigates to the selected month", () => {
@@ -107,7 +98,7 @@ describe("MonthNavigator", () => {
     );
     fireEvent.click(screen.getByRole("button", { name: "April 2026" }));
 
-    expect(mocks.navigate).toHaveBeenCalledWith("/m/2026-04/reports");
+    expect(mocks.push).toHaveBeenCalledWith("/m/2026-04/reports");
   });
 
   it("does not navigate when selecting the already-viewed month", () => {
@@ -120,7 +111,7 @@ describe("MonthNavigator", () => {
     );
     fireEvent.click(screen.getByRole("button", { name: "March 2026" }));
 
-    expect(mocks.navigate).not.toHaveBeenCalled();
+    expect(mocks.push).not.toHaveBeenCalled();
   });
 
   it("announces the current month marker inside the picker", () => {

@@ -13,7 +13,6 @@ import {
 import Link from "next/link";
 
 import { getMonthInfo } from "@/lib/months";
-import { useNavigationProgress } from "@/components/navigation-progress";
 import { toCollectionMonthValue } from "@mailtobills/domain";
 import { Button } from "@mailtobills/ui/components/button";
 import {
@@ -74,7 +73,7 @@ export const MonthNavigator = () => {
   const monthParam =
     typeof params.month === "string" ? params.month : undefined;
   const monthInfo = getMonthInfo(monthParam);
-  const { navigate, isNavigating } = useNavigationProgress();
+  const [isNavigating, startNavigation] = React.useTransition();
   const currentMonth = toCollectionMonthValue(new Date());
   const [isPickerOpen, setIsPickerOpen] = React.useState(false);
   const [visibleYear, setVisibleYear] = React.useState(() =>
@@ -95,7 +94,9 @@ export const MonthNavigator = () => {
     if (isNavigating) return;
     setIsPickerOpen(false);
     if (month === monthInfo.value) return;
-    navigate(buildMonthHref(pathname, month));
+    startNavigation(() => {
+      router.push(buildMonthHref(pathname, month));
+    });
   };
 
   React.useEffect(() => {
@@ -136,7 +137,9 @@ export const MonthNavigator = () => {
           onClick={(event) => {
             if (isNavigating) return;
             event.preventDefault();
-            navigate(previousHref);
+            startNavigation(() => {
+              router.push(previousHref);
+            });
           }}
           className="text-muted-foreground hover:bg-accent hover:text-accent-foreground focus-visible:ring-ring/50 inline-flex h-8 w-8 items-center justify-center transition outline-none focus-visible:ring-[3px] aria-disabled:pointer-events-none aria-disabled:opacity-50"
         >
@@ -151,10 +154,10 @@ export const MonthNavigator = () => {
               disabled={isNavigating}
               className="text-foreground hover:bg-accent hover:text-accent-foreground focus-visible:ring-ring/50 inline-flex h-8 items-center gap-1.5 px-3 font-mono text-xs font-medium tracking-[0.06em] uppercase tabular-nums transition outline-none focus-visible:ring-[3px] disabled:pointer-events-none disabled:opacity-50"
             >
-              <span className="hidden min-[420px]:inline">{monthInfo.label}</span>
-              <span className="min-[420px]:hidden">
-                {monthInfo.value}
+              <span className="hidden min-[420px]:inline">
+                {monthInfo.label}
               </span>
+              <span className="min-[420px]:hidden">{monthInfo.value}</span>
               <ChevronDown className="text-muted-foreground size-3.5" />
             </button>
           </PopoverTrigger>
@@ -249,7 +252,9 @@ export const MonthNavigator = () => {
           onClick={(event) => {
             if (isNavigating) return;
             event.preventDefault();
-            navigate(nextHref);
+            startNavigation(() => {
+              router.push(nextHref);
+            });
           }}
           className="text-muted-foreground hover:bg-accent hover:text-accent-foreground focus-visible:ring-ring/50 inline-flex h-8 w-8 items-center justify-center transition outline-none focus-visible:ring-[3px] aria-disabled:pointer-events-none aria-disabled:opacity-50"
         >
