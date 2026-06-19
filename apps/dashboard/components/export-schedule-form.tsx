@@ -64,6 +64,7 @@ export function ExportScheduleForm({
   const [name, setName] = useState(accountantName ?? "");
   const [day, setDay] = useState(exportScheduleDay ?? 5);
   const [enabled, setEnabled] = useState(exportScheduleDay !== undefined);
+  const [hasChangedSinceResult, setHasChangedSinceResult] = useState(false);
   const [actionState, formAction, isPending] = useActionState(
     updateAccountantDeliverySettings,
     { status: "idle" } satisfies CustomerSettingsActionState,
@@ -118,7 +119,12 @@ export function ExportScheduleForm({
         </div>
       )}
 
-      <form className="space-y-4" action={formAction}>
+      <form
+        className="space-y-4"
+        action={formAction}
+        noValidate
+        onSubmit={() => setHasChangedSinceResult(false)}
+      >
         <div className="grid gap-3 md:grid-cols-2">
           <div className="space-y-2">
             <Label htmlFor="accountant-email">Accountant Address</Label>
@@ -128,7 +134,10 @@ export function ExportScheduleForm({
               type="email"
               value={email}
               disabled={!isPro}
-              onChange={(event) => setEmail(event.target.value)}
+              onChange={(event) => {
+                setEmail(event.target.value);
+                setHasChangedSinceResult(true);
+              }}
               placeholder="accountant@example.com"
             />
           </div>
@@ -140,7 +149,10 @@ export function ExportScheduleForm({
               type="text"
               value={name}
               disabled={!isPro}
-              onChange={(event) => setName(event.target.value)}
+              onChange={(event) => {
+                setName(event.target.value);
+                setHasChangedSinceResult(true);
+              }}
               placeholder="e.g. Dra. Marta Silva"
             />
           </div>
@@ -154,7 +166,10 @@ export function ExportScheduleForm({
               name="exportScheduleDay"
               value={day}
               disabled={!isPro || !emailIsValid}
-              onChange={(event) => setDay(Number(event.target.value))}
+              onChange={(event) => {
+                setDay(Number(event.target.value));
+                setHasChangedSinceResult(true);
+              }}
               className="border-input bg-background ring-offset-background focus-visible:ring-ring flex h-9 w-full rounded-md border px-3 py-1 text-sm shadow-xs focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
             >
               {Array.from({ length: 28 }, (_, index) => index + 1).map(
@@ -173,7 +188,10 @@ export function ExportScheduleForm({
               name="scheduleEnabled"
               checked={enabled}
               disabled={!isPro || !emailIsValid}
-              onChange={(event) => setEnabled(event.target.checked)}
+              onChange={(event) => {
+                setEnabled(event.target.checked);
+                setHasChangedSinceResult(true);
+              }}
               className="size-4"
             />
             Enable monthly Export Schedule
@@ -213,12 +231,16 @@ export function ExportScheduleForm({
           ) : null}
         </div>
 
-        {actionState.status === "success" ? (
+        {!isPending &&
+        !hasChangedSinceResult &&
+        actionState.status === "success" ? (
           <p className="text-sm text-emerald-700" aria-live="polite">
             {actionState.message}
           </p>
         ) : null}
-        {actionState.status === "error" ? (
+        {!isPending &&
+        !hasChangedSinceResult &&
+        actionState.status === "error" ? (
           <p className="text-destructive text-sm" role="alert">
             {actionState.message}
           </p>

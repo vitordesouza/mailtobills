@@ -32,6 +32,7 @@ export function ForwardingAddressesForm({
   forwardingEmails: string[];
 }) {
   const [email, setEmail] = useState("");
+  const [hasChangedSinceResult, setHasChangedSinceResult] = useState(false);
   const [actionState, formAction, isPending] = useActionState(
     updateForwardingAddress,
     { status: "idle" } satisfies CustomerSettingsActionState,
@@ -97,7 +98,10 @@ export function ForwardingAddressesForm({
                 className="flex items-center justify-between gap-3 px-3 py-2 text-sm"
               >
                 <span className="min-w-0 truncate">{forwardingEmail}</span>
-                <form action={formAction}>
+                <form
+                  action={formAction}
+                  onSubmit={() => setHasChangedSinceResult(false)}
+                >
                   <input type="hidden" name="intent" value="remove" />
                   <input type="hidden" name="email" value={forwardingEmail} />
                   <Button
@@ -120,14 +124,21 @@ export function ForwardingAddressesForm({
         )}
       </div>
 
-      <form className="flex flex-col gap-2 sm:flex-row" action={formAction}>
+      <form
+        className="flex flex-col gap-2 sm:flex-row"
+        action={formAction}
+        onSubmit={() => setHasChangedSinceResult(false)}
+      >
         <input type="hidden" name="intent" value="add" />
         <Input
           type="email"
           name="email"
           value={email}
           disabled={!isPro}
-          onChange={(event) => setEmail(event.target.value)}
+          onChange={(event) => {
+            setEmail(event.target.value);
+            setHasChangedSinceResult(true);
+          }}
           placeholder="name@example.com"
           aria-label="Additional forwarding address"
         />
@@ -137,12 +148,16 @@ export function ForwardingAddressesForm({
         </Button>
       </form>
 
-      {actionState.status === "success" ? (
+      {!isPending &&
+      !hasChangedSinceResult &&
+      actionState.status === "success" ? (
         <p className="text-sm text-emerald-700" aria-live="polite">
           {actionState.message}
         </p>
       ) : null}
-      {actionState.status === "error" ? (
+      {!isPending &&
+      !hasChangedSinceResult &&
+      actionState.status === "error" ? (
         <p className="text-destructive text-sm" role="alert">
           {actionState.message}
         </p>

@@ -72,6 +72,17 @@ describe("settings forms", () => {
       email: "existing@example.com",
       intent: "remove",
     });
+    expect(
+      await screen.findByText("Forwarding Address removed."),
+    ).toBeInTheDocument();
+
+    await user.type(
+      screen.getByLabelText("Additional forwarding address"),
+      "n",
+    );
+    expect(
+      screen.queryByText("Forwarding Address removed."),
+    ).not.toBeInTheDocument();
   });
 
   it("keeps forwarding address controls disabled for Free users", () => {
@@ -125,6 +136,14 @@ describe("settings forms", () => {
       intent: "save",
       scheduleEnabled: "on",
     });
+    expect(
+      await screen.findByText("Export Schedule saved."),
+    ).toBeInTheDocument();
+
+    await user.type(screen.getByLabelText(/accountant name/i), " Updated");
+    expect(
+      screen.queryByText("Export Schedule saved."),
+    ).not.toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: /^disable$/i }));
 
@@ -134,6 +153,36 @@ describe("settings forms", () => {
     const disableData = mocks.updateAccountantDeliverySettings.mock
       .calls[1]?.[1] as FormData;
     expect(disableData.get("intent")).toBe("disable");
+  });
+
+  it("shows server-owned validation for an invalid Accountant Address", async () => {
+    mocks.updateAccountantDeliverySettings.mockResolvedValueOnce({
+      status: "error",
+      intent: "save",
+      message: "A valid Accountant Address is required.",
+    });
+    const user = userEvent.setup();
+    render(
+      <ExportScheduleForm
+        isPro
+        accountantEmail=""
+        accountantName=""
+        exportScheduleDay={5}
+      />,
+    );
+
+    await user.type(
+      screen.getByLabelText(/accountant address/i),
+      "not-an-email",
+    );
+    await user.click(
+      screen.getByRole("button", { name: /save export schedule/i }),
+    );
+
+    expect(mocks.updateAccountantDeliverySettings).toHaveBeenCalledOnce();
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "A valid Accountant Address is required.",
+    );
   });
 
   it("lets the Customer choose a dashboard theme", async () => {
