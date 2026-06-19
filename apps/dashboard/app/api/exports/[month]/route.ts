@@ -1,5 +1,5 @@
 import { convexAuthNextjsToken } from "@convex-dev/auth/nextjs/server";
-import { isCollectionMonth } from "@mailtobills/types";
+import { isCollectionMonth } from "@mailtobills/domain";
 
 const getConvexHttpBase = () =>
   process.env.NEXT_PUBLIC_CONVEX_HTTP_URL ??

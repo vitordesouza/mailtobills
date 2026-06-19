@@ -1,6 +1,6 @@
 import { httpRouter } from "convex/server";
 import { getAuthUserId } from "@convex-dev/auth/server";
-import { isCollectionMonth } from "@mailtobills/types";
+import { isCollectionMonth } from "@mailtobills/domain";
 
 import { auth } from "./auth";
 import { internal } from "./_generated/api";

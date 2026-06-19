@@ -4,7 +4,7 @@ import {
   isTimestampInCollectionMonth,
   shiftCollectionMonth,
   summarizeAccountantExportContents,
-} from "@mailtobills/types";
+} from "@mailtobills/domain";
 import { v } from "convex/values";
 
 import {
@@ -22,7 +22,7 @@ import type {
   ExpenseDocumentAttachment,
   ExpenseDocumentRow,
   ExpenseDocumentSummary,
-} from "@mailtobills/types";
+} from "@mailtobills/domain";
 
 const attachmentArgs = v.object({
   originalFilename: v.string(),

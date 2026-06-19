@@ -2,7 +2,7 @@ import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { ExpenseDocumentRow } from "@mailtobills/types";
+import type { ExpenseDocumentRow } from "@mailtobills/domain";
 
 import { ExpenseDocumentsTable } from "./expense-documents-table";
 

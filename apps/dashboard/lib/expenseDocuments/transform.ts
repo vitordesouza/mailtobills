@@ -2,7 +2,7 @@ import type {
   CollectionMonthExpenseDocuments,
   ExpenseDocumentAttachment,
   ExpenseDocumentRow,
-} from "@mailtobills/types";
+} from "@mailtobills/domain";
 
 function addDownloadUrl(
   attachment: ExpenseDocumentAttachment,

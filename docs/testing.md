@@ -12,7 +12,7 @@ the behavior clearly.
 
 ## Runners
 
-- `packages/types` uses `node:test` with `tsx` for pure TypeScript utilities.
+- `packages/domain` uses `node:test` with `tsx` for pure TypeScript utilities.
 - `apps/dashboard` uses Vitest, jsdom, and Testing Library for transforms and
   interactive React components.
 - `backend/convex` uses Vitest with `convex-test` in the edge runtime for Convex

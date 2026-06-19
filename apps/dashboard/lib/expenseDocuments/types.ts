@@ -1,6 +1,6 @@
 import type {
   CollectionMonthExpenseDocuments,
-} from "@mailtobills/types";
+} from "@mailtobills/domain";
 
 export type ExpenseDocumentsResult = CollectionMonthExpenseDocuments & {
   isLoading: boolean;

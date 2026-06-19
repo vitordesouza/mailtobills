@@ -7,7 +7,7 @@ import {
 } from "./accountantExportArchive";
 import {
   summarizeAccountantExportContents,
-} from "@mailtobills/types";
+} from "@mailtobills/domain";
 
 import { internal } from "../_generated/api";
 
@@ -15,7 +15,7 @@ import type { Id } from "../_generated/dataModel";
 import type { ActionCtx } from "../_generated/server";
 import type {
   AccountantExportSkippedDocument,
-} from "@mailtobills/types";
+} from "@mailtobills/domain";
 
 type BuildAccountantExportZipParams = {
   userId: Id<"users">;
