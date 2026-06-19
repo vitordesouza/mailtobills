@@ -3,7 +3,7 @@ import {
   isCollectionMonth,
   shiftCollectionMonth,
   toCollectionMonthValue,
-} from "@mailtobills/types";
+} from "@mailtobills/domain";
 
 export type MonthInfo = {
   value: string;

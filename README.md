@@ -22,7 +22,7 @@ MailToBills is a micro-SaaS that lets freelancers and small businesses forward i
 - `packages/ui`  
   Shared React UI components (shadcn/ui + Tailwind)
 
-- `packages/types`  
+- `packages/domain`  
   Shared TypeScript types
 
 - `packages/config`  

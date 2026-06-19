@@ -68,12 +68,12 @@ importers:
         specifier: ^19.2.6
         version: 19.2.6(react@19.2.6)
     devDependencies:
+      '@mailtobills/domain':
+        specifier: workspace:*
+        version: link:../../packages/domain
       '@mailtobills/eslint-config':
         specifier: workspace:^
         version: link:../../packages/eslint-config
-      '@mailtobills/types':
-        specifier: workspace:*
-        version: link:../../packages/types
       '@mailtobills/typescript-config':
         specifier: workspace:*
         version: link:../../packages/typescript-config
@@ -168,9 +168,9 @@ importers:
       '@convex-dev/auth':
         specifier: ^0.0.90
         version: 0.0.90(@auth/core@0.37.4)(convex@1.41.0(react@19.2.6))(react@19.2.6)
-      '@mailtobills/types':
+      '@mailtobills/domain':
         specifier: workspace:*
-        version: link:../../packages/types
+        version: link:../../packages/domain
       convex:
         specifier: ^1.32.0
         version: 1.41.0(react@19.2.6)
@@ -193,6 +193,27 @@ importers:
       vitest:
         specifier: ^4.0.15
         version: 4.1.8(@edge-runtime/vm@5.0.0)(@types/node@20.19.25)(jsdom@27.4.0)(vite@8.0.16(@types/node@20.19.25)(esbuild@0.28.0)(jiti@2.6.1)(tsx@4.22.3))
+
+  packages/domain:
+    devDependencies:
+      '@mailtobills/eslint-config':
+        specifier: workspace:*
+        version: link:../eslint-config
+      '@mailtobills/typescript-config':
+        specifier: workspace:*
+        version: link:../typescript-config
+      '@types/node':
+        specifier: ^20.19.25
+        version: 20.19.25
+      eslint:
+        specifier: ^9.39.1
+        version: 9.39.1(jiti@2.6.1)
+      tsx:
+        specifier: ^4.21.0
+        version: 4.22.3
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
 
   packages/eslint-config:
     devDependencies:
@@ -235,27 +256,6 @@ importers:
       typescript-eslint:
         specifier: ^8.52.0
         version: 8.60.0(eslint@9.39.1(jiti@2.6.1))(typescript@5.9.3)
-
-  packages/types:
-    devDependencies:
-      '@mailtobills/eslint-config':
-        specifier: workspace:*
-        version: link:../eslint-config
-      '@mailtobills/typescript-config':
-        specifier: workspace:*
-        version: link:../typescript-config
-      '@types/node':
-        specifier: ^20.19.25
-        version: 20.19.25
-      eslint:
-        specifier: ^9.39.1
-        version: 9.39.1(jiti@2.6.1)
-      tsx:
-        specifier: ^4.21.0
-        version: 4.22.3
-      typescript:
-        specifier: ^5.9.3
-        version: 5.9.3
 
   packages/typescript-config: {}
 

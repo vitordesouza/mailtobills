@@ -15,7 +15,7 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": root,
-      "@mailtobills/types": `${repoRoot}/packages/types/src/index.ts`,
+      "@mailtobills/domain": `${repoRoot}/packages/domain/src/index.ts`,
     },
   },
 });

@@ -54,7 +54,7 @@ Este repositório é um **monorepo** gerido com **pnpm + Turborepo**.
   - Tailwind + shadcn/ui
   - Não reinventar componentes base
 
-- `packages/types`
+- `packages/domain`
 
   - Tipos compartilhados (`Invoice`, `User`, `EmailMetadata`, etc.)
 

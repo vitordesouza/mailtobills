@@ -6,7 +6,7 @@ import { Fragment, useState, useTransition } from "react";
 import type {
   ExpenseDocumentAttachment,
   ExpenseDocumentRow,
-} from "@mailtobills/types";
+} from "@mailtobills/domain";
 import type { Id } from "@mailtobills/convex/_generated/dataModel";
 import { useMutation } from "convex/react";
 import {

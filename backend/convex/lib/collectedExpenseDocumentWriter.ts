@@ -1,7 +1,7 @@
 import {
   choosePrimaryAttachment,
   getAcceptedPdfAttachments,
-} from "@mailtobills/types";
+} from "@mailtobills/domain";
 
 import type { Id } from "../_generated/dataModel";
 import type { MutationCtx } from "../_generated/server";
