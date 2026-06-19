@@ -21,6 +21,7 @@ import {
   StatValue,
 } from "@mailtobills/ui/components/stat";
 import { TrendChip } from "@mailtobills/ui/components/trend-chip";
+import { getCollectionMonthRoute } from "@/lib/collection-month-route";
 
 export default async function ReportsPage({
   params,
@@ -28,7 +29,7 @@ export default async function ReportsPage({
   params: Promise<{ month: string }>;
 }) {
   const { month } = await params;
-  const monthInfo = getMonthInfo(month);
+  const monthInfo = getCollectionMonthRoute(month);
   const { summary, previousSummary, exportSummary, previousExportSummary } =
     await getExpenseDocuments(monthInfo.value);
 
@@ -113,8 +114,8 @@ export default async function ReportsPage({
             One PDF for each collected document with a Primary Attachment.
           </li>
           <li>
-            A CSV manifest with sender, subject, received date, and filename
-            for every included document.
+            A CSV manifest with sender, subject, received date, and filename for
+            every included document.
           </li>
           {exportSummary.skippedDocumentCount > 0 ? (
             <li>

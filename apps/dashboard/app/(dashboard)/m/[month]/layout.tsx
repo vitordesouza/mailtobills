@@ -1,26 +1,14 @@
-import { notFound } from "next/navigation";
-
-import { getMonthInfo } from "@/lib/months";
 import { InboxChip } from "@/components/inbox-chip";
 import { MonthNavigator } from "@/components/month-navigator";
 import { MonthPageTitle } from "@/components/month-page-title";
 import { Separator } from "@mailtobills/ui/components/separator";
 import { SidebarTrigger } from "@mailtobills/ui/components/sidebar";
 
-export default async function MonthLayout({
+export default function MonthLayout({
   children,
-  params,
 }: {
   children: React.ReactNode;
-  params: Promise<{ month: string }>;
 }) {
-  const { month } = await params;
-  const monthInfo = getMonthInfo(month);
-
-  if (monthInfo.value !== month) {
-    notFound();
-  }
-
   return (
     <>
       <header className="border-border mb-4 flex h-14 w-full min-w-0 shrink-0 items-center gap-2 border-b">

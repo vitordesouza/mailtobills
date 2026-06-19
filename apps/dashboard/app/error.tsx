@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { AlertTriangle, RotateCcw } from "lucide-react";
 
 import { Button } from "@mailtobills/ui/components/button";
@@ -11,17 +12,29 @@ import {
   EmptyStateTitle,
 } from "@mailtobills/ui/components/empty-state";
 
-export default function DashboardError({ reset }: { reset: () => void }) {
+export default function AppError({
+  error,
+  reset,
+}: {
+  error: Error & { digest?: string };
+  reset: () => void;
+}) {
+  useEffect(() => {
+    console.error("Application route failed", {
+      digest: error.digest,
+      message: error.message,
+    });
+  }, [error]);
+
   return (
-    <div className="flex min-w-0 flex-1 flex-col p-4 pt-0">
+    <main className="bg-background flex min-h-svh items-center justify-center p-4">
       <EmptyState>
         <EmptyStateIcon>
           <AlertTriangle />
         </EmptyStateIcon>
         <EmptyStateTitle>Could not load this page</EmptyStateTitle>
         <EmptyStateDescription>
-          MailToBills could not retrieve the latest dashboard data. Your
-          collected Expense Documents have not been changed.
+          MailToBills could not retrieve the latest data. No changes were made.
         </EmptyStateDescription>
         <EmptyStateActions>
           <Button type="button" onClick={reset} typography="mono">
@@ -30,6 +43,6 @@ export default function DashboardError({ reset }: { reset: () => void }) {
           </Button>
         </EmptyStateActions>
       </EmptyState>
-    </div>
+    </main>
   );
 }
