@@ -1,14 +1,13 @@
-import assert from "node:assert/strict";
-import { describe, it } from "node:test";
+import { describe, expect, it } from "vitest";
 
 import {
   buildManifestCsv,
   buildZip,
   sanitizeZipName,
-} from "./exportUtils.js";
+} from "./accountantExportArchive";
 
-describe("accountant export utilities", () => {
-  it("builds a quoted manifest CSV", () => {
+describe("accountant export archive", () => {
+  it("builds a quoted Manifest CSV", () => {
     const csv = buildManifestCsv([
       {
         id: "doc-1",
@@ -20,16 +19,15 @@ describe("accountant export utilities", () => {
       },
     ]);
 
-    assert.equal(
-      csv,
+    expect(csv).toBe(
       '"document id","primary filename","sender","email subject","received timestamp","attachment count"\n' +
         '"doc-1","invoice ""one"".pdf","billing@example.com","Invoice, January","2026-01-05T10:30:00.000Z","2"\n',
     );
   });
 
   it("sanitizes ZIP path segments", () => {
-    assert.equal(sanitizeZipName(" ../invoice 01.pdf "), "invoice_01.pdf");
-    assert.equal(sanitizeZipName("///"), "file");
+    expect(sanitizeZipName(" ../invoice 01.pdf ")).toBe("invoice_01.pdf");
+    expect(sanitizeZipName("///")).toBe("file");
   });
 
   it("builds a ZIP archive with local and central directory records", () => {
@@ -41,8 +39,8 @@ describe("accountant export utilities", () => {
     ]);
 
     const view = new DataView(zip.buffer, zip.byteOffset, zip.byteLength);
-    assert.equal(view.getUint32(0, true), 0x04034b50);
-    assert.equal(view.getUint32(zip.byteLength - 22, true), 0x06054b50);
-    assert.equal(new TextDecoder().decode(zip).includes("manifest.csv"), true);
+    expect(view.getUint32(0, true)).toBe(0x04034b50);
+    expect(view.getUint32(zip.byteLength - 22, true)).toBe(0x06054b50);
+    expect(new TextDecoder().decode(zip)).toContain("manifest.csv");
   });
 });

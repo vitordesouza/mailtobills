@@ -2,6 +2,10 @@ import {
   buildManifestCsv,
   buildZip,
   sanitizeZipName,
+  type ExportManifestRow,
+  type ZipFileInput,
+} from "./accountantExportArchive";
+import {
   summarizeAccountantExportContents,
 } from "@mailtobills/types";
 
@@ -11,8 +15,6 @@ import type { Id } from "../_generated/dataModel";
 import type { ActionCtx } from "../_generated/server";
 import type {
   AccountantExportSkippedDocument,
-  ExportManifestRow,
-  ZipFileInput,
 } from "@mailtobills/types";
 
 type BuildAccountantExportZipParams = {
