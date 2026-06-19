@@ -5,9 +5,7 @@ import { useMemo } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@/lib/convexClient";
 import { addExpenseDocumentDownloadUrls } from "./transform";
-import type {
-  ExpenseDocumentsResult,
-} from "./types";
+import type { ExpenseDocumentsResult } from "./types";
 
 export type UseExpenseDocumentsResult = ExpenseDocumentsResult;
 

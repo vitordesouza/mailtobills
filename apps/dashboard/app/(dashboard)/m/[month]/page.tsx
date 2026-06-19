@@ -4,8 +4,9 @@ import { convexAuthNextjsToken } from "@convex-dev/auth/nextjs/server";
 import { api } from "@mailtobills/convex/_generated/api";
 
 import { getMonthInfo } from "@/lib/months";
-import { getExpenseDocuments } from "@/lib/expenseDocuments/getExpenseDocuments";
-import { percentDelta } from "@/lib/expenseDocuments/transform";
+import { ExpenseDocumentsTable } from "@/features/expense-documents/components/expense-documents-table";
+import { getExpenseDocuments } from "@/features/expense-documents/read-model/getExpenseDocuments";
+import { percentDelta } from "@/features/expense-documents/read-model/transform";
 import { Button } from "@mailtobills/ui/components/button";
 import {
   PageHeader,
@@ -25,7 +26,6 @@ import {
 } from "@mailtobills/ui/components/stat";
 import { TrendChip } from "@mailtobills/ui/components/trend-chip";
 import { OnboardingEmptyState } from "@/components/onboarding-empty-state";
-import { ExpenseDocumentsTable } from "@/components/expense-documents-table";
 import { SendToAccountantButton } from "@/components/send-to-accountant-button";
 
 export default async function DashboardPage({

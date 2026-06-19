@@ -1,7 +1,7 @@
 import { Download, FileArchive, Inbox, Paperclip } from "lucide-react";
 
-import { getExpenseDocuments } from "@/lib/expenseDocuments/getExpenseDocuments";
-import { percentDelta } from "@/lib/expenseDocuments/transform";
+import { getExpenseDocuments } from "@/features/expense-documents/read-model/getExpenseDocuments";
+import { percentDelta } from "@/features/expense-documents/read-model/transform";
 import { getMonthInfo } from "@/lib/months";
 import { Button } from "@mailtobills/ui/components/button";
 import {
