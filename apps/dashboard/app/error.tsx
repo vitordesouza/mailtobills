@@ -34,7 +34,8 @@ export default function AppError({
         </EmptyStateIcon>
         <EmptyStateTitle>Could not load this page</EmptyStateTitle>
         <EmptyStateDescription>
-          MailToBills could not retrieve the latest data. No changes were made.
+          MailToBills could not retrieve the latest data. Check the page before
+          trying the action again.
         </EmptyStateDescription>
         <EmptyStateActions>
           <Button type="button" onClick={reset} typography="mono">
