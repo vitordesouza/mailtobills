@@ -116,12 +116,18 @@ export function ExpenseDocumentDetailPanel({
 }: ExpenseDocumentDetailPanelProps) {
   const [previewState, setPreviewState] = useState<PreviewState>("loading");
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [emailDetailsOpen, setEmailDetailsOpen] = useState(false);
   const attachmentUrl = getAttachmentUrl(selectedAttachment);
   const isPrimary = selectedAttachment?.id === document?.primaryAttachment?.id;
 
   useEffect(() => {
     setPreviewState(attachmentUrl ? "loading" : "error");
   }, [attachmentUrl]);
+
+  useEffect(() => {
+    const desktop = window.matchMedia("(min-width: 640px)");
+    setEmailDetailsOpen(desktop.matches);
+  }, []);
 
   if (!document) return null;
 
@@ -132,7 +138,7 @@ export function ExpenseDocumentDetailPanel({
 
   return (
     <>
-      <Sheet open={open} onOpenChange={onOpenChange}>
+      <Sheet open={open} modal={!confirmDelete} onOpenChange={onOpenChange}>
         <SheetContent className="w-full gap-0 overflow-hidden p-0 sm:max-w-[720px]">
           <SheetHeader className="gap-4 border-b px-5 pt-5 pb-4 sm:px-6">
             <div className="flex items-center justify-between gap-4 pr-8">
@@ -231,7 +237,11 @@ export function ExpenseDocumentDetailPanel({
           </SheetHeader>
 
           <div className="min-h-0 flex-1 overflow-y-auto">
-            <Collapsible defaultOpen className="border-b">
+            <Collapsible
+              open={emailDetailsOpen}
+              onOpenChange={setEmailDetailsOpen}
+              className="border-b"
+            >
               <CollapsibleTrigger asChild>
                 <Button
                   type="button"
@@ -302,7 +312,15 @@ export function ExpenseDocumentDetailPanel({
                     src={attachmentUrl}
                     title={`Preview ${title}`}
                     className="absolute inset-0 size-full bg-white"
-                    onLoad={() => setPreviewState("ready")}
+                    onLoad={(event) => {
+                      const contentType =
+                        event.currentTarget.contentDocument?.contentType;
+                      setPreviewState(
+                        contentType && contentType !== "application/pdf"
+                          ? "error"
+                          : "ready",
+                      );
+                    }}
                     onError={() => setPreviewState("error")}
                   />
                 ) : null}
