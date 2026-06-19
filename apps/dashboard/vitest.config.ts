@@ -16,6 +16,7 @@ export default defineConfig({
     alias: {
       "@": root,
       "@mailtobills/domain": `${repoRoot}/packages/domain/src/index.ts`,
+      "server-only": `${root}/test/server-only.ts`,
     },
   },
 });

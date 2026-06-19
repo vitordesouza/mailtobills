@@ -8,10 +8,12 @@ const mocks = vi.hoisted(() => ({
   notFound: vi.fn(() => {
     throw new Error("NEXT_NOT_FOUND");
   }),
+  redirect: vi.fn(),
 }));
 
 vi.mock("next/navigation", () => ({
   notFound: mocks.notFound,
+  redirect: mocks.redirect,
 }));
 vi.mock("@convex-dev/auth/nextjs/server", () => ({
   convexAuthNextjsToken: mocks.authToken,

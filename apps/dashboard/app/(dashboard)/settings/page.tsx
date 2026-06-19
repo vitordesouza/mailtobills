@@ -1,5 +1,4 @@
 import { fetchQuery } from "convex/nextjs";
-import { convexAuthNextjsToken } from "@convex-dev/auth/nextjs/server";
 import { api } from "@mailtobills/convex/_generated/api";
 
 import { BillingSettings } from "@/components/billing-settings";
@@ -14,6 +13,7 @@ import {
   PageHeaderTitle,
 } from "@mailtobills/ui/components/page-header";
 import { SectionLabel } from "@mailtobills/ui/components/section-label";
+import { requireCurrentCustomer } from "@/features/customer/read-model/getCurrentCustomer";
 
 function SettingsRow({
   title,
@@ -38,8 +38,7 @@ function SettingsRow({
 }
 
 export default async function SettingsPage() {
-  const token = await convexAuthNextjsToken();
-  const user = await fetchQuery(api.users.viewer, {}, { token });
+  const { token, customer } = await requireCurrentCustomer();
   const subscription = await fetchQuery(
     api.subscriptions.getMySubscription,
     {},
@@ -60,8 +59,8 @@ export default async function SettingsPage() {
         </PageHeader>
 
         <SettingsContextStrip
-          customerName={user?.name ?? "Customer"}
-          customerEmail={user?.email ?? undefined}
+          customerName={customer.name}
+          customerEmail={customer.email ?? undefined}
           collectionAddress="inbox@mailtobills.com"
         />
       </div>
@@ -71,9 +70,9 @@ export default async function SettingsPage() {
         description="Control which email addresses can send Expense Documents to your account."
       >
         <ForwardingAddressesForm
-          isPro={Boolean(user?.isPro)}
-          primaryEmail={user?.email ?? undefined}
-          forwardingEmails={user?.forwardingEmails ?? []}
+          isPro={customer.plan === "pro"}
+          primaryEmail={customer.email ?? undefined}
+          forwardingEmails={customer.forwardingAddresses}
         />
       </SettingsRow>
 
@@ -82,10 +81,10 @@ export default async function SettingsPage() {
         description="Send Accountant Exports directly or schedule monthly delivery on Pro."
       >
         <ExportScheduleForm
-          isPro={Boolean(user?.isPro)}
-          accountantEmail={user?.accountantEmail ?? undefined}
-          accountantName={user?.accountantName ?? undefined}
-          exportScheduleDay={user?.exportScheduleDay ?? undefined}
+          isPro={customer.plan === "pro"}
+          accountantEmail={customer.accountantAddress ?? undefined}
+          accountantName={customer.accountantName ?? undefined}
+          exportScheduleDay={customer.exportScheduleDay ?? undefined}
         />
       </SettingsRow>
 
@@ -94,7 +93,7 @@ export default async function SettingsPage() {
         description="Plans and invoices for your MailToBills subscription."
       >
         <BillingSettings
-          isPro={Boolean(user?.isPro)}
+          isPro={customer.plan === "pro"}
           subscriptionStatus={subscription?.status}
           currentPeriodEnd={subscription?.currentPeriodEnd}
           proPriceLabel={process.env.LEMONSQUEEZY_PRO_PRICE_LABEL ?? "Pro"}
