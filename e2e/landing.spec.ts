@@ -54,3 +54,25 @@ test("skip link moves keyboard focus to the main content", async ({ page }) => {
   await skipLink.press("Enter");
   await expect(page.locator("#main-content")).toBeFocused();
 });
+
+for (const { cta, path, width } of [
+  { cta: "Get started", path: "/", width: 360 },
+  { cta: "Get started", path: "/", width: 375 },
+  { cta: "Começar", path: "/pt-PT", width: 768 },
+]) {
+  test(`header fits ${width}px viewport on ${path}`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto(path);
+
+    await expect(
+      page.getByRole("link", { name: cta, exact: true }),
+    ).toBeVisible();
+
+    const hasHorizontalOverflow = await page.evaluate(
+      () =>
+        document.documentElement.scrollWidth >
+        document.documentElement.clientWidth,
+    );
+    expect(hasHorizontalOverflow).toBe(false);
+  });
+}

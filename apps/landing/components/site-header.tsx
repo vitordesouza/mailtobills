@@ -37,7 +37,7 @@ export async function SiteHeader() {
         </Link>
         <nav
           aria-label={t("primaryLabel")}
-          className="hidden items-center gap-1 md:flex"
+          className="hidden items-center gap-1 lg:flex"
         >
           {navLinks.map(({ href, label }) => (
             <a
@@ -78,7 +78,7 @@ export async function SiteHeader() {
             asChild
             variant="ghost"
             size="sm"
-            className="max-[359px]:hidden"
+            className="hidden sm:inline-flex"
           >
             <a href={signInUrl}>{t("signIn")}</a>
           </Button>
