@@ -7,11 +7,12 @@ import {
   ShieldCheck,
   Trash2,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { FormEvent, useState, useTransition } from "react";
+import { useActionState, useEffect, useState } from "react";
 
-import { api } from "@/lib/convexClient";
-import { useMutation } from "convex/react";
+import {
+  updateForwardingAddress,
+  type CustomerSettingsActionState,
+} from "@/features/customer/actions/updateCustomerSettings";
 import { Badge } from "@mailtobills/ui/components/badge";
 import { Button } from "@mailtobills/ui/components/button";
 import { Input } from "@mailtobills/ui/components/input";
@@ -30,48 +31,19 @@ export function ForwardingAddressesForm({
   primaryEmail?: string;
   forwardingEmails: string[];
 }) {
-  const router = useRouter();
   const [email, setEmail] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [pendingEmail, setPendingEmail] = useState<string | null>(null);
-  const [isPending, startTransition] = useTransition();
-  const addForwardingAddress = useMutation(api.users.addForwardingAddress);
-  const removeForwardingAddress = useMutation(
-    api.users.removeForwardingAddress,
+  const [hasChangedSinceResult, setHasChangedSinceResult] = useState(false);
+  const [actionState, formAction, isPending] = useActionState(
+    updateForwardingAddress,
+    { status: "idle" } satisfies CustomerSettingsActionState,
   );
   const canSubmit = isPro && isPlausibleEmail(email) && !isPending;
 
-  const submit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setError(null);
-
-    if (!isPlausibleEmail(email)) {
-      setError("Enter a valid email address.");
-      return;
+  useEffect(() => {
+    if (actionState.status === "success" && actionState.intent === "add") {
+      setEmail("");
     }
-
-    setPendingEmail(email);
-    startTransition(() => {
-      addForwardingAddress({ email })
-        .then(() => {
-          setEmail("");
-          router.refresh();
-        })
-        .catch(() => setError("Could not add forwarding address."))
-        .finally(() => setPendingEmail(null));
-    });
-  };
-
-  const remove = (targetEmail: string) => {
-    setError(null);
-    setPendingEmail(targetEmail);
-    startTransition(() => {
-      removeForwardingAddress({ email: targetEmail })
-        .then(() => router.refresh())
-        .catch(() => setError("Could not remove forwarding address."))
-        .finally(() => setPendingEmail(null));
-    });
-  };
+  }, [actionState]);
 
   return (
     <div className="space-y-4">
@@ -126,16 +98,22 @@ export function ForwardingAddressesForm({
                 className="flex items-center justify-between gap-3 px-3 py-2 text-sm"
               >
                 <span className="min-w-0 truncate">{forwardingEmail}</span>
-                <Button
-                  type="button"
-                  size="icon-sm"
-                  variant="ghost"
-                  disabled={!isPro || pendingEmail === forwardingEmail}
-                  onClick={() => remove(forwardingEmail)}
-                  aria-label={`Remove ${forwardingEmail}`}
+                <form
+                  action={formAction}
+                  onSubmit={() => setHasChangedSinceResult(false)}
                 >
-                  <Trash2 className="size-4" />
-                </Button>
+                  <input type="hidden" name="intent" value="remove" />
+                  <input type="hidden" name="email" value={forwardingEmail} />
+                  <Button
+                    type="submit"
+                    size="icon-sm"
+                    variant="ghost"
+                    disabled={!isPro || isPending}
+                    aria-label={`Remove ${forwardingEmail}`}
+                  >
+                    <Trash2 className="size-4" />
+                  </Button>
+                </form>
               </div>
             ))}
           </div>
@@ -146,12 +124,21 @@ export function ForwardingAddressesForm({
         )}
       </div>
 
-      <form className="flex flex-col gap-2 sm:flex-row" onSubmit={submit}>
+      <form
+        className="flex flex-col gap-2 sm:flex-row"
+        action={formAction}
+        onSubmit={() => setHasChangedSinceResult(false)}
+      >
+        <input type="hidden" name="intent" value="add" />
         <Input
           type="email"
+          name="email"
           value={email}
           disabled={!isPro}
-          onChange={(event) => setEmail(event.target.value)}
+          onChange={(event) => {
+            setEmail(event.target.value);
+            setHasChangedSinceResult(true);
+          }}
           placeholder="name@example.com"
           aria-label="Additional forwarding address"
         />
@@ -161,7 +148,20 @@ export function ForwardingAddressesForm({
         </Button>
       </form>
 
-      {error ? <p className="text-destructive text-sm">{error}</p> : null}
+      {!isPending &&
+      !hasChangedSinceResult &&
+      actionState.status === "success" ? (
+        <p className="text-sm text-emerald-700" aria-live="polite">
+          {actionState.message}
+        </p>
+      ) : null}
+      {!isPending &&
+      !hasChangedSinceResult &&
+      actionState.status === "error" ? (
+        <p className="text-destructive text-sm" role="alert">
+          {actionState.message}
+        </p>
+      ) : null}
     </div>
   );
 }

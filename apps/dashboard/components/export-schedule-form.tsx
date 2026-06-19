@@ -1,11 +1,12 @@
 "use client";
 
 import { CalendarClock, CheckCircle2, Lock, Send } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { FormEvent, useMemo, useState, useTransition } from "react";
+import { useActionState, useEffect, useMemo, useState } from "react";
 
-import { api } from "@/lib/convexClient";
-import { useMutation } from "convex/react";
+import {
+  updateAccountantDeliverySettings,
+  type CustomerSettingsActionState,
+} from "@/features/customer/actions/updateCustomerSettings";
 import { Badge } from "@mailtobills/ui/components/badge";
 import { Button } from "@mailtobills/ui/components/button";
 import { Input } from "@mailtobills/ui/components/input";
@@ -59,92 +60,29 @@ export function ExportScheduleForm({
   accountantName?: string;
   exportScheduleDay?: number;
 }) {
-  const router = useRouter();
   const [email, setEmail] = useState(accountantEmail ?? "");
   const [name, setName] = useState(accountantName ?? "");
   const [day, setDay] = useState(exportScheduleDay ?? 5);
   const [enabled, setEnabled] = useState(exportScheduleDay !== undefined);
-  const [message, setMessage] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [isPending, startTransition] = useTransition();
-  const updateAccountantDeliverySettings = useMutation(
-    api.users.updateAccountantDeliverySettings,
+  const [hasChangedSinceResult, setHasChangedSinceResult] = useState(false);
+  const [actionState, formAction, isPending] = useActionState(
+    updateAccountantDeliverySettings,
+    { status: "idle" } satisfies CustomerSettingsActionState,
   );
-  const updateExportSchedule = useMutation(api.users.updateExportSchedule);
   const emailIsValid = isPlausibleEmail(email);
   const preview = useMemo(
     () => (enabled && emailIsValid ? nextExportPreview(new Date(), day) : null),
     [day, emailIsValid, enabled],
   );
 
-  const submit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setMessage(null);
-    setError(null);
-
-    if (email.trim() && !emailIsValid) {
-      setError("A valid Accountant Address is required.");
-      return;
+  useEffect(() => {
+    if (
+      actionState.status === "success" &&
+      actionState.scheduleEnabled !== undefined
+    ) {
+      setEnabled(actionState.scheduleEnabled);
     }
-
-    if (enabled && !emailIsValid) {
-      setError(
-        "A valid Accountant Address is required to enable the schedule.",
-      );
-      return;
-    }
-
-    startTransition(() => {
-      updateAccountantDeliverySettings({
-        accountantEmail: email,
-        accountantName: name,
-        exportScheduleDay: enabled ? day : undefined,
-      })
-        .then(() => {
-          setMessage(
-            enabled ? "Export Schedule saved." : "Export Schedule disabled.",
-          );
-          router.refresh();
-        })
-        .catch((caught) => {
-          if (
-            caught instanceof Error &&
-            caught.message.includes("PRO_REQUIRED")
-          ) {
-            setError("Upgrade to Pro to configure Export Schedule.");
-            return;
-          }
-          if (
-            caught instanceof Error &&
-            caught.message.includes(
-              "ACCOUNTANT_ADDRESS_REQUIRED_FOR_EXPORT_SCHEDULE",
-            )
-          ) {
-            setError(
-              "A valid Accountant Address is required to enable the schedule.",
-            );
-            return;
-          }
-          setError("Could not save Export Schedule.");
-        });
-    });
-  };
-
-  const disableSchedule = () => {
-    setMessage(null);
-    setError(null);
-    startTransition(() => {
-      updateExportSchedule({
-        exportScheduleDay: undefined,
-      })
-        .then(() => {
-          setEnabled(false);
-          setMessage("Export Schedule disabled.");
-          router.refresh();
-        })
-        .catch(() => setError("Could not disable Export Schedule."));
-    });
-  };
+  }, [actionState]);
 
   return (
     <div className="space-y-4">
@@ -181,16 +119,25 @@ export function ExportScheduleForm({
         </div>
       )}
 
-      <form className="space-y-4" onSubmit={submit}>
+      <form
+        className="space-y-4"
+        action={formAction}
+        noValidate
+        onSubmit={() => setHasChangedSinceResult(false)}
+      >
         <div className="grid gap-3 md:grid-cols-2">
           <div className="space-y-2">
             <Label htmlFor="accountant-email">Accountant Address</Label>
             <Input
               id="accountant-email"
+              name="accountantEmail"
               type="email"
               value={email}
               disabled={!isPro}
-              onChange={(event) => setEmail(event.target.value)}
+              onChange={(event) => {
+                setEmail(event.target.value);
+                setHasChangedSinceResult(true);
+              }}
               placeholder="accountant@example.com"
             />
           </div>
@@ -198,10 +145,14 @@ export function ExportScheduleForm({
             <Label htmlFor="accountant-name">Accountant Name</Label>
             <Input
               id="accountant-name"
+              name="accountantName"
               type="text"
               value={name}
               disabled={!isPro}
-              onChange={(event) => setName(event.target.value)}
+              onChange={(event) => {
+                setName(event.target.value);
+                setHasChangedSinceResult(true);
+              }}
               placeholder="e.g. Dra. Marta Silva"
             />
           </div>
@@ -212,9 +163,13 @@ export function ExportScheduleForm({
             <Label htmlFor="export-day">Send on day (UTC)</Label>
             <select
               id="export-day"
+              name="exportScheduleDay"
               value={day}
               disabled={!isPro || !emailIsValid}
-              onChange={(event) => setDay(Number(event.target.value))}
+              onChange={(event) => {
+                setDay(Number(event.target.value));
+                setHasChangedSinceResult(true);
+              }}
               className="border-input bg-background ring-offset-background focus-visible:ring-ring flex h-9 w-full rounded-md border px-3 py-1 text-sm shadow-xs focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
             >
               {Array.from({ length: 28 }, (_, index) => index + 1).map(
@@ -230,9 +185,13 @@ export function ExportScheduleForm({
           <label className="flex items-center gap-2 self-end rounded-md border px-3 py-2 text-sm">
             <input
               type="checkbox"
+              name="scheduleEnabled"
               checked={enabled}
               disabled={!isPro || !emailIsValid}
-              onChange={(event) => setEnabled(event.target.checked)}
+              onChange={(event) => {
+                setEnabled(event.target.checked);
+                setHasChangedSinceResult(true);
+              }}
               className="size-4"
             />
             Enable monthly Export Schedule
@@ -250,23 +209,42 @@ export function ExportScheduleForm({
         ) : null}
 
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-          <Button type="submit" disabled={!isPro || isPending}>
+          <Button
+            type="submit"
+            name="intent"
+            value="save"
+            disabled={!isPro || isPending}
+          >
             Save Export Schedule
           </Button>
           {enabled ? (
             <Button
-              type="button"
+              type="submit"
+              name="intent"
+              value="disable"
               variant="outline"
               disabled={!isPro || isPending}
-              onClick={disableSchedule}
+              formNoValidate
             >
               Disable
             </Button>
           ) : null}
         </div>
 
-        {message ? <p className="text-sm text-emerald-700">{message}</p> : null}
-        {error ? <p className="text-destructive text-sm">{error}</p> : null}
+        {!isPending &&
+        !hasChangedSinceResult &&
+        actionState.status === "success" ? (
+          <p className="text-sm text-emerald-700" aria-live="polite">
+            {actionState.message}
+          </p>
+        ) : null}
+        {!isPending &&
+        !hasChangedSinceResult &&
+        actionState.status === "error" ? (
+          <p className="text-destructive text-sm" role="alert">
+            {actionState.message}
+          </p>
+        ) : null}
       </form>
     </div>
   );
