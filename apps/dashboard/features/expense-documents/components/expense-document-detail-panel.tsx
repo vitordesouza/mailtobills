@@ -117,6 +117,8 @@ export function ExpenseDocumentDetailPanel({
   const [previewState, setPreviewState] = useState<PreviewState>("loading");
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [emailDetailsOpen, setEmailDetailsOpen] = useState(false);
+  const [sheetContentElement, setSheetContentElement] =
+    useState<HTMLDivElement | null>(null);
   const attachmentUrl = getAttachmentUrl(selectedAttachment);
   const isPrimary = selectedAttachment?.id === document?.primaryAttachment?.id;
 
@@ -126,7 +128,13 @@ export function ExpenseDocumentDetailPanel({
 
   useEffect(() => {
     const desktop = window.matchMedia("(min-width: 640px)");
-    setEmailDetailsOpen(desktop.matches);
+    const syncEmailDetails = (event: MediaQueryListEvent | MediaQueryList) => {
+      setEmailDetailsOpen(event.matches);
+    };
+
+    syncEmailDetails(desktop);
+    desktop.addEventListener("change", syncEmailDetails);
+    return () => desktop.removeEventListener("change", syncEmailDetails);
   }, []);
 
   if (!document) return null;
@@ -138,8 +146,11 @@ export function ExpenseDocumentDetailPanel({
 
   return (
     <>
-      <Sheet open={open} modal={!confirmDelete} onOpenChange={onOpenChange}>
-        <SheetContent className="w-full gap-0 overflow-hidden p-0 sm:max-w-[720px]">
+      <Sheet open={open} onOpenChange={onOpenChange}>
+        <SheetContent
+          ref={setSheetContentElement}
+          className="w-full gap-0 overflow-hidden p-0 sm:max-w-[720px]"
+        >
           <SheetHeader className="gap-4 border-b px-5 pt-5 pb-4 sm:px-6">
             <div className="flex items-center justify-between gap-4 pr-8">
               <p className="text-muted-foreground font-mono text-[11px] font-medium uppercase tracking-[0.08em] tabular-nums">
@@ -410,32 +421,34 @@ export function ExpenseDocumentDetailPanel({
           <p className="sr-only" aria-live="polite">
             Previewing {title}
           </p>
+
+          <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
+            <AlertDialogContent portalContainer={sheetContentElement}>
+              <AlertDialogHeader>
+                <AlertDialogTitle>
+                  Delete this expense document?
+                </AlertDialogTitle>
+                <AlertDialogDescription>
+                  This removes the collected email and all its attachments. This
+                  action cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  disabled={isBusy}
+                  onClick={() => {
+                    setConfirmDelete(false);
+                    onDelete();
+                  }}
+                >
+                  Delete document
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </SheetContent>
       </Sheet>
-
-      <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete this expense document?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This removes the collected email and all its attachments. This
-              action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              disabled={isBusy}
-              onClick={() => {
-                setConfirmDelete(false);
-                onDelete();
-              }}
-            >
-              Delete document
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </>
   );
 }
