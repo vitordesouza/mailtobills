@@ -4,7 +4,7 @@ import * as React from "react";
 
 import { usePathname, useRouter } from "next/navigation";
 
-import { ExpenseDocumentsTableSkeleton } from "@/components/expense-documents-table";
+import { ExpenseDocumentsTableSkeleton } from "@/features/expense-documents/components/expense-documents-table";
 import { Skeleton } from "@mailtobills/ui/components/skeleton";
 
 type NavigationProgressContextValue = {
