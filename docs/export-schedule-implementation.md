@@ -51,10 +51,10 @@ export const updateExportSchedule = mutation({
 
 ## Slice 2 — ZIP/Manifest into a Convex action
 
-**Files:** `packages/types/src/exportUtils.ts` (new), `backend/convex/exports.ts` (new), `apps/dashboard/app/api/exports/[month]/route.ts` (refactor)
+**Files:** `backend/convex/lib/accountantExportArchive.ts`, `backend/convex/exports.ts`, `apps/dashboard/app/api/exports/[month]/route.ts`
 
-### exportUtils.ts
-Move these pure functions out of the Next.js route:
+### accountantExportArchive.ts
+Keep these pure functions behind the Convex Accountant Export Module:
 `buildZip`, `buildManifestCsv`, `crc32`, `writeUint16`, `writeUint32`, `concat`, `csvCell`, `sanitizeZipName`
 
 ### exports.ts (new Convex file)
@@ -65,7 +65,7 @@ export const buildAccountantExportZip = internalAction({
     // 1. Query active documents for the user + month
     // 2. For each Primary Attachment with fileStorageId: ctx.storage.get(fileStorageId)
     // 3. Build Manifest CSV rows (originFromEmail ?? fromEmail, subject, receivedAt, etc.)
-    // 4. Build ZIP using shared helpers from exportUtils.ts
+    // 4. Build ZIP using backend-local archive helpers
     // 5. Return { zipBytes: Uint8Array, documentCount: number, month }
   },
 });

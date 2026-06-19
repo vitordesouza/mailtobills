@@ -232,5 +232,14 @@ describe("ingest normalization", () => {
     expect(new TextDecoder().decode(decodeBase64Payload("SGVsbG8"))).toBe(
       "Hello",
     );
+    expect(decodeBase64Payload("--__")).toEqual(
+      new Uint8Array([251, 239, 255]),
+    );
+  });
+
+  it("rejects invalid base64 attachment payload lengths", () => {
+    expect(() => decodeBase64Payload("abcde")).toThrow(
+      "Invalid base64 payload length",
+    );
   });
 });
