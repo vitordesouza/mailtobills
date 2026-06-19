@@ -34,3 +34,17 @@ export type ExpenseDocumentRow = ExpenseDocument & {
   attachments: ExpenseDocumentAttachment[];
   primaryAttachment?: ExpenseDocumentAttachment;
 };
+
+export type ExpenseDocumentSummary = {
+  count: number;
+  attachmentCount: number;
+};
+
+export type CollectionMonthExpenseDocuments = {
+  documents: ExpenseDocumentRow[];
+  summary: ExpenseDocumentSummary;
+  previousSummary: ExpenseDocumentSummary;
+  exportSummary: import("./accountantExportContents.js").AccountantExportContentSummary;
+  previousExportSummary: import("./accountantExportContents.js").AccountantExportContentSummary;
+  totalCount: number;
+};

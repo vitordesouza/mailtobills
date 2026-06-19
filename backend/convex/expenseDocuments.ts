@@ -2,6 +2,8 @@ import { getAuthUserId } from "@convex-dev/auth/server";
 import {
   isCollectionMonth,
   isTimestampInCollectionMonth,
+  shiftCollectionMonth,
+  summarizeAccountantExportContents,
 } from "@mailtobills/types";
 import { v } from "convex/values";
 
@@ -15,6 +17,12 @@ import { writeCollectedExpenseDocument } from "./lib/collectedExpenseDocumentWri
 
 import type { Doc, Id } from "./_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "./_generated/server";
+import type {
+  CollectionMonthExpenseDocuments,
+  ExpenseDocumentAttachment,
+  ExpenseDocumentRow,
+  ExpenseDocumentSummary,
+} from "@mailtobills/types";
 
 const attachmentArgs = v.object({
   originalFilename: v.string(),
@@ -91,22 +99,143 @@ async function projectCollectedExpenseDocument(
   };
 }
 
+async function listActiveProjectedExpenseDocuments(
+  ctx: Pick<QueryCtx, "db">,
+  userId: Id<"users">,
+) {
+  const documents = await ctx.db
+    .query("expenseDocuments")
+    .withIndex("userId", (q) => q.eq("userId", userId))
+    .collect();
+
+  const activeDocuments = documents.filter((document) => !document.deletedAt);
+
+  return await Promise.all(
+    activeDocuments.map((document) =>
+      projectCollectedExpenseDocument(ctx, document),
+    ),
+  );
+}
+
+function toExpenseDocumentAttachment(
+  attachment: Doc<"expenseDocumentAttachments">,
+): ExpenseDocumentAttachment {
+  return {
+    id: attachment._id,
+    expenseDocumentId: attachment.expenseDocumentId,
+    originalFilename: attachment.originalFilename,
+    mimeType: attachment.mimeType,
+    fileSize: attachment.fileSize,
+    fileUrl: attachment.fileUrl,
+    fileStorageId: attachment.fileStorageId,
+    attachmentId: attachment.attachmentId,
+    originalOrder: attachment.originalOrder,
+    createdAt: attachment.createdAt,
+  };
+}
+
+type ProjectedCollectedExpenseDocument = Awaited<
+  ReturnType<typeof projectCollectedExpenseDocument>
+>;
+
+function toExpenseDocumentRow(
+  document: ProjectedCollectedExpenseDocument,
+): ExpenseDocumentRow {
+  const attachments = document.attachments.map(toExpenseDocumentAttachment);
+  const primaryAttachment = document.primaryAttachment
+    ? toExpenseDocumentAttachment(document.primaryAttachment)
+    : undefined;
+
+  return {
+    id: document._id,
+    userId: document.userId,
+    fromEmail: document.fromEmail,
+    subject: document.subject,
+    messageId: document.messageId,
+    receivedAt: document.receivedAt,
+    createdAt: document.createdAt,
+    deletedAt: document.deletedAt,
+    dedupeKey: document.dedupeKey,
+    primaryAttachmentId: document.primaryAttachmentId,
+    originFromEmail: document.originFromEmail,
+    originFromName: document.originFromName,
+    originDomain: document.originDomain,
+    originSubject: document.originSubject,
+    originSentAt: document.originSentAt,
+    attachments,
+    primaryAttachment,
+  };
+}
+
+function expenseDocumentRowsForCollectionMonth(
+  documents: ProjectedCollectedExpenseDocument[],
+  month: string,
+) {
+  return documents
+    .filter((document) =>
+      isTimestampInCollectionMonth(document.receivedAt, month),
+    )
+    .sort((a, b) => b.receivedAt - a.receivedAt)
+    .map(toExpenseDocumentRow);
+}
+
+function summarizeExpenseDocumentRows(
+  documents: ExpenseDocumentRow[],
+): ExpenseDocumentSummary {
+  return {
+    count: documents.length,
+    attachmentCount: documents.reduce(
+      (total, document) => total + document.attachments.length,
+      0,
+    ),
+  };
+}
+
+function summarizeAccountantExportRows(documents: ExpenseDocumentRow[]) {
+  return summarizeAccountantExportContents(
+    documents.map((document) => ({
+      id: document.id,
+      primaryAttachment: document.primaryAttachment,
+    })),
+  );
+}
+
 export const listMine = query({
   args: {},
   handler: async (ctx) => {
     const userId = await requireSignedInUserId(ctx);
-    const documents = await ctx.db
-      .query("expenseDocuments")
-      .withIndex("userId", (q) => q.eq("userId", userId))
-      .collect();
+    return await listActiveProjectedExpenseDocuments(ctx, userId);
+  },
+});
 
-    const activeDocuments = documents.filter((document) => !document.deletedAt);
+export const getCollectionMonthDashboard = query({
+  args: {
+    month: v.string(),
+  },
+  handler: async (
+    ctx,
+    args,
+  ): Promise<CollectionMonthExpenseDocuments> => {
+    if (!isCollectionMonth(args.month)) {
+      throw new Error("INVALID_COLLECTION_MONTH");
+    }
 
-    return Promise.all(
-      activeDocuments.map((document) =>
-        projectCollectedExpenseDocument(ctx, document),
-      ),
+    const userId = await requireSignedInUserId(ctx);
+    const documents = await listActiveProjectedExpenseDocuments(ctx, userId);
+    const rows = expenseDocumentRowsForCollectionMonth(documents, args.month);
+    const previousRows = expenseDocumentRowsForCollectionMonth(
+      documents,
+      shiftCollectionMonth(args.month, -1),
     );
+
+    return {
+      documents: rows,
+      summary: summarizeExpenseDocumentRows(rows),
+      previousSummary: summarizeExpenseDocumentRows(previousRows),
+      exportSummary: summarizeAccountantExportRows(rows),
+      previousExportSummary: summarizeAccountantExportRows(previousRows),
+      totalCount: documents.length,
+    };
   },
 });
 
