@@ -45,6 +45,8 @@ import {
 } from "./expense-documents-table-chrome";
 import { cn } from "@mailtobills/ui/lib/utils";
 
+import { ExpenseDocumentDetailPanel } from "./expense-document-detail-panel";
+
 const getSenderEmail = (document: ExpenseDocumentRow) =>
   document.originFromEmail ?? document.fromEmail;
 
@@ -70,13 +72,24 @@ const getSenderName = (document: ExpenseDocumentRow, unknownSender: string) => {
 function ViewPdfButton({
   attachment,
   label,
+  onClick,
   children,
 }: {
   attachment: ExpenseDocumentAttachment | undefined;
   label: string;
+  onClick?: () => void;
   children: string;
 }) {
   const url = attachment?.downloadUrl ?? attachment?.fileUrl;
+
+  if (onClick) {
+    return (
+      <Button type="button" variant="outline" size="sm" onClick={onClick}>
+        <ExternalLink className="size-3.5" />
+        {children}
+      </Button>
+    );
+  }
 
   if (!url) {
     return (
@@ -109,6 +122,13 @@ export function ExpenseDocumentsTable({
   const t = useTranslations("ExpenseDocuments.table");
   const fileSizeT = useTranslations("ExpenseDocuments.fileSize");
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [panelOpen, setPanelOpen] = useState(false);
+  const [selectedDocumentId, setSelectedDocumentId] = useState<string | null>(
+    null,
+  );
+  const [selectedAttachmentId, setSelectedAttachmentId] = useState<
+    string | null
+  >(null);
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const setPrimaryAttachment = useMutation(
@@ -116,13 +136,71 @@ export function ExpenseDocumentsTable({
   );
   const softDelete = useMutation(api.expenseDocuments.softDelete);
 
-  const runAction = (id: string, action: () => Promise<unknown>) => {
+  const runAction = (
+    id: string,
+    action: () => Promise<unknown>,
+    onSuccess?: () => void,
+  ) => {
     setPendingId(id);
     startTransition(() => {
       action()
-        .then(() => router.refresh())
+        .then(() => {
+          onSuccess?.();
+          router.refresh();
+        })
         .finally(() => setPendingId(null));
     });
+  };
+
+  const selectedDocument = documents.find(
+    (document) => document.id === selectedDocumentId,
+  );
+  const selectedDocumentIndex = selectedDocument
+    ? documents.indexOf(selectedDocument)
+    : -1;
+  const selectedAttachment =
+    selectedDocument?.attachments.find(
+      (attachment) => attachment.id === selectedAttachmentId,
+    ) ??
+    selectedDocument?.primaryAttachment ??
+    null;
+
+  const selectDocument = (document: ExpenseDocumentRow) => {
+    setSelectedDocumentId(document.id);
+    setSelectedAttachmentId(document.primaryAttachment?.id ?? null);
+  };
+
+  const openDocument = (document: ExpenseDocumentRow) => {
+    selectDocument(document);
+    setPanelOpen(true);
+  };
+
+  const selectDocumentAt = (index: number) => {
+    const document = documents[index];
+    if (document) selectDocument(document);
+  };
+
+  const deleteSelectedDocument = () => {
+    if (!selectedDocument) return;
+
+    const nextDocument =
+      documents[selectedDocumentIndex + 1] ??
+      documents[selectedDocumentIndex - 1];
+
+    runAction(
+      selectedDocument.id,
+      () =>
+        softDelete({
+          expenseDocumentId: selectedDocument.id as Id<"expenseDocuments">,
+        }),
+      () => {
+        if (nextDocument) {
+          selectDocument(nextDocument);
+        } else {
+          setPanelOpen(false);
+        }
+      },
+    );
   };
 
   if (documents.length === 0) {
@@ -247,7 +325,11 @@ export function ExpenseDocumentsTable({
                     </TableCell>
                     <TableCell className="border-l text-right">
                       <div className="flex justify-end gap-2">
-                        <ViewPdfButton attachment={primary} label={t("viewPdf")}>
+                        <ViewPdfButton
+                          attachment={primary}
+                          label={t("viewPdf")}
+                          onClick={() => openDocument(document)}
+                        >
                           {t("viewPdf")}
                         </ViewPdfButton>
                         <Button
@@ -363,6 +445,29 @@ export function ExpenseDocumentsTable({
           </TableBody>
         </Table>
       </CardContent>
+
+      <ExpenseDocumentDetailPanel
+        open={panelOpen}
+        document={selectedDocument ?? null}
+        selectedAttachment={selectedAttachment}
+        documentIndex={Math.max(selectedDocumentIndex, 0)}
+        documentCount={documents.length}
+        isBusy={isPending}
+        onOpenChange={setPanelOpen}
+        onPrevious={() => selectDocumentAt(selectedDocumentIndex - 1)}
+        onNext={() => selectDocumentAt(selectedDocumentIndex + 1)}
+        onSelectAttachment={setSelectedAttachmentId}
+        onMakePrimary={(attachmentId) => {
+          if (!selectedDocument) return;
+          runAction(attachmentId, () =>
+            setPrimaryAttachment({
+              expenseDocumentId: selectedDocument.id as Id<"expenseDocuments">,
+              attachmentId: attachmentId as Id<"expenseDocumentAttachments">,
+            }),
+          );
+        }}
+        onDelete={deleteSelectedDocument}
+      />
     </Card>
   );
 }

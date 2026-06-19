@@ -95,12 +95,21 @@ describe("ExpenseDocumentsTable", () => {
     );
 
     expect(screen.getByText("invoice-primary.pdf")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /view pdf/i })).toHaveAttribute(
-      "href",
+    await user.click(screen.getByRole("button", { name: /view pdf/i }));
+
+    expect(
+      screen.getByRole("dialog", { name: "invoice-primary.pdf" }),
+    ).toBeInTheDocument();
+    expect(screen.getByTitle("Preview invoice-primary.pdf")).toHaveAttribute(
+      "src",
       "/api/files/attachment-primary",
     );
 
-    await user.click(screen.getByRole("button", { name: /expand attachments/i }));
+    await user.click(screen.getByRole("button", { name: "Close" }));
+
+    await user.click(
+      screen.getByRole("button", { name: /expand attachments/i }),
+    );
 
     const secondary = screen
       .getByText("invoice-secondary.pdf")
@@ -117,5 +126,40 @@ describe("ExpenseDocumentsTable", () => {
       expenseDocumentId: "doc-1",
       attachmentId: "attachment-secondary",
     });
+  });
+
+  it("moves between documents without closing the drawer", async () => {
+    const user = userEvent.setup();
+    const secondDocument = documentRow();
+    secondDocument.id = "doc-2";
+    secondDocument.dedupeKey = "doc-2";
+    secondDocument.subject = "Second invoice";
+    secondDocument.primaryAttachmentId = "attachment-doc-2";
+    secondDocument.primaryAttachment = {
+      ...secondDocument.primaryAttachment!,
+      id: "attachment-doc-2",
+      expenseDocumentId: "doc-2",
+      originalFilename: "second-invoice.pdf",
+      downloadUrl: "/api/files/attachment-doc-2",
+    };
+    secondDocument.attachments = [secondDocument.primaryAttachment!];
+
+    render(
+      <ExpenseDocumentsTable
+        documents={[documentRow(), secondDocument]}
+        emptyLabel="No documents this month."
+      />,
+    );
+
+    await user.click(screen.getAllByRole("button", { name: /view pdf/i })[0]!);
+    await user.click(screen.getByRole("button", { name: "Next document" }));
+
+    expect(
+      screen.getByRole("dialog", { name: "second-invoice.pdf" }),
+    ).toBeInTheDocument();
+    expect(screen.getByTitle("Preview second-invoice.pdf")).toHaveAttribute(
+      "src",
+      "/api/files/attachment-doc-2",
+    );
   });
 });

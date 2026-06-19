@@ -122,6 +122,8 @@ export function ExpenseDocumentDetailPanel({
   }, [attachmentUrl]);
 
   useEffect(() => {
+    if (!window.matchMedia) return;
+
     const desktop = window.matchMedia("(min-width: 640px)");
     const syncEmailDetails = (event: MediaQueryListEvent | MediaQueryList) => {
       setEmailDetailsOpen(event.matches);
