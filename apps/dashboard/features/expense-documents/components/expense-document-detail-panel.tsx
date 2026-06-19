@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import type {
   ExpenseDocumentAttachment,
@@ -119,6 +119,7 @@ export function ExpenseDocumentDetailPanel({
   const [emailDetailsOpen, setEmailDetailsOpen] = useState(false);
   const [sheetContentElement, setSheetContentElement] =
     useState<HTMLDivElement | null>(null);
+  const moreActionsRef = useRef<HTMLButtonElement>(null);
   const attachmentUrl = getAttachmentUrl(selectedAttachment);
   const isPrimary = selectedAttachment?.id === document?.primaryAttachment?.id;
 
@@ -224,6 +225,7 @@ export function ExpenseDocumentDetailPanel({
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button
+                      ref={moreActionsRef}
                       type="button"
                       variant="ghost"
                       size="icon-sm"
@@ -423,7 +425,13 @@ export function ExpenseDocumentDetailPanel({
           </p>
 
           <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
-            <AlertDialogContent portalContainer={sheetContentElement}>
+            <AlertDialogContent
+              portalContainer={sheetContentElement}
+              onCloseAutoFocus={(event) => {
+                event.preventDefault();
+                moreActionsRef.current?.focus();
+              }}
+            >
               <AlertDialogHeader>
                 <AlertDialogTitle>
                   Delete this expense document?

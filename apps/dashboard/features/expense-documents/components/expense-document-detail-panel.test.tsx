@@ -133,6 +133,20 @@ describe("ExpenseDocumentDetailPanel", () => {
     expect(props.onDelete).toHaveBeenCalledOnce();
   });
 
+  it("restores focus to the overflow button when deletion is canceled", async () => {
+    const user = userEvent.setup();
+    renderPanel();
+    const moreActions = screen.getByRole("button", {
+      name: "More document actions",
+    });
+
+    await user.click(moreActions);
+    await user.click(screen.getByRole("menuitem", { name: "Delete document" }));
+    await user.click(screen.getByRole("button", { name: "Cancel" }));
+
+    expect(moreActions).toHaveFocus();
+  });
+
   it("shows the fallback when the file route does not return a PDF", () => {
     renderPanel();
 
