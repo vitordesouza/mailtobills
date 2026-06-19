@@ -1,8 +1,4 @@
 import { Download, FileText, Inbox, Paperclip } from "lucide-react";
-import { fetchQuery } from "convex/nextjs";
-import { convexAuthNextjsToken } from "@convex-dev/auth/nextjs/server";
-import { api } from "@mailtobills/convex/_generated/api";
-
 import { getMonthInfo } from "@/lib/months";
 import { ExpenseDocumentsTable } from "@/features/expense-documents/components/expense-documents-table";
 import { getExpenseDocuments } from "@/features/expense-documents/read-model/getExpenseDocuments";
@@ -28,6 +24,7 @@ import { TrendChip } from "@mailtobills/ui/components/trend-chip";
 import { OnboardingEmptyState } from "@/components/onboarding-empty-state";
 import { SendToAccountantButton } from "@/components/send-to-accountant-button";
 import { getCollectionMonthRoute } from "@/lib/collection-month-route";
+import { requireCurrentCustomer } from "@/features/customer/read-model/getCurrentCustomer";
 
 export default async function DashboardPage({
   params,
@@ -36,10 +33,11 @@ export default async function DashboardPage({
 }) {
   const { month } = await params;
   const monthInfo = getCollectionMonthRoute(month);
-  const token = await convexAuthNextjsToken();
-  const { summary, previousSummary, totalCount, documents } =
-    await getExpenseDocuments(monthInfo.value);
-  const user = await fetchQuery(api.users.viewer, {}, { token });
+  const [{ summary, previousSummary, totalCount, documents }, { customer }] =
+    await Promise.all([
+      getExpenseDocuments(monthInfo.value),
+      requireCurrentCustomer(),
+    ]);
 
   if (totalCount === 0) {
     return <OnboardingEmptyState />;
@@ -67,8 +65,8 @@ export default async function DashboardPage({
           <div className="flex w-full flex-col gap-2 md:w-auto md:flex-row">
             <SendToAccountantButton
               month={monthInfo.value}
-              isPro={Boolean(user?.isPro)}
-              accountantEmail={user?.accountantEmail}
+              isPro={customer.plan === "pro"}
+              accountantEmail={customer.accountantAddress ?? undefined}
             />
             <Button asChild typography="mono" className="w-full md:w-auto">
               <a href={`/api/exports/${monthInfo.value}`}>

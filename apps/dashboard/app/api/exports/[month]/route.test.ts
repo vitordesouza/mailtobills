@@ -4,8 +4,8 @@ const auth = vi.hoisted(() => ({
   token: "auth-token" as string | null,
 }));
 
-vi.mock("@convex-dev/auth/nextjs/server", () => ({
-  convexAuthNextjsToken: vi.fn(() => Promise.resolve(auth.token)),
+vi.mock("@/features/customer/read-model/getCurrentCustomer", () => ({
+  readCustomerAuthToken: vi.fn(() => Promise.resolve(auth.token)),
 }));
 
 describe("accountant export API route", () => {
@@ -60,7 +60,9 @@ describe("accountant export API route", () => {
       },
     );
     expect(response.status).toBe(200);
-    expect(response.headers.get("content-type")).toBe("text/plain;charset=UTF-8");
+    expect(response.headers.get("content-type")).toBe(
+      "text/plain;charset=UTF-8",
+    );
     expect(response.headers.get("content-disposition")).toBe(
       'attachment; filename="mailtobills-2026-01.zip"',
     );

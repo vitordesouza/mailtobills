@@ -4,8 +4,8 @@ const auth = vi.hoisted(() => ({
   token: "auth-token" as string | null,
 }));
 
-vi.mock("@convex-dev/auth/nextjs/server", () => ({
-  convexAuthNextjsToken: vi.fn(() => Promise.resolve(auth.token)),
+vi.mock("@/features/customer/read-model/getCurrentCustomer", () => ({
+  readCustomerAuthToken: vi.fn(() => Promise.resolve(auth.token)),
 }));
 
 describe("file download API route", () => {
