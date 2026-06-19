@@ -1,0 +1,794 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>MailToBills i18n and Accessibility Plan</title>
+    <style>
+      :root {
+        --paper: #f5f3ec;
+        --surface: #ffffff;
+        --surface-2: #faf9f5;
+        --ink: #28302a;
+        --muted: #697168;
+        --line: #e5e0d4;
+        --line-strong: #d2cab9;
+        --green: #286653;
+        --green-soft: #e8f1ec;
+        --blue: #2f5f8f;
+        --blue-soft: #e9f1f8;
+        --amber: #a86412;
+        --amber-soft: #fff5de;
+        --danger: #a0332b;
+        --danger-soft: #fdecea;
+        --shadow: 0 20px 50px rgba(42, 48, 38, 0.12);
+        --radius: 8px;
+        color-scheme: light;
+        font-family:
+          ui-sans-serif,
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: var(--paper);
+        color: var(--ink);
+        line-height: 1.5;
+      }
+
+      a {
+        color: var(--green);
+      }
+
+      code {
+        border: 1px solid var(--line);
+        border-radius: 5px;
+        background: var(--surface-2);
+        padding: 0.12rem 0.32rem;
+        font-family:
+          ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        font-size: 0.92em;
+      }
+
+      .page {
+        max-width: 1220px;
+        margin: 0 auto;
+        padding: 28px;
+      }
+
+      .intro {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(300px, 420px);
+        gap: 24px;
+        align-items: end;
+        margin-bottom: 24px;
+      }
+
+      .eyebrow,
+      .tag,
+      th,
+      .kicker,
+      .step-number {
+        font-family:
+          ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .eyebrow {
+        margin: 0 0 10px;
+        color: var(--green);
+        font-size: 12px;
+        font-weight: 800;
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        margin-top: 0;
+      }
+
+      h1 {
+        max-width: 840px;
+        margin-bottom: 12px;
+        font-size: clamp(36px, 5vw, 64px);
+        line-height: 0.98;
+        letter-spacing: 0;
+      }
+
+      h2 {
+        margin-bottom: 10px;
+        font-size: 22px;
+      }
+
+      h3 {
+        margin-bottom: 8px;
+        font-size: 16px;
+      }
+
+      .lead {
+        max-width: 760px;
+        margin-bottom: 0;
+        color: var(--muted);
+        font-size: 18px;
+      }
+
+      .decision-card,
+      .panel,
+      .lane,
+      .source-list {
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: var(--surface);
+        box-shadow: 0 10px 30px rgba(42, 48, 38, 0.07);
+      }
+
+      .decision-card {
+        padding: 18px;
+      }
+
+      .decision-card strong {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 18px;
+      }
+
+      .decision-card p {
+        margin-bottom: 0;
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 16px;
+        margin-bottom: 24px;
+      }
+
+      .panel {
+        padding: 18px;
+      }
+
+      .panel p:last-child,
+      .panel ul:last-child,
+      .panel ol:last-child {
+        margin-bottom: 0;
+      }
+
+      .tag-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 14px;
+      }
+
+      .tag {
+        display: inline-flex;
+        align-items: center;
+        border-radius: 999px;
+        background: var(--green-soft);
+        color: var(--green);
+        padding: 5px 8px;
+        font-size: 11px;
+        font-weight: 800;
+      }
+
+      .tag.blue {
+        background: var(--blue-soft);
+        color: var(--blue);
+      }
+
+      .tag.amber {
+        background: var(--amber-soft);
+        color: var(--amber);
+      }
+
+      .section {
+        margin-top: 24px;
+      }
+
+      .two-col {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+      }
+
+      .stack {
+        display: grid;
+        gap: 16px;
+      }
+
+      .table-wrap {
+        overflow-x: auto;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: var(--surface);
+      }
+
+      table {
+        width: 100%;
+        min-width: 820px;
+        border-collapse: collapse;
+      }
+
+      th,
+      td {
+        border-bottom: 1px solid var(--line);
+        padding: 13px 14px;
+        text-align: left;
+        vertical-align: top;
+      }
+
+      th {
+        background: var(--surface-2);
+        color: var(--muted);
+        font-size: 11px;
+      }
+
+      tr:last-child td {
+        border-bottom: 0;
+      }
+
+      ul,
+      ol {
+        margin: 0 0 0 1.1rem;
+        padding: 0;
+      }
+
+      li + li {
+        margin-top: 6px;
+      }
+
+      .flow {
+        display: grid;
+        gap: 12px;
+      }
+
+      .lane {
+        display: grid;
+        grid-template-columns: 88px minmax(0, 1fr);
+        gap: 12px;
+        align-items: start;
+        padding: 14px;
+      }
+
+      .step-number {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 34px;
+        border-radius: 6px;
+        background: var(--ink);
+        color: white;
+        font-size: 12px;
+        font-weight: 800;
+      }
+
+      .lane h3 {
+        margin-bottom: 4px;
+      }
+
+      .lane p {
+        margin-bottom: 8px;
+        color: var(--muted);
+      }
+
+      .callout {
+        border: 1px solid var(--line-strong);
+        border-left: 5px solid var(--green);
+        border-radius: var(--radius);
+        background: var(--surface);
+        padding: 16px 18px;
+      }
+
+      .callout.warning {
+        border-left-color: var(--amber);
+        background: var(--amber-soft);
+      }
+
+      .callout.danger {
+        border-left-color: var(--danger);
+        background: var(--danger-soft);
+      }
+
+      .source-list {
+        padding: 16px 18px;
+      }
+
+      .source-list li {
+        margin-top: 0;
+      }
+
+      @media (max-width: 900px) {
+        .page {
+          padding: 18px;
+        }
+
+        .intro,
+        .summary-grid,
+        .two-col {
+          grid-template-columns: 1fr;
+        }
+
+        .lane {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <section class="intro" aria-labelledby="page-title">
+        <div>
+          <p class="eyebrow">Assessment</p>
+          <h1 id="page-title">i18n and accessibility plan</h1>
+          <p class="lead">
+            MailToBills should add internationalization and accessibility as one
+            coordinated initiative, but not as one large product-wide pull
+            request. Keep the work small, route-safe, and tied to the existing
+            landing, dashboard, and feature-module boundaries.
+          </p>
+        </div>
+        <aside
+          class="decision-card"
+          aria-label="Recommended pull request split"
+        >
+          <strong>PR recommendation</strong>
+          <p>
+            Do not ship the full i18n and accessibility migration in a single
+            PR. Ship a foundation PR, then pair i18n and accessibility changes
+            per surface so copy, accessible names, and tests move together.
+          </p>
+        </aside>
+      </section>
+
+      <section class="summary-grid" aria-label="Executive summary">
+        <article class="panel">
+          <h2>Best i18n path</h2>
+          <p>
+            Use <code>next-intl</code> in both Next apps. It matches the App
+            Router, Server Components, ICU messages, typed keys, and formatting
+            needs without changing the product stack.
+          </p>
+          <div class="tag-row">
+            <span class="tag">Next App Router</span>
+            <span class="tag">ICU messages</span>
+            <span class="tag">Typed keys</span>
+          </div>
+        </article>
+
+        <article class="panel">
+          <h2>Best a11y path</h2>
+          <p>
+            Add static linting with <code>eslint-plugin-jsx-a11y</code>, runtime
+            scans with <code>@axe-core/playwright</code>, and focused manual
+            checks for keyboard, focus, screen reader flow, and PDF/download
+            actions.
+          </p>
+          <div class="tag-row">
+            <span class="tag blue">WCAG A/AA gate</span>
+            <span class="tag blue">Keyboard first</span>
+          </div>
+        </article>
+
+        <article class="panel">
+          <h2>First locales</h2>
+          <p>
+            Keep <code>en</code> as default and add <code>pt-PT</code> first.
+            This fits the current product language, existing copy mentions of
+            <code>fatura</code>, and the Lisbon/Portugal operating context.
+          </p>
+          <div class="tag-row">
+            <span class="tag amber">Default: en</span>
+            <span class="tag amber">First add: pt-PT</span>
+          </div>
+        </article>
+      </section>
+
+      <section class="section two-col" aria-label="Technology decisions">
+        <article class="panel">
+          <h2>Technology Stack</h2>
+          <ul>
+            <li>
+              <strong>i18n runtime:</strong> <code>next-intl</code>, installed
+              in <code>apps/landing</code> and <code>apps/dashboard</code>.
+            </li>
+            <li>
+              <strong>Shared locale model:</strong> add a small
+              <code>packages/i18n</code> only for locale constants, labels,
+              validation, and formatting defaults. Do not put app copy there.
+            </li>
+            <li>
+              <strong>Accessibility lint:</strong> add
+              <code>eslint-plugin-jsx-a11y</code> to
+              <code>packages/eslint-config/next.js</code>, using flat config and
+              component settings for local UI primitives where useful.
+            </li>
+            <li>
+              <strong>Accessibility runtime tests:</strong> add
+              <code>@axe-core/playwright</code> to root E2E tests and scan
+              landing, dashboard sign-in, and later authenticated dashboard
+              routes.
+            </li>
+          </ul>
+        </article>
+
+        <article class="panel">
+          <h2>Routing Decision</h2>
+          <ul>
+            <li>
+              <strong>Landing:</strong> use locale routes because it is public,
+              SEO-facing, and content-led. Keep default English available at
+              <code>/</code>; add Portuguese at <code>/pt</code> or
+              <code>/pt-PT</code> after choosing URL style.
+            </li>
+            <li>
+              <strong>Dashboard:</strong> avoid locale-prefixed routes at first.
+              Keep <code>/signin</code>, <code>/settings</code>, and
+              <code>/m/[month]</code> stable because auth middleware and sidebar
+              navigation currently assume unprefixed paths.
+            </li>
+            <li>
+              <strong>Dashboard locale source:</strong> read user preference
+              from Convex when authenticated, with a cookie fallback for
+              <code>/signin</code> and first visit.
+            </li>
+          </ul>
+        </article>
+      </section>
+
+      <section class="section" aria-labelledby="org-title">
+        <h2 id="org-title">Organisation</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Concern</th>
+                <th>Recommended Location</th>
+                <th>Reason</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Locale constants</td>
+                <td><code>packages/i18n/src/locales.ts</code></td>
+                <td>
+                  Shared by landing, dashboard, tests, and future outbound copy
+                  without coupling UI messages to domain types.
+                </td>
+              </tr>
+              <tr>
+                <td>Landing messages</td>
+                <td><code>apps/landing/messages/{locale}/...</code></td>
+                <td>
+                  Landing copy is marketing copy and should stay with the
+                  landing app, split by page section if files grow.
+                </td>
+              </tr>
+              <tr>
+                <td>Dashboard shell messages</td>
+                <td>
+                  <code>apps/dashboard/messages/{locale}/common.json</code>
+                </td>
+                <td>
+                  Navigation, settings shell, auth copy, and shared labels can
+                  be loaded once through the dashboard provider.
+                </td>
+              </tr>
+              <tr>
+                <td>Feature messages</td>
+                <td>
+                  <code
+                    >apps/dashboard/features/expense-documents/messages/{locale}.json</code
+                  >
+                </td>
+                <td>
+                  Keeps Expense Document wording and accessible labels beside
+                  the feature module that owns the rows, actions, and read
+                  model.
+                </td>
+              </tr>
+              <tr>
+                <td>Accessible component defaults</td>
+                <td><code>packages/ui/src/components</code></td>
+                <td>
+                  Keep focus styles, labels, descriptions, and semantic behavior
+                  close to the reusable primitives.
+                </td>
+              </tr>
+              <tr>
+                <td>E2E a11y scans</td>
+                <td><code>e2e/accessibility.spec.ts</code></td>
+                <td>
+                  Root Playwright already runs against landing. Extend it first,
+                  then add dashboard routes when authenticated fixtures are
+                  available.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="section two-col" aria-label="Implementation shape">
+        <article class="panel">
+          <h2>i18n Implementation Shape</h2>
+          <ul>
+            <li>
+              Add <code>Locale</code>, <code>defaultLocale</code>,
+              <code>supportedLocales</code>, and <code>isLocale</code> in
+              <code>packages/i18n</code>.
+            </li>
+            <li>
+              Configure <code>next-intl</code> request loading separately in
+              each app so landing and dashboard can load different message
+              bundles.
+            </li>
+            <li>
+              Move visible strings, metadata, button labels, form labels, status
+              text, empty states, and <code>aria-label</code> values into
+              translation namespaces.
+            </li>
+            <li>
+              Use locale-aware formatting for collection months, timestamps,
+              counts, and prices. Do not localize stored IDs, file names, route
+              params, Convex function names, or CSV field contracts in the first
+              pass.
+            </li>
+            <li>
+              Replace the disabled language select in dashboard preferences with
+              a real setting only after the provider and fallback behavior are
+              in place.
+            </li>
+          </ul>
+        </article>
+
+        <article class="panel">
+          <h2>Accessibility Implementation Shape</h2>
+          <ul>
+            <li>
+              Add a skip link and confirm one meaningful <code>main</code>
+              landmark per page shell.
+            </li>
+            <li>
+              Audit icon-only and icon-leading controls for stable accessible
+              names, especially month navigation, table expansion, delete,
+              download, export, sidebar toggle, and language selection.
+            </li>
+            <li>
+              Verify forms expose labels, descriptions, invalid states, and
+              error messages through semantic relationships.
+            </li>
+            <li>
+              Keep focus visible and predictable through menus, dialogs,
+              dropdowns, table row expansion, and mobile sidebar states.
+            </li>
+            <li>
+              Add Playwright axe scans for public pages and smoke-level manual
+              keyboard scripts for dashboard workflows that need auth.
+            </li>
+          </ul>
+        </article>
+      </section>
+
+      <section class="section" aria-labelledby="pr-title">
+        <h2 id="pr-title">Pull Request Plan</h2>
+        <div class="flow">
+          <article class="lane">
+            <span class="step-number">PR 1</span>
+            <div>
+              <h3>Foundation: no broad copy migration</h3>
+              <p>
+                Add <code>packages/i18n</code>, install/configure
+                <code>next-intl</code>, add <code>eslint-plugin-jsx-a11y</code>,
+                add <code>@axe-core/playwright</code>, and create the first
+                accessibility test fixture.
+              </p>
+              <ul>
+                <li>Keep routes and visible copy mostly unchanged.</li>
+                <li>
+                  Verify <code>pnpm lint</code>, <code>pnpm typecheck</code>,
+                  and E2E smoke.
+                </li>
+                <li>Expected review size: configuration and guardrails.</li>
+              </ul>
+            </div>
+          </article>
+
+          <article class="lane">
+            <span class="step-number">PR 2</span>
+            <div>
+              <h3>Landing: public i18n plus public a11y</h3>
+              <p>
+                Localize the landing app, metadata, header/footer, sections, and
+                CTAs. Add locale-aware public routing and axe scans for each
+                public locale.
+              </p>
+              <ul>
+                <li>Keep <code>/</code> stable for default English.</li>
+                <li>
+                  Translate accessible names at the same time as visible copy.
+                </li>
+                <li>
+                  Verify SEO metadata, language switcher, keyboard navigation,
+                  and contrast.
+                </li>
+              </ul>
+            </div>
+          </article>
+
+          <article class="lane">
+            <span class="step-number">PR 3</span>
+            <div>
+              <h3>Dashboard shell: provider, settings, auth, navigation</h3>
+              <p>
+                Add dashboard locale provider, persist the selected locale,
+                localize sign-in, sidebar, settings, billing, forwarding
+                addresses, and preference copy.
+              </p>
+              <ul>
+                <li>Keep dashboard URLs unprefixed.</li>
+                <li>
+                  Make the language select functional with cookie fallback.
+                </li>
+                <li>
+                  Run axe on <code>/signin</code> and manual keyboard checks on
+                  authenticated shell paths.
+                </li>
+              </ul>
+            </div>
+          </article>
+
+          <article class="lane">
+            <span class="step-number">PR 4</span>
+            <div>
+              <h3>Expense Documents feature</h3>
+              <p>
+                Localize the month dashboard, reports page, table actions,
+                attachment labels, status text, empty states, and export/send
+                controls inside the existing
+                <code>features/expense-documents</code> module.
+              </p>
+              <ul>
+                <li>Use locale-aware month and timestamp formatting.</li>
+                <li>
+                  Do not introduce new document states while translating old
+                  copy.
+                </li>
+                <li>
+                  Extend component tests for accessible names and expanded row
+                  behavior.
+                </li>
+              </ul>
+            </div>
+          </article>
+
+          <article class="lane">
+            <span class="step-number">PR 5</span>
+            <div>
+              <h3>Outbound copy and export policy</h3>
+              <p>
+                Decide whether transactional email copy and Accountant Export
+                filenames are locale-specific. Keep Manifest column names stable
+                unless there is a deliberate accountant-facing compatibility
+                decision.
+              </p>
+              <ul>
+                <li>Localize customer-facing email subject/body copy.</li>
+                <li>
+                  Keep machine-readable export contracts stable by default.
+                </li>
+                <li>
+                  Document any locale-specific export behavior in the operations
+                  runbook.
+                </li>
+              </ul>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="section two-col" aria-label="Risks and gates">
+        <article class="callout warning">
+          <h2>Primary Risks</h2>
+          <ul>
+            <li>
+              Locale-prefixed dashboard routes would require auth middleware,
+              sidebar, redirects, tests, and deep links to change together.
+            </li>
+            <li>
+              Large copy extraction can hide behavior changes in review. Keep
+              visible copy migration separate from route and auth changes.
+            </li>
+            <li>
+              Automated accessibility scans are useful but incomplete. They must
+              be paired with keyboard and screen reader spot checks.
+            </li>
+            <li>
+              Domain terms must stay consistent: use Expense Document, Customer,
+              Collection Month, Primary Attachment, and Accountant Export.
+            </li>
+          </ul>
+        </article>
+
+        <article class="callout">
+          <h2>Definition of Done</h2>
+          <ul>
+            <li>
+              <code>html lang</code>, metadata, visible copy, and accessible
+              labels all reflect the selected locale.
+            </li>
+            <li>
+              <code>pnpm lint</code>, <code>pnpm typecheck</code>, app builds,
+              Vitest, and Playwright pass.
+            </li>
+            <li>Axe scans pass for landing locales and dashboard sign-in.</li>
+            <li>
+              Manual keyboard path passes for sign-in, sidebar navigation, month
+              navigation, table expansion, export/download, settings, and
+              language selection.
+            </li>
+          </ul>
+        </article>
+      </section>
+
+      <section class="section" aria-labelledby="single-pr-title">
+        <div class="callout danger">
+          <h2 id="single-pr-title">Should Both Ship in a Single PR?</h2>
+          <p>
+            No, not as a full implementation. i18n touches nearly every visible
+            string, metadata value, route decision, and accessible label.
+            Accessibility touches semantics, focus behavior, forms, tests, and
+            component primitives. A single product-wide PR would be difficult to
+            review and risky to revert.
+          </p>
+          <p>
+            The practical split is: one small foundation PR for shared tooling,
+            then surface-by-surface PRs where i18n and accessibility move
+            together. That keeps accessible names translated with their visible
+            labels without mixing landing SEO, dashboard auth, and Expense
+            Document workflow changes in one review.
+          </p>
+        </div>
+      </section>
+
+      <section class="section source-list" aria-labelledby="sources-title">
+        <h2 id="sources-title">Reference Sources</h2>
+        <ul>
+          <li>
+            Next.js App Router internationalization guide:
+            <a href="https://nextjs.org/docs/app/guides/internationalization">
+              nextjs.org/docs/app/guides/internationalization
+            </a>
+          </li>
+          <li>
+            next-intl project documentation:
+            <a href="https://next-intl.dev/">next-intl.dev</a>
+          </li>
+          <li>
+            Playwright accessibility testing with axe:
+            <a href="https://playwright.dev/docs/accessibility-testing">
+              playwright.dev/docs/accessibility-testing
+            </a>
+          </li>
+          <li>
+            eslint-plugin-jsx-a11y flat config documentation:
+            <a href="https://github.com/jsx-eslint/eslint-plugin-jsx-a11y">
+              github.com/jsx-eslint/eslint-plugin-jsx-a11y
+            </a>
+          </li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

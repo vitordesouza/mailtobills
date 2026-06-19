@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ConvexAuthNextjsServerProvider } from "@convex-dev/auth/nextjs/server";
+import { NextIntlClientProvider } from "next-intl";
+import { getLocale, getMessages } from "next-intl/server";
 
 import "@mailtobills/ui/globals.css";
 import { Providers } from "@/components/providers";
@@ -27,18 +29,22 @@ export const viewport: Viewport = {
   ],
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const [locale, messages] = await Promise.all([getLocale(), getMessages()]);
+
   return (
     <ConvexAuthNextjsServerProvider>
-      <html lang="en" className="overscroll-none" suppressHydrationWarning>
+      <html lang={locale} className="overscroll-none" suppressHydrationWarning>
         <body
           className={`${fontSans.variable} ${fontMono.variable} font-sans antialiased `}
         >
-          <Providers>{children}</Providers>
+          <NextIntlClientProvider locale={locale} messages={messages}>
+            <Providers>{children}</Providers>
+          </NextIntlClientProvider>
         </body>
       </html>
     </ConvexAuthNextjsServerProvider>
