@@ -18,6 +18,7 @@ import type * as expenseDocuments from "../expenseDocuments.js";
 import type * as exports from "../exports.js";
 import type * as http from "../http.js";
 import type * as lib_accountantExport from "../lib/accountantExport.js";
+import type * as lib_accountantExportArchive from "../lib/accountantExportArchive.js";
 import type * as lib_accountantExportDelivery from "../lib/accountantExportDelivery.js";
 import type * as lib_collectedExpenseDocumentWriter from "../lib/collectedExpenseDocumentWriter.js";
 import type * as lib_ingestNormalization from "../lib/ingestNormalization.js";
@@ -42,6 +43,7 @@ declare const fullApi: ApiFromModules<{
   exports: typeof exports;
   http: typeof http;
   "lib/accountantExport": typeof lib_accountantExport;
+  "lib/accountantExportArchive": typeof lib_accountantExportArchive;
   "lib/accountantExportDelivery": typeof lib_accountantExportDelivery;
   "lib/collectedExpenseDocumentWriter": typeof lib_collectedExpenseDocumentWriter;
   "lib/ingestNormalization": typeof lib_ingestNormalization;
