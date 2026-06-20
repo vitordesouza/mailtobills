@@ -254,7 +254,12 @@
       "open": "Abrir",
       "makePrimary": "Definir como principal",
       "primaryPdf": "PDF principal",
-      "pdf": "PDF"
+      "pdf": "PDF",
+      "errors": {
+        "fallback": "Não foi possível concluir a ação. Tente novamente.",
+        "delete": "Não foi possível eliminar o documento. Tente novamente.",
+        "primary": "Não foi possível alterar o PDF principal. Tente novamente."
+      }
     },
     "detail": {
       "fallbackTitle": "Documento de despesa",

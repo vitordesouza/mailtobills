@@ -254,7 +254,12 @@
       "open": "Open",
       "makePrimary": "Make primary",
       "primaryPdf": "Primary PDF",
-      "pdf": "PDF"
+      "pdf": "PDF",
+      "errors": {
+        "fallback": "The action could not be completed. Please try again.",
+        "delete": "The document could not be deleted. Please try again.",
+        "primary": "The primary PDF could not be changed. Please try again."
+      }
     },
     "detail": {
       "fallbackTitle": "Expense document",

@@ -1,7 +1,7 @@
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { NextIntlClientProvider } from "next-intl";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { ExpenseDocumentRow } from "@mailtobills/domain";
 
@@ -75,6 +75,42 @@ function documentRow(): ExpenseDocumentRow {
   };
 }
 
+function secondDocumentRow(): ExpenseDocumentRow {
+  const document = documentRow();
+  document.id = "doc-2";
+  document.dedupeKey = "doc-2";
+  document.subject = "Second invoice";
+  document.primaryAttachmentId = "attachment-doc-2";
+  document.primaryAttachment = {
+    ...document.primaryAttachment!,
+    id: "attachment-doc-2",
+    expenseDocumentId: "doc-2",
+    originalFilename: "second-invoice.pdf",
+    downloadUrl: "/api/files/attachment-doc-2",
+  };
+  document.attachments = [document.primaryAttachment];
+  return document;
+}
+
+async function confirmDrawerDelete(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(
+    screen.getByRole("button", { name: "More document actions" }),
+  );
+  await user.click(screen.getByRole("menuitem", { name: "Delete document" }));
+  await user.click(screen.getByRole("button", { name: "Delete document" }));
+}
+
+function renderTable(documents: ExpenseDocumentRow[]) {
+  return render(
+    <NextIntlClientProvider locale="en" messages={messages}>
+      <ExpenseDocumentsTable
+        documents={documents}
+        emptyLabel="No documents this month."
+      />
+    </NextIntlClientProvider>,
+  );
+}
+
 describe("ExpenseDocumentsTable", () => {
   beforeEach(() => {
     mocks.refresh.mockClear();
@@ -83,24 +119,30 @@ describe("ExpenseDocumentsTable", () => {
     mocks.mutationCallCount = 0;
   });
 
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it("renders rows, expands attachments, and marks a secondary attachment primary", async () => {
     const user = userEvent.setup();
-    render(
-      <NextIntlClientProvider locale="en" messages={messages}>
-        <ExpenseDocumentsTable
-          documents={[documentRow()]}
-          emptyLabel="No documents this month."
-        />
-      </NextIntlClientProvider>,
-    );
+    renderTable([documentRow()]);
 
     expect(screen.getByText("invoice-primary.pdf")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /view pdf/i })).toHaveAttribute(
-      "href",
+    await user.click(screen.getAllByRole("button", { name: /view pdf/i })[0]!);
+
+    expect(
+      screen.getByRole("dialog", { name: "invoice-primary.pdf" }),
+    ).toBeInTheDocument();
+    expect(screen.getByTitle("Preview invoice-primary.pdf")).toHaveAttribute(
+      "src",
       "/api/files/attachment-primary",
     );
 
-    await user.click(screen.getByRole("button", { name: /expand attachments/i }));
+    await user.click(screen.getByRole("button", { name: "Close" }));
+
+    await user.click(
+      screen.getByRole("button", { name: /expand attachments/i }),
+    );
 
     const secondary = screen
       .getByText("invoice-secondary.pdf")
@@ -117,5 +159,150 @@ describe("ExpenseDocumentsTable", () => {
       expenseDocumentId: "doc-1",
       attachmentId: "attachment-secondary",
     });
+  });
+
+  it("moves between documents without closing the drawer", async () => {
+    const user = userEvent.setup();
+
+    renderTable([documentRow(), secondDocumentRow()]);
+
+    await user.click(screen.getAllByRole("button", { name: /view pdf/i })[0]!);
+    await user.click(screen.getByRole("button", { name: "Next document" }));
+
+    expect(
+      screen.getByRole("dialog", { name: "second-invoice.pdf" }),
+    ).toBeInTheDocument();
+    expect(screen.getByTitle("Preview second-invoice.pdf")).toHaveAttribute(
+      "src",
+      "/api/files/attachment-doc-2",
+    );
+  });
+
+  it("restores focus to the view action when the drawer closes", async () => {
+    const user = userEvent.setup();
+    renderTable([documentRow()]);
+    const viewAction = screen.getByRole("button", { name: /view pdf/i });
+
+    await user.click(viewAction);
+    await user.click(screen.getByRole("button", { name: "Close" }));
+
+    await waitFor(() => expect(viewAction).toHaveFocus());
+  });
+
+  it("advances to the next document after deletion succeeds", async () => {
+    const user = userEvent.setup();
+    renderTable([documentRow(), secondDocumentRow()]);
+
+    await user.click(screen.getAllByRole("button", { name: /view pdf/i })[0]!);
+    await confirmDrawerDelete(user);
+
+    expect(mocks.softDelete).toHaveBeenCalledWith({
+      expenseDocumentId: "doc-1",
+    });
+    expect(
+      await screen.findByRole("dialog", { name: "second-invoice.pdf" }),
+    ).toBeInTheDocument();
+  });
+
+  it("closes the drawer after deleting the final document", async () => {
+    const user = userEvent.setup();
+    renderTable([documentRow()]);
+
+    await user.click(screen.getByRole("button", { name: /view pdf/i }));
+    await confirmDrawerDelete(user);
+
+    await waitFor(() =>
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
+    );
+  });
+
+  it("keeps the drawer open and reports a failed deletion", async () => {
+    const user = userEvent.setup();
+    const error = new Error("delete failed");
+    mocks.softDelete.mockRejectedValueOnce(error);
+    const consoleError = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+    renderTable([documentRow(), secondDocumentRow()]);
+
+    await user.click(screen.getAllByRole("button", { name: /view pdf/i })[0]!);
+    await confirmDrawerDelete(user);
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "The document could not be deleted. Please try again.",
+    );
+    expect(
+      screen.getByRole("dialog", { name: "invoice-primary.pdf" }),
+    ).toBeInTheDocument();
+    expect(consoleError).toHaveBeenCalledWith(
+      "expense_document_action_failed",
+      { id: "doc-1", error },
+    );
+
+    await user.click(screen.getByRole("button", { name: "Next document" }));
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("dialog", { name: "second-invoice.pdf" }),
+    ).toBeInTheDocument();
+  });
+
+  it("disables navigation while deletion is pending", async () => {
+    const user = userEvent.setup();
+    let resolveDelete: (() => void) | undefined;
+    mocks.softDelete.mockImplementationOnce(
+      () =>
+        new Promise<void>((resolve) => {
+          resolveDelete = resolve;
+        }),
+    );
+    renderTable([documentRow(), secondDocumentRow()]);
+
+    await user.click(screen.getAllByRole("button", { name: /view pdf/i })[0]!);
+    await confirmDrawerDelete(user);
+
+    expect(
+      screen.getByRole("button", { name: "Next document" }),
+    ).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Close" })).toBeDisabled();
+    await user.keyboard("{Escape}");
+    expect(
+      screen.getByRole("dialog", { name: "invoice-primary.pdf" }),
+    ).toBeInTheDocument();
+    resolveDelete?.();
+    await waitFor(() => expect(mocks.refresh).toHaveBeenCalled());
+  });
+
+  it("reports a failed expanded attachment action above the table", async () => {
+    const user = userEvent.setup();
+    const error = new Error("primary failed");
+    mocks.setPrimaryAttachment.mockRejectedValueOnce(error);
+    const consoleError = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+    renderTable([documentRow()]);
+
+    await user.click(
+      screen.getByRole("button", { name: /expand attachments/i }),
+    );
+    await user.click(screen.getByRole("button", { name: /make primary/i }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "The action could not be completed. Please try again.",
+    );
+    expect(consoleError).toHaveBeenCalledWith(
+      "expense_document_action_failed",
+      { id: "attachment-secondary", error },
+    );
+  });
+
+  it("disables the PDF action when no primary file is available", () => {
+    const document = documentRow();
+    document.primaryAttachment = undefined;
+    document.primaryAttachmentId = undefined;
+    document.attachments = [];
+
+    renderTable([document]);
+
+    expect(screen.getByRole("button", { name: /view pdf/i })).toBeDisabled();
   });
 });

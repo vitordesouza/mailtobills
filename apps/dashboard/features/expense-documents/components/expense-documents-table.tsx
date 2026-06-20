@@ -2,7 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
-import { Fragment, useState, useTransition } from "react";
+import type { MouseEventHandler } from "react";
+import { Fragment, useState } from "react";
 
 import type {
   ExpenseDocumentAttachment,
@@ -45,6 +46,8 @@ import {
 } from "./expense-documents-table-chrome";
 import { cn } from "@mailtobills/ui/lib/utils";
 
+import { ExpenseDocumentDetailPanel } from "./expense-document-detail-panel";
+
 const getSenderEmail = (document: ExpenseDocumentRow) =>
   document.originFromEmail ?? document.fromEmail;
 
@@ -70,17 +73,28 @@ const getSenderName = (document: ExpenseDocumentRow, unknownSender: string) => {
 function ViewPdfButton({
   attachment,
   label,
+  onClick,
   children,
 }: {
   attachment: ExpenseDocumentAttachment | undefined;
   label: string;
   children: string;
+  onClick?: MouseEventHandler<HTMLButtonElement>;
 }) {
   const url = attachment?.downloadUrl ?? attachment?.fileUrl;
 
   if (!url) {
     return (
       <Button variant="outline" size="sm" disabled>
+        <ExternalLink className="size-3.5" />
+        {children}
+      </Button>
+    );
+  }
+
+  if (onClick) {
+    return (
+      <Button type="button" variant="outline" size="sm" onClick={onClick}>
         <ExternalLink className="size-3.5" />
         {label}
       </Button>
@@ -109,20 +123,99 @@ export function ExpenseDocumentsTable({
   const t = useTranslations("ExpenseDocuments.table");
   const fileSizeT = useTranslations("ExpenseDocuments.fileSize");
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [panelOpen, setPanelOpen] = useState(false);
+  const [selectedDocumentId, setSelectedDocumentId] = useState<string | null>(
+    null,
+  );
+  const [selectedAttachmentId, setSelectedAttachmentId] = useState<
+    string | null
+  >(null);
+  const [panelTrigger, setPanelTrigger] = useState<HTMLButtonElement | null>(
+    null,
+  );
+  const [actionError, setActionError] = useState<string | null>(null);
   const [pendingId, setPendingId] = useState<string | null>(null);
-  const [isPending, startTransition] = useTransition();
   const setPrimaryAttachment = useMutation(
     api.expenseDocuments.setPrimaryAttachment,
   );
   const softDelete = useMutation(api.expenseDocuments.softDelete);
 
-  const runAction = (id: string, action: () => Promise<unknown>) => {
+  const runAction = (
+    id: string,
+    action: () => Promise<unknown>,
+    onSuccess?: () => void,
+    failureMessage = t("errors.fallback"),
+  ) => {
     setPendingId(id);
-    startTransition(() => {
-      action()
-        .then(() => router.refresh())
-        .finally(() => setPendingId(null));
-    });
+    setActionError(null);
+    void action()
+      .then(() => {
+        onSuccess?.();
+        router.refresh();
+      })
+      .catch((error: unknown) => {
+        console.error("expense_document_action_failed", { id, error });
+        setActionError(failureMessage);
+      })
+      .finally(() => setPendingId(null));
+  };
+
+  const selectedDocument = documents.find(
+    (document) => document.id === selectedDocumentId,
+  );
+  const selectedDocumentIndex = selectedDocument
+    ? documents.indexOf(selectedDocument)
+    : -1;
+  const selectedAttachment =
+    selectedDocument?.attachments.find(
+      (attachment) => attachment.id === selectedAttachmentId,
+    ) ??
+    selectedDocument?.primaryAttachment ??
+    null;
+
+  const selectDocument = (document: ExpenseDocumentRow) => {
+    setSelectedDocumentId(document.id);
+    setSelectedAttachmentId(document.primaryAttachment?.id ?? null);
+    setActionError(null);
+  };
+
+  const openDocument = (
+    document: ExpenseDocumentRow,
+    trigger: HTMLButtonElement,
+  ) => {
+    selectDocument(document);
+    setPanelTrigger(trigger);
+    setActionError(null);
+    setPanelOpen(true);
+  };
+
+  const selectDocumentAt = (index: number) => {
+    const document = documents[index];
+    if (document) selectDocument(document);
+  };
+
+  const deleteSelectedDocument = () => {
+    if (!selectedDocument) return;
+
+    const nextDocument =
+      documents[selectedDocumentIndex + 1] ??
+      documents[selectedDocumentIndex - 1];
+
+    runAction(
+      selectedDocument.id,
+      () =>
+        softDelete({
+          expenseDocumentId: selectedDocument.id as Id<"expenseDocuments">,
+        }),
+      () => {
+        if (nextDocument) {
+          selectDocument(nextDocument);
+        } else {
+          setPanelOpen(false);
+        }
+      },
+      t("errors.delete"),
+    );
   };
 
   if (documents.length === 0) {
@@ -144,6 +237,14 @@ export function ExpenseDocumentsTable({
   return (
     <Card className="min-w-0 gap-0 overflow-hidden rounded-lg py-0 shadow-xs">
       <ExpenseDocumentsTableHeading count={documents.length} />
+      {actionError && !panelOpen ? (
+        <div
+          role="alert"
+          className="border-destructive/30 bg-destructive/10 text-destructive border-b px-4 py-2 text-sm"
+        >
+          {actionError}
+        </div>
+      ) : null}
       <CardContent className="p-0">
         <Table className="min-w-[920px] table-fixed">
           <ExpenseDocumentsTableColumns />
@@ -154,11 +255,10 @@ export function ExpenseDocumentsTable({
               const primary = document.primaryAttachment;
               const isExpanded = expandedId === document.id;
               const isBusy =
-                isPending &&
-                (pendingId === document.id ||
-                  document.attachments.some(
-                    (attachment) => attachment.id === pendingId,
-                  ));
+                pendingId === document.id ||
+                document.attachments.some(
+                  (attachment) => attachment.id === pendingId,
+                );
 
               return (
                 <Fragment key={document.id}>
@@ -247,7 +347,13 @@ export function ExpenseDocumentsTable({
                     </TableCell>
                     <TableCell className="border-l text-right">
                       <div className="flex justify-end gap-2">
-                        <ViewPdfButton attachment={primary} label={t("viewPdf")}>
+                        <ViewPdfButton
+                          attachment={primary}
+                          label={t("viewPdf")}
+                          onClick={(event) =>
+                            openDocument(document, event.currentTarget)
+                          }
+                        >
                           {t("viewPdf")}
                         </ViewPdfButton>
                         <Button
@@ -363,6 +469,39 @@ export function ExpenseDocumentsTable({
           </TableBody>
         </Table>
       </CardContent>
+
+      <ExpenseDocumentDetailPanel
+        open={panelOpen}
+        document={selectedDocument ?? null}
+        selectedAttachment={selectedAttachment}
+        documentIndex={Math.max(selectedDocumentIndex, 0)}
+        documentCount={documents.length}
+        isBusy={pendingId !== null}
+        errorMessage={actionError}
+        returnFocusTo={panelTrigger}
+        onOpenChange={(open) => {
+          if (!open && pendingId !== null) return;
+          setPanelOpen(open);
+        }}
+        onPrevious={() => selectDocumentAt(selectedDocumentIndex - 1)}
+        onNext={() => selectDocumentAt(selectedDocumentIndex + 1)}
+        onSelectAttachment={setSelectedAttachmentId}
+        onMakePrimary={(attachmentId) => {
+          if (!selectedDocument) return;
+          runAction(
+            attachmentId,
+            () =>
+              setPrimaryAttachment({
+                expenseDocumentId:
+                  selectedDocument.id as Id<"expenseDocuments">,
+                attachmentId: attachmentId as Id<"expenseDocumentAttachments">,
+            }),
+            undefined,
+            t("errors.primary"),
+          );
+        }}
+        onDelete={deleteSelectedDocument}
+      />
     </Card>
   );
 }
