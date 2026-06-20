@@ -1,14 +1,16 @@
 "use client";
 
 import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 export function MonthPageTitle() {
   const pathname = usePathname();
+  const t = useTranslations("Navigation");
   const title = pathname.includes("/reports")
-    ? "Reports"
+    ? t("reports")
     : pathname.includes("/settings")
-      ? "Settings"
-      : "Dashboard";
+      ? t("settings")
+      : t("dashboard");
 
   return <span className="text-sm font-medium">{title}</span>;
 }

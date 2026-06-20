@@ -39,7 +39,7 @@ const expenseDocumentAttachments = defineTable({
 const subscriptionStatus = v.union(
   v.literal("active"),
   v.literal("past_due"),
-  v.literal("cancelled")
+  v.literal("cancelled"),
 );
 
 const subscriptions = defineTable({
@@ -66,6 +66,7 @@ const users = defineTable({
   accountantName: v.optional(v.string()),
   exportScheduleDay: v.optional(v.number()),
   exportScheduleLastSentMonth: v.optional(v.string()),
+  locale: v.optional(v.union(v.literal("en"), v.literal("pt-PT"))),
 })
   .index("email", ["email"])
   .index("phone", ["phone"])

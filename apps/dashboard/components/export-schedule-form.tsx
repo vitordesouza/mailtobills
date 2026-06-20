@@ -2,6 +2,9 @@
 
 import { CalendarClock, CheckCircle2, Lock, Send } from "lucide-react";
 import { useActionState, useEffect, useMemo, useState } from "react";
+import { useLocale, useTranslations } from "next-intl";
+
+import { localeFormats } from "@mailtobills/i18n";
 
 import {
   updateAccountantDeliverySettings,
@@ -16,15 +19,7 @@ function isPlausibleEmail(value: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
 }
 
-function monthLabel(date: Date) {
-  return new Intl.DateTimeFormat("en-US", {
-    month: "long",
-    timeZone: "UTC",
-    year: "numeric",
-  }).format(date);
-}
-
-function nextExportPreview(today: Date, scheduleDay: number) {
+function nextExportDates(today: Date, scheduleDay: number) {
   const sendDate =
     today.getUTCDate() < scheduleDay
       ? new Date(
@@ -41,12 +36,7 @@ function nextExportPreview(today: Date, scheduleDay: number) {
     Date.UTC(sendDate.getUTCFullYear(), sendDate.getUTCMonth() - 1, 1),
   );
 
-  return `Next export (UTC): ${new Intl.DateTimeFormat("en-US", {
-    day: "numeric",
-    month: "short",
-    timeZone: "UTC",
-    year: "numeric",
-  }).format(sendDate)}, covering ${monthLabel(coveringMonth)}`;
+  return { coveringMonth, sendDate };
 }
 
 export function ExportScheduleForm({
@@ -61,6 +51,8 @@ export function ExportScheduleForm({
   exportScheduleDay?: number;
 }) {
   const [email, setEmail] = useState(accountantEmail ?? "");
+  const locale = useLocale();
+  const t = useTranslations("Settings.delivery");
   const [name, setName] = useState(accountantName ?? "");
   const [day, setDay] = useState(exportScheduleDay ?? 5);
   const [enabled, setEnabled] = useState(exportScheduleDay !== undefined);
@@ -70,10 +62,25 @@ export function ExportScheduleForm({
     { status: "idle" } satisfies CustomerSettingsActionState,
   );
   const emailIsValid = isPlausibleEmail(email);
-  const preview = useMemo(
-    () => (enabled && emailIsValid ? nextExportPreview(new Date(), day) : null),
-    [day, emailIsValid, enabled],
-  );
+  const preview = useMemo(() => {
+    if (!enabled || !emailIsValid) return null;
+
+    const { coveringMonth, sendDate } = nextExportDates(new Date(), day);
+    const dateLocale = localeFormats[locale].dateLocale;
+    const date = new Intl.DateTimeFormat(dateLocale, {
+      day: "numeric",
+      month: "short",
+      timeZone: "UTC",
+      year: "numeric",
+    }).format(sendDate);
+    const month = new Intl.DateTimeFormat(dateLocale, {
+      month: "long",
+      timeZone: "UTC",
+      year: "numeric",
+    }).format(coveringMonth);
+
+    return t("nextExport", { date, month });
+  }, [day, emailIsValid, enabled, locale, t]);
 
   useEffect(() => {
     if (
@@ -91,17 +98,12 @@ export function ExportScheduleForm({
           <Lock className="mt-0.5 size-4 shrink-0" />
           <div className="space-y-3">
             <div className="space-y-1">
-              <p className="font-medium">
-                Pro turns month-end handoff into a saved delivery route.
-              </p>
-              <p>
-                Send Accountant Exports directly to the Accountant Address and
-                schedule monthly delivery for the previous Collection Month.
-              </p>
+              <p className="font-medium">{t("lockedTitle")}</p>
+              <p>{t("lockedDescription")}</p>
             </div>
             <form action="/api/billing/checkout" method="post">
               <Button type="submit" size="sm" variant="outline">
-                Upgrade to Pro
+                {t("upgrade")}
               </Button>
             </form>
           </div>
@@ -110,11 +112,11 @@ export function ExportScheduleForm({
         <div className="grid gap-2 rounded-md border border-emerald-500/25 bg-emerald-500/10 px-3 py-3 text-sm text-emerald-700 dark:text-emerald-300 sm:grid-cols-2">
           <div className="flex items-center gap-2">
             <Send className="size-4" />
-            Direct Accountant Export sending is unlocked.
+            {t("directUnlocked")}
           </div>
           <div className="flex items-center gap-2">
             <CheckCircle2 className="size-4" />
-            Export Schedule settings are preserved.
+            {t("schedulePreserved")}
           </div>
         </div>
       )}
@@ -127,7 +129,7 @@ export function ExportScheduleForm({
       >
         <div className="grid gap-3 md:grid-cols-2">
           <div className="space-y-2">
-            <Label htmlFor="accountant-email">Accountant Address</Label>
+            <Label htmlFor="accountant-email">{t("accountantAddress")}</Label>
             <Input
               id="accountant-email"
               name="accountantEmail"
@@ -138,11 +140,11 @@ export function ExportScheduleForm({
                 setEmail(event.target.value);
                 setHasChangedSinceResult(true);
               }}
-              placeholder="accountant@example.com"
+              placeholder={t("accountantAddressPlaceholder")}
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="accountant-name">Accountant Name</Label>
+            <Label htmlFor="accountant-name">{t("accountantName")}</Label>
             <Input
               id="accountant-name"
               name="accountantName"
@@ -153,14 +155,14 @@ export function ExportScheduleForm({
                 setName(event.target.value);
                 setHasChangedSinceResult(true);
               }}
-              placeholder="e.g. Dra. Marta Silva"
+              placeholder={t("accountantNamePlaceholder")}
             />
           </div>
         </div>
 
         <div className="grid gap-3 md:grid-cols-[160px_1fr]">
           <div className="space-y-2">
-            <Label htmlFor="export-day">Send on day (UTC)</Label>
+            <Label htmlFor="export-day">{t("sendDay")}</Label>
             <select
               id="export-day"
               name="exportScheduleDay"
@@ -194,9 +196,9 @@ export function ExportScheduleForm({
               }}
               className="size-4"
             />
-            Enable monthly Export Schedule
+            {t("enable")}
             <Badge variant={enabled ? "success" : "secondary"}>
-              {enabled ? "On" : "Off"}
+              {enabled ? t("on") : t("off")}
             </Badge>
           </label>
         </div>
@@ -215,7 +217,7 @@ export function ExportScheduleForm({
             value="save"
             disabled={!isPro || isPending}
           >
-            Save Export Schedule
+            {t("save")}
           </Button>
           {enabled ? (
             <Button
@@ -226,7 +228,7 @@ export function ExportScheduleForm({
               disabled={!isPro || isPending}
               formNoValidate
             >
-              Disable
+              {t("disable")}
             </Button>
           ) : null}
         </div>

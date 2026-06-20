@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ConvexAuthNextjsServerProvider } from "@convex-dev/auth/nextjs/server";
 import { NextIntlClientProvider } from "next-intl";
-import { getLocale, getMessages } from "next-intl/server";
+import { getLocale, getMessages, getTranslations } from "next-intl/server";
 
 import "@mailtobills/ui/globals.css";
 import { Providers } from "@/components/providers";
@@ -17,10 +17,14 @@ const fontMono = Geist_Mono({
   variable: "--font-mono",
 });
 
-export const metadata: Metadata = {
-  title: "MailToBills Dashboard",
-  description: "Collect and export expense documents from one place.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("Metadata");
+
+  return {
+    title: t("title"),
+    description: t("description"),
+  };
+}
 
 export const viewport: Viewport = {
   themeColor: [
@@ -34,7 +38,11 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const [locale, messages] = await Promise.all([getLocale(), getMessages()]);
+  const [locale, messages, t] = await Promise.all([
+    getLocale(),
+    getMessages(),
+    getTranslations("Accessibility"),
+  ]);
 
   return (
     <ConvexAuthNextjsServerProvider>
@@ -43,6 +51,12 @@ export default async function RootLayout({
           className={`${fontSans.variable} ${fontMono.variable} font-sans antialiased `}
         >
           <NextIntlClientProvider locale={locale} messages={messages}>
+            <a
+              href="#main-content"
+              className="bg-background text-foreground focus:ring-ring fixed top-3 left-3 z-50 -translate-y-20 rounded-md px-3 py-2 text-sm font-medium shadow-md focus:translate-y-0 focus:ring-2 focus:outline-none"
+            >
+              {t("skipToContent")}
+            </a>
             <Providers>{children}</Providers>
           </NextIntlClientProvider>
         </body>

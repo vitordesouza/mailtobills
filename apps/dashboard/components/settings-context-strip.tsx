@@ -2,6 +2,7 @@
 
 import { Check, Copy, Inbox, UserRound } from "lucide-react";
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@mailtobills/ui/components/button";
 
@@ -15,6 +16,7 @@ export function SettingsContextStrip({
   collectionAddress: string;
 }) {
   const [isCopied, setIsCopied] = useState(false);
+  const t = useTranslations("Settings.context");
 
   const copyCollectionAddress = async () => {
     try {
@@ -32,7 +34,7 @@ export function SettingsContextStrip({
         <div className="flex min-w-0 items-center gap-2">
           <UserRound className="text-muted-foreground size-4 shrink-0" />
           <div className="min-w-0">
-            <span className="sr-only">Signed in Customer</span>
+            <span className="sr-only">{t("signedInCustomer")}</span>
             <span className="inline-block max-w-full truncate align-bottom font-medium">
               {customerName}
             </span>
@@ -46,7 +48,7 @@ export function SettingsContextStrip({
         <div className="flex min-w-0 items-center gap-2">
           <Inbox className="text-muted-foreground size-4 shrink-0" />
           <span className="text-muted-foreground shrink-0">
-            Collection Address
+            {t("collectionAddress")}
           </span>
           <span className="truncate font-mono text-xs font-medium">
             {collectionAddress}
@@ -62,7 +64,7 @@ export function SettingsContextStrip({
         className="w-full md:w-auto"
       >
         {isCopied ? <Check className="size-4" /> : <Copy className="size-4" />}
-        {isCopied ? "Copied" : "Copy address"}
+        {isCopied ? t("copied") : t("copyAddress")}
       </Button>
     </div>
   );

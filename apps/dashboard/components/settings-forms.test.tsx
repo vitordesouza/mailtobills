@@ -1,6 +1,13 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import {
+  render as renderComponent,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { NextIntlClientProvider } from "next-intl";
+
+import messages from "@/messages/en/common.json";
 
 import { ExportScheduleForm } from "./export-schedule-form";
 import { ForwardingAddressesForm } from "./forwarding-addresses-form";
@@ -10,12 +17,28 @@ const mocks = vi.hoisted(() => ({
   updateForwardingAddress: vi.fn(),
   updateAccountantDeliverySettings: vi.fn(),
   setTheme: vi.fn(),
+  refresh: vi.fn(),
+  updateDashboardLocale: vi.fn(),
+}));
+vi.mock("@/features/customer/actions/updateDashboardLocale", () => ({
+  updateDashboardLocale: mocks.updateDashboardLocale,
+}));
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ refresh: mocks.refresh }),
 }));
 
 vi.mock("@/features/customer/actions/updateCustomerSettings", () => ({
   updateForwardingAddress: mocks.updateForwardingAddress,
   updateAccountantDeliverySettings: mocks.updateAccountantDeliverySettings,
 }));
+
+function render(ui: React.ReactNode) {
+  return renderComponent(
+    <NextIntlClientProvider locale="en" messages={messages}>
+      {ui}
+    </NextIntlClientProvider>,
+  );
+}
 
 vi.mock("next-themes", () => ({
   useTheme: () => ({
@@ -33,6 +56,10 @@ describe("settings forms", () => {
       message: "Forwarding Address removed.",
     });
     mocks.updateAccountantDeliverySettings.mockClear();
+    mocks.updateDashboardLocale.mockResolvedValue({
+      status: "success",
+      locale: "pt-PT",
+    });
     mocks.updateAccountantDeliverySettings.mockImplementation(
       async (_state, data: FormData) => {
         const intent = data.get("intent");
@@ -192,7 +219,10 @@ describe("settings forms", () => {
     await user.click(screen.getByRole("button", { name: /dark/i }));
 
     expect(mocks.setTheme).toHaveBeenCalledWith("dark");
-    expect(screen.getByLabelText(/language/i)).toBeDisabled();
-    expect(screen.getByText(/current locale/i)).toBeInTheDocument();
+    await user.selectOptions(screen.getByLabelText(/language/i), "pt-PT");
+    await waitFor(() =>
+      expect(mocks.updateDashboardLocale).toHaveBeenCalledWith("pt-PT"),
+    );
+    expect(mocks.refresh).toHaveBeenCalledOnce();
   });
 });

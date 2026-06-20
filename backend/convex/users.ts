@@ -137,6 +137,20 @@ export const updateAccountantDeliverySettings = mutation({
   },
 });
 
+export const updateLocale = mutation({
+  args: {
+    locale: v.union(v.literal("en"), v.literal("pt-PT")),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      throw new Error("UNAUTHENTICATED");
+    }
+
+    await ctx.db.patch(userId, { locale: args.locale });
+  },
+});
+
 export const addForwardingAddress = mutation({
   args: {
     email: v.string(),

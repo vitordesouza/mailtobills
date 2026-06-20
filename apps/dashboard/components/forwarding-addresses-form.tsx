@@ -8,6 +8,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { useActionState, useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import {
   updateForwardingAddress,
@@ -32,6 +33,7 @@ export function ForwardingAddressesForm({
   forwardingEmails: string[];
 }) {
   const [email, setEmail] = useState("");
+  const t = useTranslations("Settings.forwarding");
   const [hasChangedSinceResult, setHasChangedSinceResult] = useState(false);
   const [actionState, formAction, isPending] = useActionState(
     updateForwardingAddress,
@@ -52,18 +54,12 @@ export function ForwardingAddressesForm({
           <Lock className="mt-0.5 size-4 shrink-0" />
           <div className="space-y-3">
             <div className="space-y-1">
-              <p className="font-medium">
-                Pro collects from every sender you actually use.
-              </p>
-              <p>
-                Keep your Primary Forwarding Address on Free, or upgrade to add
-                business, personal, and assistant addresses without changing
-                sign-in.
-              </p>
+              <p className="font-medium">{t("lockedTitle")}</p>
+              <p>{t("lockedDescription")}</p>
             </div>
             <form action="/api/billing/checkout" method="post">
               <Button type="submit" size="sm" variant="outline">
-                Upgrade to Pro
+                {t("upgrade")}
               </Button>
             </form>
           </div>
@@ -71,25 +67,25 @@ export function ForwardingAddressesForm({
       ) : (
         <div className="flex items-center gap-2 rounded-md border border-emerald-500/25 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-700 dark:text-emerald-300">
           <CheckCircle2 className="size-4" />
-          Additional Forwarding Addresses are unlocked for this Customer.
+          {t("unlocked")}
         </div>
       )}
 
       <div className="space-y-2">
-        <Label>Primary Forwarding Address</Label>
+        <Label>{t("primary")}</Label>
         <div className="bg-muted/40 flex items-center justify-between gap-3 rounded-md border px-3 py-2 text-sm">
           <span className="min-w-0 truncate">
-            {primaryEmail ?? "No primary email on file"}
+            {primaryEmail ?? t("noPrimary")}
           </span>
           <Badge variant="secondary">
             <ShieldCheck className="size-3" />
-            Trusted
+            {t("trusted")}
           </Badge>
         </div>
       </div>
 
       <div className="space-y-2">
-        <Label>Additional Forwarding Addresses</Label>
+        <Label>{t("additional")}</Label>
         {forwardingEmails.length > 0 ? (
           <div className="divide-y rounded-md border">
             {forwardingEmails.map((forwardingEmail) => (
@@ -109,7 +105,7 @@ export function ForwardingAddressesForm({
                     size="icon-sm"
                     variant="ghost"
                     disabled={!isPro || isPending}
-                    aria-label={`Remove ${forwardingEmail}`}
+                    aria-label={t("remove", { email: forwardingEmail })}
                   >
                     <Trash2 className="size-4" />
                   </Button>
@@ -119,7 +115,7 @@ export function ForwardingAddressesForm({
           </div>
         ) : (
           <div className="text-muted-foreground rounded-md border border-dashed px-3 py-3 text-sm">
-            No additional Forwarding Addresses configured.
+            {t("none")}
           </div>
         )}
       </div>
@@ -139,12 +135,12 @@ export function ForwardingAddressesForm({
             setEmail(event.target.value);
             setHasChangedSinceResult(true);
           }}
-          placeholder="name@example.com"
-          aria-label="Additional forwarding address"
+          placeholder={t("placeholder")}
+          aria-label={t("inputLabel")}
         />
         <Button type="submit" disabled={!canSubmit}>
           <MailPlus className="size-4" />
-          Add
+          {t("add")}
         </Button>
       </form>
 

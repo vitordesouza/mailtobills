@@ -14,12 +14,14 @@ export default async function SignInPage({ searchParams }: PageProps) {
   const initialMode = mode === "signup" ? "signUp" : "signIn";
 
   return (
-    <div
+    <main
+      id="main-content"
+      tabIndex={-1}
       className="bg-muted flex min-h-svh flex-col items-center justify-center p-6 md:p-10"
     >
       <div className="w-full max-w-sm md:max-w-4xl">
         <LoginForm initialMode={initialMode} />
       </div>
-    </div>
+    </main>
   );
 }

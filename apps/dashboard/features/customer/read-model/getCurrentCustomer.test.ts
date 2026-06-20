@@ -74,6 +74,7 @@ describe("current Customer read model", () => {
       accountantEmail: "books@example.com",
       accountantName: "Marta",
       exportScheduleDay: 12,
+      locale: "pt-PT",
     });
 
     await expect(readCurrentCustomer()).resolves.toEqual({
@@ -88,6 +89,7 @@ describe("current Customer read model", () => {
         accountantAddress: "books@example.com",
         accountantName: "Marta",
         exportScheduleDay: 12,
+        locale: "pt-PT",
       },
     });
   });

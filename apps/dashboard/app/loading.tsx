@@ -1,11 +1,16 @@
+"use client";
+
 import { Skeleton } from "@mailtobills/ui/components/skeleton";
+import { useTranslations } from "next-intl";
 
 export default function AppLoading() {
+  const t = useTranslations("System");
+
   return (
     <main
       className="bg-background min-h-svh p-4 sm:p-6"
       role="status"
-      aria-label="Loading MailToBills"
+      aria-label={t("loadingApp")}
     >
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
         <div className="flex h-14 items-center gap-3 border-b">
@@ -23,7 +28,7 @@ export default function AppLoading() {
         </div>
         <Skeleton className="h-72" />
       </div>
-      <span className="sr-only">Loading MailToBills</span>
+      <span className="sr-only">{t("loadingApp")}</span>
     </main>
   );
 }

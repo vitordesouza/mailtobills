@@ -4,6 +4,8 @@ export type Locale = (typeof supportedLocales)[number]
 
 export const defaultLocale: Locale = "en"
 
+export const localeCookieName = "NEXT_LOCALE"
+
 export const localeLabels: Record<Locale, string> = {
   en: "English",
   "pt-PT": "Português (Portugal)",
