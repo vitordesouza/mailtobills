@@ -15,9 +15,16 @@ monthly dashboard browsing, and Accountant Export.
       horizontal overflow.
 - [ ] Verify the Expense Documents table scrolls inside its own frame on narrow
       screens.
+- [ ] Click an Expense Document row and confirm the right-side detail panel opens
+      without navigating away from the dashboard.
+- [ ] Confirm the detail panel shows the original email subject, sender,
+      forwarding address, received date, and original sent date when available.
+- [ ] Confirm the embedded PDF preview loads in the detail panel and the user can
+      move to the previous and next documents without closing it.
 - [ ] Expand an Attachment Set and confirm the Primary Attachment is obvious.
-- [ ] Verify `Export month`, `View PDF`, `Open`, `Make primary`, `Delete`, and
-      `Copy` controls remain reachable.
+- [ ] Verify `Export month`, `View PDF`, expanded Attachment `Open`,
+      `Make primary`, detail-panel `Download PDF`, overflow `Delete`, and `Copy`
+      controls remain reachable.
 
 ## Email Ingest
 
@@ -34,12 +41,20 @@ monthly dashboard browsing, and Accountant Export.
 - [ ] Confirm rejected emails are handled operationally and do not appear in the
       Customer dashboard.
 
-## Download And Export
+## Detail Panel, Download, And Export
 
-- [ ] Open the Primary Attachment from the row action.
-- [ ] Open a non-primary attachment from the expanded Attachment Set.
-- [ ] Change the Primary Attachment and confirm the row and export use the new
-      Primary Attachment.
+- [ ] Open the Primary Attachment from the row or `View PDF` action and confirm
+      the dashboard remains visible behind the detail panel.
+- [ ] Open a non-primary attachment from the expanded Attachment Set and confirm
+      the same detail panel previews that attachment.
+- [ ] Use `Download PDF` in the detail panel and confirm it downloads the
+      selected attachment.
+- [ ] Use `Open original` in the detail panel and confirm it opens only when the
+      user explicitly chooses the browser/native PDF view.
+- [ ] Change the Primary Attachment from the table and from the detail panel, then
+      confirm the row and export use the new Primary Attachment.
+- [ ] Delete a document from the detail panel overflow menu and confirm the
+      confirmation dialog appears before deletion.
 - [ ] Export a Collection Month with documents and inspect the ZIP contents.
 - [ ] Confirm the ZIP contains one PDF per Collected Expense Document.
 - [ ] Confirm the Manifest CSV contains only known metadata, not extracted
