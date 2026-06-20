@@ -32,7 +32,8 @@ export default function AppError({
   return (
     <main
       id="main-content"
-      className="bg-background flex min-h-svh items-center justify-center p-4"
+      tabIndex={-1}
+      className="bg-background flex min-h-svh items-center justify-center p-4 outline-none"
     >
       <EmptyState>
         <EmptyStateIcon>

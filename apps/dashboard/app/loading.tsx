@@ -8,7 +8,9 @@ export default function AppLoading() {
 
   return (
     <main
-      className="bg-background min-h-svh p-4 sm:p-6"
+      id="main-content"
+      tabIndex={-1}
+      className="bg-background min-h-svh p-4 outline-none sm:p-6"
       role="status"
       aria-label={t("loadingApp")}
     >
