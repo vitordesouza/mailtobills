@@ -9,17 +9,19 @@ import {
   TriangleAlert,
 } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 
+import { localeFormats, type Locale } from "@mailtobills/i18n";
 import { Badge } from "@mailtobills/ui/components/badge";
 import { Button } from "@mailtobills/ui/components/button";
 
 type SubscriptionStatus = "active" | "past_due" | "cancelled";
 
-function formatDate(timestamp: number | undefined) {
+function formatDate(timestamp: number | undefined, locale: Locale) {
   if (!timestamp) return null;
 
-  return new Intl.DateTimeFormat("en-US", {
+  return new Intl.DateTimeFormat(localeFormats[locale].dateLocale, {
     year: "numeric",
     month: "short",
     day: "numeric",
@@ -38,26 +40,28 @@ export function BillingSettings({
   proPriceLabel: string;
 }) {
   const pathname = usePathname();
+  const locale = useLocale();
+  const t = useTranslations("Settings.billing");
   const router = useRouter();
   const searchParams = useSearchParams();
   const [showUpgradeSuccess, setShowUpgradeSuccess] = useState(false);
-  const renewalDate = formatDate(currentPeriodEnd);
+  const renewalDate = formatDate(currentPeriodEnd, locale);
   const isPastDue = subscriptionStatus === "past_due";
   const isProLike = isPro || isPastDue;
   const proFeatures = [
     {
-      label: "Additional Forwarding Addresses",
-      description: "Collect from more than the Primary Forwarding Address.",
+      label: t("features.addressesTitle"),
+      description: t("features.addressesDescription"),
       icon: MailPlus,
     },
     {
-      label: "Direct Accountant Export sending",
-      description: "Send the ZIP and Manifest to the Accountant Address.",
+      label: t("features.directTitle"),
+      description: t("features.directDescription"),
       icon: Send,
     },
     {
-      label: "Export Schedule",
-      description: "Deliver the previous Collection Month automatically.",
+      label: t("features.scheduleTitle"),
+      description: t("features.scheduleDescription"),
       icon: Clock3,
     },
   ];
@@ -84,11 +88,7 @@ export function BillingSettings({
           ) : (
             <Clock3 className="mt-0.5 size-4" />
           )}
-          <span>
-            {isProLike
-              ? "Welcome to Pro. Direct send, Export Schedule, and Additional Forwarding Addresses are now unlocked."
-              : "Checkout completed. Waiting for the Lemon Squeezy subscription webhook to confirm Pro access."}
-          </span>
+          <span>{isProLike ? t("upgradeConfirmed") : t("upgradePending")}</span>
         </div>
       ) : null}
 
@@ -97,25 +97,25 @@ export function BillingSettings({
           <div className="flex items-center gap-2">
             <span className="font-medium">
               {isPastDue
-                ? "Your Pro Plan is paused"
+                ? t("pausedTitle")
                 : isPro
-                  ? "You are on the Pro Plan"
-                  : "You are on the Free Plan"}
+                  ? t("proTitle")
+                  : t("freeTitle")}
             </span>
             <Badge
               variant={isPastDue ? "warning" : isPro ? "success" : "secondary"}
             >
-              {isPastDue ? "Past due" : isPro ? "Pro" : "Free"}
+              {isPastDue ? t("pastDue") : isPro ? t("pro") : t("free")}
             </Badge>
           </div>
           <p className="text-muted-foreground text-sm">
             {isPastDue
-              ? "Update your payment method to resume Pro features."
+              ? t("pausedDescription")
               : isPro
                 ? renewalDate
-                  ? `Renews ${renewalDate}.`
-                  : "Your Pro subscription is active."
-                : "Manual ZIP download is included for free."}
+                  ? t("renews", { date: renewalDate })
+                  : t("activeDescription")
+                : t("freeDescription")}
           </p>
         </div>
 
@@ -123,14 +123,14 @@ export function BillingSettings({
           <Button asChild variant="outline">
             <a href="/api/billing/portal">
               <CreditCard className="size-4" />
-              {isPastDue ? "Update payment method" : "Manage billing"}
+              {isPastDue ? t("updatePayment") : t("manageBilling")}
             </a>
           </Button>
         ) : (
           <form action="/api/billing/checkout" method="post">
             <Button type="submit">
               <CreditCard className="size-4" />
-              Upgrade to Pro
+              {t("upgrade")}
             </Button>
           </form>
         )}
@@ -139,10 +139,7 @@ export function BillingSettings({
       {isPastDue ? (
         <div className="flex items-start gap-2 rounded-md border border-amber-500/25 bg-amber-500/10 px-3 py-2 text-sm text-amber-700 dark:text-amber-300">
           <TriangleAlert className="mt-0.5 size-4" />
-          <span>
-            Your last payment failed. Update your payment method to keep Pro
-            features active.
-          </span>
+          <span>{t("paymentFailed")}</span>
         </div>
       ) : null}
 
@@ -150,20 +147,19 @@ export function BillingSettings({
         <div className="grid gap-3 text-sm lg:grid-cols-[0.85fr_1.15fr]">
           <div className="rounded-md border bg-muted/30 px-3 py-3">
             <div className="flex items-center justify-between gap-3">
-              <div className="font-medium">Free Plan</div>
-              <Badge variant="secondary">Current</Badge>
+              <div className="font-medium">{t("freePlan")}</div>
+              <Badge variant="secondary">{t("current")}</Badge>
             </div>
             <p className="text-muted-foreground mt-1">
-              Unlimited collection, dashboard browsing, and manual Accountant
-              Export ZIP download.
+              {t("freePlanDescription")}
             </p>
           </div>
           <div className="divide-y rounded-md border border-primary/25 bg-primary/5">
             <div className="flex items-center justify-between gap-3 px-3 py-3">
               <div>
-                <div className="font-medium">Pro Plan</div>
+                <div className="font-medium">{t("proPlan")}</div>
                 <p className="text-muted-foreground text-xs">
-                  Removes the repeated month-end handoff work.
+                  {t("proPlanDescription")}
                 </p>
               </div>
               <span className="text-muted-foreground shrink-0 font-mono text-xs">
@@ -191,7 +187,7 @@ export function BillingSettings({
                 <p className="text-muted-foreground text-xs">{description}</p>
               </div>
               <Badge variant={isPastDue ? "warning" : "success"}>
-                {isPastDue ? "Paused" : "Active"}
+                {isPastDue ? t("paused") : t("active")}
               </Badge>
             </div>
           ))}

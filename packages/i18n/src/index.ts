@@ -1,6 +1,7 @@
 export {
   defaultLocale,
   isLocale,
+  localeCookieName,
   localeFormats,
   localeLabels,
   supportedLocales,

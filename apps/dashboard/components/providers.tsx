@@ -4,21 +4,25 @@ import * as React from "react";
 
 import { ThemeProvider as NextThemesProvider } from "next-themes";
 import { ConvexAuthNextjsProvider } from "@convex-dev/auth/nextjs";
+import { useTranslations } from "next-intl";
 
 import { convexClient, isConvexConfigured } from "../lib/convexClient";
 
 export function Providers({ children }: { children: React.ReactNode }) {
+  const t = useTranslations("System");
+
   if (!convexClient || !isConvexConfigured) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-6 py-12">
+      <main
+        id="main-content"
+        tabIndex={-1}
+        className="flex min-h-screen items-center justify-center px-6 py-12 outline-none"
+      >
         <div className="max-w-md space-y-2 text-center">
-          <p className="text-lg font-semibold">Convex not configured</p>
-          <p className="text-sm text-gray-700">
-            Set NEXT_PUBLIC_CONVEX_URL in apps/dashboard/.env.local and restart
-            dev server.
-          </p>
+          <p className="text-lg font-semibold">{t("convexNotConfigured")}</p>
+          <p className="text-sm text-gray-700">{t("convexInstructions")}</p>
         </div>
-      </div>
+      </main>
     );
   }
 

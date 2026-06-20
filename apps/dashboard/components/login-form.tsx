@@ -1,16 +1,18 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState } from "react";
 
 import { useRouter } from "next/navigation";
 import { useConvexAuth } from "convex/react";
 import { useAuthActions } from "@convex-dev/auth/react";
+import { useTranslations } from "next-intl";
 
 import { cn } from "@mailtobills/ui/lib/utils";
 import { Logo } from "@mailtobills/ui/components/logo";
 import { Input } from "@mailtobills/ui/components/input";
 import { Button } from "@mailtobills/ui/components/button";
 import { Card, CardContent } from "@mailtobills/ui/components/card";
+import { LocaleSelect } from "@/components/locale-select";
 
 import {
   Field,
@@ -47,6 +49,7 @@ export function LoginForm({
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const router = useRouter();
+  const t = useTranslations("Auth");
   const { signIn } = useAuthActions();
   const { isLoading } = useConvexAuth();
 
@@ -54,13 +57,8 @@ export function LoginForm({
     setMode(initialMode);
   }, [initialMode]);
 
-  const heroSubtitle = useMemo(
-    () =>
-      mode === "signIn"
-        ? "Access your expense documents dashboard and keep PDFs organized."
-        : "Create your MailToBills account in a couple of clicks.",
-    [mode]
-  );
+  const heroSubtitle =
+    mode === "signIn" ? t("signInSubtitle") : t("signUpSubtitle");
 
   const resetFeedback = () => {
     setErrorMessage(null);
@@ -80,25 +78,25 @@ export function LoginForm({
 
       router.replace("/");
     } catch (error) {
-      setErrorMessage(
-        error instanceof Error
-          ? error.message
-          : "Unable to start the sign-in flow."
-      );
+      console.error("OAuth sign-in failed", {
+        message: error instanceof Error ? error.message : "Unknown error",
+        provider,
+      });
+      setErrorMessage(t("oauthError"));
     } finally {
       setOauthLoading(null);
     }
   };
 
   const handlePasswordSubmit: React.FormEventHandler<HTMLFormElement> = async (
-    event
+    event,
   ) => {
     event.preventDefault();
     resetFeedback();
 
     const trimmedEmail = email.trim().toLowerCase();
     if (!trimmedEmail || !password) {
-      setErrorMessage("Please enter both email and password.");
+      setErrorMessage(t("missingCredentials"));
       return;
     }
 
@@ -117,9 +115,11 @@ export function LoginForm({
 
       router.replace("/");
     } catch (error) {
-      setErrorMessage(
-        error instanceof Error ? error.message : "Failed to sign in."
-      );
+      console.error("Password authentication failed", {
+        message: error instanceof Error ? error.message : "Unknown error",
+        mode,
+      });
+      setErrorMessage(t("signInError"));
     } finally {
       setIsSubmitting(false);
     }
@@ -170,11 +170,10 @@ export function LoginForm({
 
       router.replace("/");
     } catch (error) {
-      setErrorMessage(
-        error instanceof Error
-          ? error.message
-          : "Failed to use the dev account."
-      );
+      console.error("Development account authentication failed", {
+        message: error instanceof Error ? error.message : "Unknown error",
+      });
+      setErrorMessage(t("devAccountError"));
     } finally {
       setIsSubmitting(false);
     }
@@ -186,9 +185,12 @@ export function LoginForm({
         <CardContent className="grid p-0 md:grid-cols-2">
           <form className="p-6 md:p-8" onSubmit={handlePasswordSubmit}>
             <FieldGroup>
+              <div className="ml-auto w-full max-w-44">
+                <LocaleSelect id="auth-language" label={t("language")} />
+              </div>
               <div className="flex flex-col items-center gap-2 text-center">
                 <h1 className="text-2xl font-bold">
-                  {mode === "signIn" ? "Welcome back" : "Create your account"}
+                  {mode === "signIn" ? t("signInTitle") : t("signUpTitle")}
                 </h1>
                 <p className="text-muted-foreground text-balance">
                   {heroSubtitle}
@@ -196,12 +198,12 @@ export function LoginForm({
               </div>
 
               <Field>
-                <FieldLabel htmlFor="email">Email</FieldLabel>
+                <FieldLabel htmlFor="email">{t("email")}</FieldLabel>
                 <Input
                   id="email"
                   type="email"
                   autoComplete="email"
-                  placeholder="you@company.com"
+                  placeholder={t("emailPlaceholder")}
                   value={email}
                   onChange={(event) => setEmail(event.target.value)}
                   disabled={isSubmitting || isLoading}
@@ -210,7 +212,7 @@ export function LoginForm({
               </Field>
               <Field>
                 <div className="flex items-center">
-                  <FieldLabel htmlFor="password">Password</FieldLabel>
+                  <FieldLabel htmlFor="password">{t("password")}</FieldLabel>
                   {/* {mode === "signIn" && (
                     <a
                       href="#"
@@ -226,7 +228,7 @@ export function LoginForm({
                   autoComplete={
                     mode === "signIn" ? "current-password" : "new-password"
                   }
-                  placeholder="At least 8 characters"
+                  placeholder={t("passwordPlaceholder")}
                   minLength={8}
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
@@ -242,10 +244,10 @@ export function LoginForm({
                   disabled={isSubmitting || isLoading}
                 >
                   {isSubmitting
-                    ? "Please wait..."
+                    ? t("pleaseWait")
                     : mode === "signIn"
-                      ? "Sign in with password"
-                      : "Create account"}
+                      ? t("signInWithPassword")
+                      : t("createAccount")}
                 </Button>
                 {isDevAuthEnabled ? (
                   <Button
@@ -255,13 +257,13 @@ export function LoginForm({
                     disabled={isSubmitting || isLoading}
                     onClick={handleDevAuth}
                   >
-                    Use dev account
+                    {t("useDevAccount")}
                   </Button>
                 ) : null}
               </Field>
 
               <FieldSeparator className="*:data-[slot=field-separator-content]:bg-card">
-                Or continue with
+                {t("continueWith")}
               </FieldSeparator>
 
               <Field className="flex flex-col gap-4">
@@ -284,7 +286,7 @@ export function LoginForm({
                           fill="currentColor"
                         />
                       </svg>
-                      <span className="">Github</span>
+                      <span>GitHub</span>
                     </>
                   )}
                 </Button>
@@ -307,7 +309,7 @@ export function LoginForm({
                           fill="currentColor"
                         />
                       </svg>
-                      <span className="">Google</span>
+                      <span>Google</span>
                     </>
                   )}
                 </Button>
@@ -319,7 +321,7 @@ export function LoginForm({
                     "rounded-md border px-3 py-2 text-sm",
                     errorMessage
                       ? "border-red-200 bg-red-50 text-red-700"
-                      : "border-green-200 bg-green-50 text-green-700"
+                      : "border-green-200 bg-green-50 text-green-700",
                   )}
                   role="status"
                   aria-live="polite"
@@ -331,7 +333,7 @@ export function LoginForm({
               <FieldDescription className="text-center">
                 {mode === "signIn" ? (
                   <>
-                    New to MailToBills?{" "}
+                    {t("newCustomer")}{" "}
                     <button
                       type="button"
                       className="cursor-pointer font-semibold underline-offset-4 hover:underline"
@@ -340,12 +342,12 @@ export function LoginForm({
                         setMode("signUp");
                       }}
                     >
-                      Create an account
+                      {t("createAccount")}
                     </button>
                   </>
                 ) : (
                   <>
-                    Already have an account?{" "}
+                    {t("existingCustomer")}{" "}
                     <button
                       type="button"
                       className="cursor-pointer font-semibold underline-offset-4 hover:underline"
@@ -354,7 +356,7 @@ export function LoginForm({
                         setMode("signIn");
                       }}
                     >
-                      Sign in instead
+                      {t("signInInstead")}
                     </button>
                   </>
                 )}
@@ -373,14 +375,13 @@ export function LoginForm({
               </div>
               <div className="flex flex-col gap-2 p-12">
                 <p className="text-muted-foreground font-mono text-[11px] font-medium tracking-[0.08em] uppercase">
-                  Expense documents. Organized.
+                  {t("tagline")}
                 </p>
                 <h2 className="text-foreground text-2xl font-bold tracking-tight">
-                  Forward expense PDFs. We&apos;ll organize them.
+                  {t("heroTitle")}
                 </h2>
                 <p className="text-muted-foreground max-w-2xl text-base">
-                  Collect received expense documents by month and export the
-                  current primary PDFs with a CSV manifest for your accountant.
+                  {t("heroDescription")}
                 </p>
               </div>
             </div>
@@ -388,8 +389,7 @@ export function LoginForm({
         </CardContent>
       </Card>
       <FieldDescription className="px-6 text-center">
-        By clicking continue, you agree to our Terms of Service and Privacy
-        Policy.
+        {t("legal")}
       </FieldDescription>
     </div>
   );

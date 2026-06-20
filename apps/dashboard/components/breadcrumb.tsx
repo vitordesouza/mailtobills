@@ -1,6 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 import {
   Breadcrumb,
@@ -13,10 +14,16 @@ import {
 
 export function BreadcrumbComponent() {
   const pathname = usePathname();
+  const t = useTranslations("Navigation");
   const pathnames = pathname.split("/").filter(Boolean);
   const breadcrumb = pathnames.map((name, index) => {
     const href = `/${pathnames.slice(0, index + 1).join("/")}`;
-    const label = name.charAt(0).toUpperCase() + name.slice(1);
+    const label =
+      name === "reports"
+        ? t("reports")
+        : name === "settings"
+          ? t("settings")
+          : name.charAt(0).toUpperCase() + name.slice(1);
     return {
       href,
       label,
@@ -27,7 +34,7 @@ export function BreadcrumbComponent() {
     <Breadcrumb>
       <BreadcrumbList>
         <BreadcrumbItem className="hidden md:block">
-          <BreadcrumbPage>Dashboard</BreadcrumbPage>
+          <BreadcrumbPage>{t("dashboard")}</BreadcrumbPage>
         </BreadcrumbItem>
         {breadcrumb.length > 0 && (
           <BreadcrumbSeparator className="hidden md:block" />

@@ -6,6 +6,7 @@ import { fetchQuery } from "convex/nextjs";
 import { convexAuthNextjsToken } from "@convex-dev/auth/nextjs/server";
 import { api } from "@mailtobills/convex/_generated/api";
 import type { Id } from "@mailtobills/convex/_generated/dataModel";
+import type { Locale } from "@mailtobills/i18n";
 
 export type CurrentCustomer = {
   id: Id<"users">;
@@ -17,6 +18,7 @@ export type CurrentCustomer = {
   accountantAddress: string | null;
   accountantName: string | null;
   exportScheduleDay: number | null;
+  locale: Locale | null;
 };
 
 export type CurrentCustomerSession = {
@@ -48,6 +50,7 @@ async function readCustomerWithToken(
       accountantAddress: user.accountantEmail ?? null,
       accountantName: user.accountantName ?? null,
       exportScheduleDay: user.exportScheduleDay ?? null,
+      locale: user.locale ?? null,
     },
   };
 }

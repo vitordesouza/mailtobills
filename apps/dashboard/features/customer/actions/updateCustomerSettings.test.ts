@@ -4,6 +4,25 @@ const mocks = vi.hoisted(() => ({
   token: vi.fn(),
   fetchMutation: vi.fn(),
   revalidatePath: vi.fn(),
+  translations: {
+    sessionExpired: "Your session expired. Sign in again.",
+    unsupportedForwarding: "Unsupported Forwarding Address action.",
+    unsupportedSchedule: "Unsupported Export Schedule action.",
+    proRequired: "Upgrade to Pro to change these settings.",
+    primaryAlreadyTrusted: "The Primary Forwarding Address is already trusted.",
+    invalidEmail: "Enter a valid email address.",
+    invalidAccountant: "A valid Accountant Address is required.",
+    accountantRequired:
+      "A valid Accountant Address is required to enable the schedule.",
+    invalidDay: "Choose an Export Schedule day from 1 to 28.",
+    addressAdded: "Forwarding Address added.",
+    addressRemoved: "Forwarding Address removed.",
+    addressAddFailed: "Could not add Forwarding Address.",
+    addressRemoveFailed: "Could not remove Forwarding Address.",
+    scheduleSaved: "Export Schedule saved.",
+    scheduleDisabled: "Export Schedule disabled.",
+    scheduleSaveFailed: "Could not save Export Schedule.",
+  } as Record<string, string>,
 }));
 
 vi.mock("@/features/customer/read-model/getCurrentCustomer", () => ({
@@ -14,6 +33,9 @@ vi.mock("convex/nextjs", () => ({
 }));
 vi.mock("next/cache", () => ({
   revalidatePath: mocks.revalidatePath,
+}));
+vi.mock("next-intl/server", () => ({
+  getTranslations: vi.fn(async () => (key: string) => mocks.translations[key]),
 }));
 
 import {

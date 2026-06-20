@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { AlertTriangle, RotateCcw } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@mailtobills/ui/components/button";
 import {
@@ -19,6 +20,8 @@ export default function AppError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const t = useTranslations("Error");
+
   useEffect(() => {
     console.error("Application route failed", {
       digest: error.digest,
@@ -27,20 +30,21 @@ export default function AppError({
   }, [error]);
 
   return (
-    <main className="bg-background flex min-h-svh items-center justify-center p-4">
+    <main
+      id="main-content"
+      tabIndex={-1}
+      className="bg-background flex min-h-svh items-center justify-center p-4 outline-none"
+    >
       <EmptyState>
         <EmptyStateIcon>
           <AlertTriangle />
         </EmptyStateIcon>
-        <EmptyStateTitle>Could not load this page</EmptyStateTitle>
-        <EmptyStateDescription>
-          MailToBills could not retrieve the latest data. Check the page before
-          trying the action again.
-        </EmptyStateDescription>
+        <EmptyStateTitle>{t("title")}</EmptyStateTitle>
+        <EmptyStateDescription>{t("description")}</EmptyStateDescription>
         <EmptyStateActions>
           <Button type="button" onClick={reset} typography="mono">
             <RotateCcw />
-            Try again
+            {t("retry")}
           </Button>
         </EmptyStateActions>
       </EmptyState>

@@ -2,17 +2,20 @@ import { InboxChip } from "@/components/inbox-chip";
 import { MonthPageTitle } from "@/components/month-page-title";
 import { Separator } from "@mailtobills/ui/components/separator";
 import { SidebarTrigger } from "@mailtobills/ui/components/sidebar";
+import { getTranslations } from "next-intl/server";
 
-export default function SettingsLayout({
+export default async function SettingsLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const t = await getTranslations("Navigation");
+
   return (
     <>
       <header className="border-border mb-4 flex h-14 w-full min-w-0 shrink-0 items-center gap-2 border-b">
         <div className="flex w-full min-w-0 items-center gap-2 px-4">
-          <SidebarTrigger className="-ml-1" />
+          <SidebarTrigger className="-ml-1" aria-label={t("toggleSidebar")} />
           <Separator
             orientation="vertical"
             className="mr-2 data-[orientation=vertical]:h-4"

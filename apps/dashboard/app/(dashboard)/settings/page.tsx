@@ -1,5 +1,6 @@
 import { fetchQuery } from "convex/nextjs";
 import { api } from "@mailtobills/convex/_generated/api";
+import { getTranslations } from "next-intl/server";
 
 import { BillingSettings } from "@/components/billing-settings";
 import { ExportScheduleForm } from "@/components/export-schedule-form";
@@ -38,6 +39,7 @@ function SettingsRow({
 }
 
 export default async function SettingsPage() {
+  const t = await getTranslations("Settings");
   const { token, customer } = await requireCurrentCustomer();
   const subscription = await fetchQuery(
     api.subscriptions.getMySubscription,
@@ -50,11 +52,8 @@ export default async function SettingsPage() {
       <div className="space-y-3">
         <PageHeader>
           <PageHeaderContent>
-            <PageHeaderTitle>Settings</PageHeaderTitle>
-            <PageHeaderDescription>
-              Manage how MailToBills collects Expense Documents and prepares
-              Accountant Exports.
-            </PageHeaderDescription>
+            <PageHeaderTitle>{t("title")}</PageHeaderTitle>
+            <PageHeaderDescription>{t("description")}</PageHeaderDescription>
           </PageHeaderContent>
         </PageHeader>
 
@@ -66,8 +65,8 @@ export default async function SettingsPage() {
       </div>
 
       <SettingsRow
-        title="Forwarding Addresses"
-        description="Control which email addresses can send Expense Documents to your account."
+        title={t("sections.forwardingTitle")}
+        description={t("sections.forwardingDescription")}
       >
         <ForwardingAddressesForm
           isPro={customer.plan === "pro"}
@@ -77,8 +76,8 @@ export default async function SettingsPage() {
       </SettingsRow>
 
       <SettingsRow
-        title="Accountant Delivery"
-        description="Send Accountant Exports directly or schedule monthly delivery on Pro."
+        title={t("sections.deliveryTitle")}
+        description={t("sections.deliveryDescription")}
       >
         <ExportScheduleForm
           isPro={customer.plan === "pro"}
@@ -89,8 +88,8 @@ export default async function SettingsPage() {
       </SettingsRow>
 
       <SettingsRow
-        title="Billing"
-        description="Plans and invoices for your MailToBills subscription."
+        title={t("sections.billingTitle")}
+        description={t("sections.billingDescription")}
       >
         <BillingSettings
           isPro={customer.plan === "pro"}
@@ -101,8 +100,8 @@ export default async function SettingsPage() {
       </SettingsRow>
 
       <SettingsRow
-        title="Preferences"
-        description="Choose how the dashboard should look and prepare for locale-aware copy."
+        title={t("sections.preferencesTitle")}
+        description={t("sections.preferencesDescription")}
       >
         <PreferencesSettings />
       </SettingsRow>

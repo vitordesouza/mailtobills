@@ -3,20 +3,14 @@
 import * as React from "react";
 
 import { useParams, usePathname } from "next/navigation";
-import {
-  ChartColumn,
-  LayoutDashboard,
-  LifeBuoy,
-  Send,
-  Settings2,
-} from "lucide-react";
+import { useTranslations } from "next-intl";
+import { ChartColumn, LayoutDashboard, Settings2 } from "lucide-react";
 
 import Link from "next/link";
 
 import { NavUser } from "@/components/nav-user";
 import { NavMain } from "@/components/nav-main";
 import { Logo } from "@mailtobills/ui/components/logo";
-import { NavSecondary } from "@/components/nav-secondary";
 
 import {
   Sidebar,
@@ -40,6 +34,7 @@ export function AppSidebar({
 }) {
   const params = useParams<{ month?: string }>();
   const pathname = usePathname();
+  const t = useTranslations("Navigation");
   const monthParam =
     typeof params.month === "string" ? params.month : undefined;
 
@@ -63,40 +58,33 @@ export function AppSidebar({
     user,
     navMain: [
       {
-        title: "Dashboard",
+        title: t("dashboard"),
         url: dashboardUrl,
         icon: LayoutDashboard,
         isActive: isDashboardActive,
       },
       {
-        title: "Reports",
+        title: t("reports"),
         url: reportsUrl,
         icon: ChartColumn,
         isActive: isReportsActive,
       },
       {
-        title: "Settings",
+        title: t("settings"),
         url: "/settings",
         icon: Settings2,
         isActive: isSettingsActive,
       },
     ],
-    navSecondary: [
-      {
-        title: "Support",
-        url: "#",
-        icon: LifeBuoy,
-      },
-      {
-        title: "Feedback",
-        url: "#",
-        icon: Send,
-      },
-    ],
   };
 
   return (
-    <Sidebar variant="inset" {...props}>
+    <Sidebar
+      variant="inset"
+      mobileTitle={t("sidebarTitle")}
+      mobileDescription={t("sidebarDescription")}
+      {...props}
+    >
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
@@ -114,7 +102,7 @@ export function AppSidebar({
                     MailToBills
                   </span>
                   <span className="text-muted-foreground truncate font-mono text-[10px] font-medium tracking-[0.08em] uppercase">
-                    Customer
+                    {t("customer")}
                   </span>
                 </div>
               </Link>
@@ -125,7 +113,6 @@ export function AppSidebar({
       <SidebarContent>
         <NavMain items={data.navMain} />
         {/* <NavProjects projects={data.projects} /> */}
-        <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={data.user} />

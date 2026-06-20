@@ -36,6 +36,21 @@ function asIdentity(userId: Id<"users">) {
 }
 
 describe("user settings Convex functions", () => {
+  it("persists a supported dashboard locale for any authenticated user", async () => {
+    const t = convexTest({ schema, modules });
+    const userId = await insertUser(t, {
+      email: "owner@example.com",
+      isPro: false,
+    });
+
+    await t.withIdentity(asIdentity(userId)).mutation(api.users.updateLocale, {
+      locale: "pt-PT",
+    });
+
+    const user = await t.run((ctx) => ctx.db.get(userId));
+    expect(user?.locale).toBe("pt-PT");
+  });
+
   it("adds normalized forwarding addresses and rejects duplicates of the primary email", async () => {
     const t = convexTest({ schema, modules });
     const userId = await insertUser(t, {

@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { fetchMutation } from "convex/nextjs";
 import { api } from "@mailtobills/convex/_generated/api";
+import { getTranslations } from "next-intl/server";
 
 import { readCustomerAuthToken } from "@/features/customer/read-model/getCurrentCustomer";
 
@@ -12,6 +13,26 @@ export type CustomerSettingsActionState = {
   intent?: "add" | "remove" | "save" | "disable";
   scheduleEnabled?: boolean;
 };
+
+type ActionMessageKey =
+  | "sessionExpired"
+  | "unsupportedForwarding"
+  | "unsupportedSchedule"
+  | "proRequired"
+  | "primaryAlreadyTrusted"
+  | "invalidEmail"
+  | "invalidAccountant"
+  | "accountantRequired"
+  | "invalidDay"
+  | "addressAdded"
+  | "addressRemoved"
+  | "addressAddFailed"
+  | "addressRemoveFailed"
+  | "scheduleSaved"
+  | "scheduleDisabled"
+  | "scheduleSaveFailed";
+
+type ActionTranslator = (key: ActionMessageKey) => string;
 
 function field(formData: FormData, name: string) {
   const value = formData.get(name);
@@ -29,32 +50,27 @@ function mutationError(
   error: unknown,
   intent: CustomerSettingsActionState["intent"],
   fallback: string,
+  t: ActionTranslator,
 ) {
   const message = error instanceof Error ? error.message : "";
 
   if (message.includes("PRO_REQUIRED")) {
-    return errorState("Upgrade to Pro to change these settings.", intent);
+    return errorState(t("proRequired"), intent);
   }
   if (message.includes("FORWARDING_EMAIL_IS_PRIMARY")) {
-    return errorState(
-      "The Primary Forwarding Address is already trusted.",
-      intent,
-    );
+    return errorState(t("primaryAlreadyTrusted"), intent);
   }
   if (message.includes("INVALID_FORWARDING_EMAIL")) {
-    return errorState("Enter a valid email address.", intent);
+    return errorState(t("invalidEmail"), intent);
   }
   if (message.includes("INVALID_ACCOUNTANT_EMAIL")) {
-    return errorState("A valid Accountant Address is required.", intent);
+    return errorState(t("invalidAccountant"), intent);
   }
   if (message.includes("ACCOUNTANT_ADDRESS_REQUIRED_FOR_EXPORT_SCHEDULE")) {
-    return errorState(
-      "A valid Accountant Address is required to enable the schedule.",
-      intent,
-    );
+    return errorState(t("accountantRequired"), intent);
   }
   if (message.includes("EXPORT_SCHEDULE_DAY_OUT_OF_RANGE")) {
-    return errorState("Choose an Export Schedule day from 1 to 28.", intent);
+    return errorState(t("invalidDay"), intent);
   }
 
   console.error("Customer settings mutation failed", {
@@ -66,26 +82,28 @@ function mutationError(
 
 async function authToken(
   intent: CustomerSettingsActionState["intent"],
+  t: ActionTranslator,
 ): Promise<string | CustomerSettingsActionState> {
   const token = await readCustomerAuthToken();
-  return token ?? errorState("Your session expired. Sign in again.", intent);
+  return token ?? errorState(t("sessionExpired"), intent);
 }
 
 export async function updateForwardingAddress(
   _previousState: CustomerSettingsActionState,
   formData: FormData,
 ): Promise<CustomerSettingsActionState> {
+  const t = await getTranslations("Settings.actions");
   const intent = field(formData, "intent");
   if (intent !== "add" && intent !== "remove") {
-    return errorState("Unsupported Forwarding Address action.");
+    return errorState(t("unsupportedForwarding"));
   }
 
   const email = field(formData, "email").trim().toLowerCase();
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    return errorState("Enter a valid email address.", intent);
+    return errorState(t("invalidEmail"), intent);
   }
 
-  const token = await authToken(intent);
+  const token = await authToken(intent, t);
   if (typeof token !== "string") return token;
 
   try {
@@ -101,18 +119,14 @@ export async function updateForwardingAddress(
     return {
       status: "success",
       intent,
-      message:
-        intent === "add"
-          ? "Forwarding Address added."
-          : "Forwarding Address removed.",
+      message: intent === "add" ? t("addressAdded") : t("addressRemoved"),
     };
   } catch (error) {
     return mutationError(
       error,
       intent,
-      intent === "add"
-        ? "Could not add Forwarding Address."
-        : "Could not remove Forwarding Address.",
+      intent === "add" ? t("addressAddFailed") : t("addressRemoveFailed"),
+      t,
     );
   }
 }
@@ -121,12 +135,13 @@ export async function updateAccountantDeliverySettings(
   _previousState: CustomerSettingsActionState,
   formData: FormData,
 ): Promise<CustomerSettingsActionState> {
+  const t = await getTranslations("Settings.actions");
   const intent = field(formData, "intent");
   if (intent !== "save" && intent !== "disable") {
-    return errorState("Unsupported Export Schedule action.");
+    return errorState(t("unsupportedSchedule"));
   }
 
-  const token = await authToken(intent);
+  const token = await authToken(intent, t);
   if (typeof token !== "string") return token;
 
   try {
@@ -141,7 +156,7 @@ export async function updateAccountantDeliverySettings(
         status: "success",
         intent,
         scheduleEnabled: false,
-        message: "Export Schedule disabled.",
+        message: t("scheduleDisabled"),
       };
     }
 
@@ -154,19 +169,16 @@ export async function updateAccountantDeliverySettings(
       accountantEmail &&
       !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(accountantEmail)
     ) {
-      return errorState("A valid Accountant Address is required.", intent);
+      return errorState(t("invalidAccountant"), intent);
     }
     if (scheduleEnabled && !accountantEmail) {
-      return errorState(
-        "A valid Accountant Address is required to enable the schedule.",
-        intent,
-      );
+      return errorState(t("accountantRequired"), intent);
     }
     if (
       scheduleEnabled &&
       (!Number.isInteger(scheduleDay) || scheduleDay < 1 || scheduleDay > 28)
     ) {
-      return errorState("Choose an Export Schedule day from 1 to 28.", intent);
+      return errorState(t("invalidDay"), intent);
     }
 
     await fetchMutation(
@@ -184,11 +196,9 @@ export async function updateAccountantDeliverySettings(
       status: "success",
       intent,
       scheduleEnabled,
-      message: scheduleEnabled
-        ? "Export Schedule saved."
-        : "Export Schedule disabled.",
+      message: scheduleEnabled ? t("scheduleSaved") : t("scheduleDisabled"),
     };
   } catch (error) {
-    return mutationError(error, intent, "Could not save Export Schedule.");
+    return mutationError(error, intent, t("scheduleSaveFailed"), t);
   }
 }

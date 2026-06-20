@@ -22,7 +22,11 @@ export default async function DashboardLayout({
           avatar: customer.avatarUrl ?? "",
         }}
       />
-      <SidebarInset className="min-w-0 overflow-x-hidden">
+      <SidebarInset
+        id="main-content"
+        tabIndex={-1}
+        className="min-w-0 overflow-x-hidden outline-none"
+      >
         {children}
       </SidebarInset>
     </SidebarProvider>

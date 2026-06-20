@@ -1,4 +1,7 @@
+"use client";
+
 import { Skeleton } from "@mailtobills/ui/components/skeleton";
+import { useTranslations } from "next-intl";
 
 function SettingsSectionSkeleton({ rows = 2 }: { rows?: number }) {
   return (
@@ -20,11 +23,13 @@ function SettingsSectionSkeleton({ rows = 2 }: { rows?: number }) {
 }
 
 export default function SettingsLoading() {
+  const t = useTranslations("System");
+
   return (
     <div
       className="mx-auto w-full max-w-3xl"
       role="status"
-      aria-label="Loading settings"
+      aria-label={t("loadingSettings")}
     >
       <div className="mb-6 space-y-2">
         <Skeleton className="h-3 w-24" />
@@ -33,7 +38,7 @@ export default function SettingsLoading() {
       </div>
       <SettingsSectionSkeleton />
       <SettingsSectionSkeleton rows={3} />
-      <span className="sr-only">Loading settings</span>
+      <span className="sr-only">{t("loadingSettings")}</span>
     </div>
   );
 }
