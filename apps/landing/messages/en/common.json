@@ -7,6 +7,11 @@
     "description": "Forward any invoice, receipt, or fatura to your private MailToBills address. We file it by month and hand your accountant one clean ZIP with every PDF and a CSV manifest.",
     "openGraphDescription": "Forward expense PDFs, collect them by month, and export a clean package for your accountant."
   },
+  "NotFound": {
+    "title": "Page not found",
+    "description": "The page you requested does not exist or has moved.",
+    "backHome": "Back to MailToBills"
+  },
   "Navigation": {
     "homeLabel": "MailToBills home",
     "primaryLabel": "Primary navigation",

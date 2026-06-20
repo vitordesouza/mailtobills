@@ -7,6 +7,11 @@
     "description": "Encaminhe qualquer fatura ou recibo para o seu endereço privado MailToBills. Organizamos tudo por mês e entregamos ao seu contabilista um ZIP com cada PDF e um manifesto CSV.",
     "openGraphDescription": "Encaminhe PDFs de despesas, organize-os por mês e exporte um pacote completo para o seu contabilista."
   },
+  "NotFound": {
+    "title": "Página não encontrada",
+    "description": "A página pedida não existe ou foi movida.",
+    "backHome": "Voltar ao MailToBills"
+  },
   "Navigation": {
     "homeLabel": "Página inicial do MailToBills",
     "primaryLabel": "Navegação principal",
