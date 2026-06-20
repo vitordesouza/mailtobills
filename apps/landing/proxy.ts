@@ -23,8 +23,11 @@ export default function proxy(request: NextRequest) {
     return response;
   }
 
+  const headers = new Headers(response.headers);
+  headers.delete("link");
+
   return new NextResponse(response.body, {
-    headers: response.headers,
+    headers,
     status: 404,
     statusText: "Not Found",
   });

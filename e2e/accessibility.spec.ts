@@ -48,6 +48,10 @@ for (const { heading, lang, locale, path, title } of [
     const crawlerHead = crawlerHtml.match(/<head>([\s\S]*?)<\/head>/)?.[1];
 
     expect(crawlerResponse.status()).toBe(404);
+    expect(crawlerResponse.headers()["link"] ?? "").not.toContain(
+      'rel="alternate"',
+    );
+    expect(crawlerResponse.headers()["link"] ?? "").not.toContain("hreflang");
     expect(crawlerHtml).toContain(`<html lang="${lang}"`);
     expect(crawlerHead).toContain(`<title>${title}</title>`);
     expect(crawlerHead).toContain('<meta name="robots" content="noindex"/>');
