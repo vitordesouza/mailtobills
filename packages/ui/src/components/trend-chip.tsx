@@ -11,12 +11,14 @@ function TrendChip({
   delta,
   format = "percent",
   positiveIsGood = true,
+  newLabel = "New",
   className,
   ...props
 }: React.ComponentProps<"span"> & {
   delta: number | null;
   format?: "percent" | "count";
   positiveIsGood?: boolean;
+  newLabel?: string;
 }) {
   if (delta === null) {
     return (
@@ -28,7 +30,7 @@ function TrendChip({
         )}
         {...props}
       >
-        New
+        {newLabel}
       </span>
     );
   }

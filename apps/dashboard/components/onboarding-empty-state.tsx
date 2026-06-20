@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useMutation } from "convex/react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 import Image from "next/image";
 import { CheckCircle2, FilePlus2, Mail } from "lucide-react";
@@ -19,19 +20,19 @@ import { SectionLabel } from "@mailtobills/ui/components/section-label";
 
 const inboxAddress = "inbox@mailtobills.com";
 
-const onboardingSteps = [
-  "Find an expense PDF in your email.",
-  `Forward it to ${inboxAddress}.`,
-  "MailToBills stores the accepted PDF for this Collection Month.",
-];
-
 export const OnboardingEmptyState = () => {
   const router = useRouter();
+  const t = useTranslations("Onboarding");
   const createDemoExpenseDocument = useMutation(
     api.expenseDocuments.createDemoExpenseDocument,
   );
 
   const [isSendingTest, setIsSendingTest] = useState(false);
+  const onboardingSteps = [
+    t("steps.find"),
+    t("steps.forward", { address: inboxAddress }),
+    t("steps.stored"),
+  ];
 
   const handleSendTestDocument = () => {
     setIsSendingTest(true);
@@ -50,21 +51,22 @@ export const OnboardingEmptyState = () => {
       <div className="grid gap-0 lg:grid-cols-[1.1fr_0.9fr]">
         <div className="flex flex-col gap-6 p-5 sm:p-6 lg:p-8">
           <PageHeaderContent className="space-y-2">
-            <SectionLabel>First Collection</SectionLabel>
+            <SectionLabel>{t("sectionLabel")}</SectionLabel>
             <PageHeaderTitle className="text-3xl whitespace-normal">
-              Forward your first Expense Document
+              {t("title")}
             </PageHeaderTitle>
             <PageHeaderDescription className="max-w-xl text-base">
-              Use the Collection Address below. Accepted PDFs will appear here
-              grouped by the month MailToBills receives the forwarded email.
+              {t("description")}
             </PageHeaderDescription>
           </PageHeaderContent>
 
           <div className="bg-sidebar/50 rounded-lg border border-dashed p-4">
             <CopyField
               id="mailtobills-inbox"
-              label="Collection Address"
+              label={t("collectionAddress")}
               value={inboxAddress}
+              copyLabel={t("copy")}
+              copiedLabel={t("copied")}
             />
           </div>
 
@@ -94,18 +96,16 @@ export const OnboardingEmptyState = () => {
               className="w-full whitespace-nowrap sm:w-auto"
             >
               <FilePlus2 className="size-4" />
-              {isSendingTest ? "Sending..." : "Add a demo document"}
+              {isSendingTest ? t("sending") : t("addDemo")}
             </Button>
-            <p className="text-muted-foreground text-sm">
-              Use this while email ingestion is being tested end to end.
-            </p>
+            <p className="text-muted-foreground text-sm">{t("demoHelp")}</p>
           </div>
         </div>
 
         <div className="bg-sidebar flex min-h-[280px] items-center justify-center border-t p-6 lg:border-t-0 lg:border-l">
           <Image
             src="/images/mailtobills-envelope.svg"
-            alt="Expense document in an envelope"
+            alt={t("imageAlt")}
             width={896}
             height={512}
             className="h-auto w-full max-w-md"

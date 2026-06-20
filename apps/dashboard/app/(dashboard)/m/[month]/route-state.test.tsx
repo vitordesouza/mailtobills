@@ -5,6 +5,7 @@ const mocks = vi.hoisted(() => ({
   authToken: vi.fn(),
   fetchQuery: vi.fn(),
   getExpenseDocuments: vi.fn(),
+  getTranslations: vi.fn(),
   notFound: vi.fn(() => {
     throw new Error("NEXT_NOT_FOUND");
   }),
@@ -21,6 +22,10 @@ vi.mock("@convex-dev/auth/nextjs/server", () => ({
 vi.mock("convex/nextjs", () => ({
   fetchQuery: mocks.fetchQuery,
 }));
+vi.mock("next-intl/server", () => ({
+  getLocale: vi.fn(() => Promise.resolve("en")),
+  getTranslations: mocks.getTranslations,
+}));
 vi.mock("@/features/expense-documents/read-model/getExpenseDocuments", () => ({
   getExpenseDocuments: mocks.getExpenseDocuments,
 }));
@@ -34,6 +39,21 @@ describe("Collection Month route states", () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-06-19T12:00:00.000Z"));
     vi.clearAllMocks();
+    mocks.getTranslations.mockImplementation((namespace: string) =>
+      Promise.resolve((key: string, values?: Record<string, string>) => {
+        const fullKey = `${namespace}.${key}`;
+        if (fullKey === "CollectionMonth.notFound.title") {
+          return "Collection Month not found";
+        }
+        if (fullKey === "CollectionMonth.notFound.description") {
+          return "Use a Collection Month in YYYY-MM format to browse collected Expense Documents.";
+        }
+        if (fullKey === "CollectionMonth.notFound.openMonth") {
+          return `Open ${values?.month}`;
+        }
+        return fullKey;
+      }),
+    );
   });
 
   afterEach(() => {
@@ -57,8 +77,8 @@ describe("Collection Month route states", () => {
     },
   );
 
-  it("renders the Collection Month recovery action", () => {
-    render(<CollectionMonthNotFound />);
+  it("renders the Collection Month recovery action", async () => {
+    render(await CollectionMonthNotFound());
 
     expect(screen.getByText("Collection Month not found")).toBeInTheDocument();
     expect(

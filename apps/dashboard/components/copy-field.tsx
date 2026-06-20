@@ -14,11 +14,15 @@ export function CopyField({
   label,
   value,
   className,
+  copyLabel = "Copy",
+  copiedLabel = "Copied",
 }: {
   id: string;
   label: string;
   value: string;
   className?: string;
+  copyLabel?: string;
+  copiedLabel?: string;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [isCopied, setIsCopied] = useState(false);
@@ -58,7 +62,7 @@ export function CopyField({
         className="w-full sm:w-auto"
       >
         {isCopied ? <Check className="size-4" /> : <Copy className="size-4" />}
-        {isCopied ? "Copied" : "Copy"}
+        {isCopied ? copiedLabel : copyLabel}
       </Button>
     </div>
   );

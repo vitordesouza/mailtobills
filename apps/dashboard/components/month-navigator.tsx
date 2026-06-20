@@ -3,6 +3,7 @@
 import * as React from "react";
 
 import { usePathname, useParams, useRouter } from "next/navigation";
+import { useLocale, useTranslations } from "next-intl";
 import {
   CalendarDays,
   ChevronDown,
@@ -13,6 +14,7 @@ import {
 import Link from "next/link";
 
 import { getMonthInfo } from "@/lib/months";
+import { formatCollectionMonthLabel } from "@/lib/localized-format";
 import { toCollectionMonthValue } from "@mailtobills/domain";
 import { Button } from "@mailtobills/ui/components/button";
 import {
@@ -31,36 +33,6 @@ const buildMonthHref = (pathname: string, month: string) => {
   return `/m/${month}`;
 };
 
-const monthNames = [
-  "Jan",
-  "Feb",
-  "Mar",
-  "Apr",
-  "May",
-  "Jun",
-  "Jul",
-  "Aug",
-  "Sep",
-  "Oct",
-  "Nov",
-  "Dec",
-];
-
-const fullMonthNames = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
-];
-
 const getMonthYear = (month: string) => Number(month.slice(0, 4));
 
 const buildCollectionMonth = (year: number, monthIndex: number) =>
@@ -69,6 +41,8 @@ const buildCollectionMonth = (year: number, monthIndex: number) =>
 export const MonthNavigator = () => {
   const router = useRouter();
   const pathname = usePathname();
+  const locale = useLocale();
+  const t = useTranslations("Navigation");
   const params = useParams<{ month?: string }>();
   const monthParam =
     typeof params.month === "string" ? params.month : undefined;
@@ -89,6 +63,11 @@ export const MonthNavigator = () => {
   const next2Href = buildMonthHref(pathname, next2);
   const currentHref = buildMonthHref(pathname, currentMonth);
   const isCurrentMonth = monthInfo.value === currentMonth;
+  const monthLabel = formatCollectionMonthLabel(monthInfo.start, locale);
+  const currentMonthLabel = formatCollectionMonthLabel(
+    getMonthInfo(currentMonth).start,
+    locale,
+  );
 
   const navigateToMonth = (month: string) => {
     if (isNavigating) return;
@@ -132,7 +111,7 @@ export const MonthNavigator = () => {
         <Link
           prefetch
           href={previousHref}
-          aria-label="Previous month"
+          aria-label={t("previousMonth")}
           aria-disabled={isNavigating}
           onClick={(event) => {
             if (isNavigating) return;
@@ -150,12 +129,12 @@ export const MonthNavigator = () => {
           <PopoverTrigger asChild>
             <button
               type="button"
-              aria-label={`Choose month, currently ${monthInfo.label}`}
+              aria-label={t("chooseMonth", { month: monthLabel })}
               disabled={isNavigating}
               className="text-foreground hover:bg-accent hover:text-accent-foreground focus-visible:ring-ring/50 inline-flex h-8 items-center gap-1.5 px-3 font-mono text-xs font-medium tracking-[0.06em] uppercase tabular-nums transition outline-none focus-visible:ring-[3px] disabled:pointer-events-none disabled:opacity-50"
             >
               <span className="hidden min-[420px]:inline">
-                {monthInfo.label}
+                {monthLabel}
               </span>
               <span className="min-[420px]:hidden">{monthInfo.value}</span>
               <ChevronDown className="text-muted-foreground size-3.5" />
@@ -163,13 +142,13 @@ export const MonthNavigator = () => {
           </PopoverTrigger>
           <PopoverContent
             align="end"
-            aria-label="Choose collection month"
+            aria-label={t("chooseCollectionMonth")}
             className="w-[19.5rem] p-0"
           >
             <div className="flex items-center justify-between gap-3 border-b p-3">
               <button
                 type="button"
-                aria-label="Previous year"
+                aria-label={t("previousYear")}
                 disabled={isNavigating}
                 onClick={() => setVisibleYear((year) => year - 1)}
                 className="text-muted-foreground hover:bg-accent hover:text-accent-foreground focus-visible:ring-ring/50 inline-flex size-8 items-center justify-center rounded-md transition outline-none focus-visible:ring-[3px] disabled:pointer-events-none disabled:opacity-50"
@@ -178,7 +157,7 @@ export const MonthNavigator = () => {
               </button>
               <div className="min-w-0 text-center">
                 <div className="text-muted-foreground font-mono text-[11px] font-medium tracking-[0.08em] uppercase">
-                  Jump to
+                  {t("jumpTo")}
                 </div>
                 <div className="font-mono text-sm font-semibold tabular-nums">
                   {visibleYear}
@@ -186,7 +165,7 @@ export const MonthNavigator = () => {
               </div>
               <button
                 type="button"
-                aria-label="Next year"
+                aria-label={t("nextYear")}
                 disabled={isNavigating}
                 onClick={() => setVisibleYear((year) => year + 1)}
                 className="text-muted-foreground hover:bg-accent hover:text-accent-foreground focus-visible:ring-ring/50 inline-flex size-8 items-center justify-center rounded-md transition outline-none focus-visible:ring-[3px] disabled:pointer-events-none disabled:opacity-50"
@@ -195,13 +174,24 @@ export const MonthNavigator = () => {
               </button>
             </div>
             <div className="grid grid-cols-3 gap-2 p-3">
-              {monthNames.map((monthName, monthIndex) => {
+              {Array.from({ length: 12 }, (_, monthIndex) => {
                 const month = buildCollectionMonth(visibleYear, monthIndex);
                 const isSelected = month === monthInfo.value;
                 const isToday = month === currentMonth;
-                const accessibleLabel = `${fullMonthNames[monthIndex]} ${visibleYear}${
-                  isToday && !isSelected ? ", current month" : ""
-                }`;
+                const buttonMonthInfo = getMonthInfo(month);
+                const shortLabel = formatCollectionMonthLabel(
+                  buttonMonthInfo.start,
+                  locale,
+                  "short",
+                );
+                const accessibleMonth = formatCollectionMonthLabel(
+                  buttonMonthInfo.start,
+                  locale,
+                );
+                const accessibleLabel =
+                  isToday && !isSelected
+                    ? t("monthIsCurrent", { month: accessibleMonth })
+                    : accessibleMonth;
 
                 return (
                   <button
@@ -221,7 +211,7 @@ export const MonthNavigator = () => {
                         "border-amber-600/50 text-amber-700 dark:border-amber-400/50 dark:text-amber-300",
                     )}
                   >
-                    {monthName}
+                    {shortLabel}
                   </button>
                 );
               })}
@@ -237,7 +227,7 @@ export const MonthNavigator = () => {
                   onClick={() => navigateToMonth(currentMonth)}
                 >
                   <CalendarDays className="size-3.5" />
-                  Current month
+                  {t("currentMonth")}
                 </Button>
               </div>
             ) : null}
@@ -247,7 +237,7 @@ export const MonthNavigator = () => {
         <Link
           href={nextHref}
           prefetch
-          aria-label="Next month"
+          aria-label={t("nextMonth")}
           aria-disabled={isNavigating}
           onClick={(event) => {
             if (isNavigating) return;
@@ -267,13 +257,13 @@ export const MonthNavigator = () => {
           variant="outline"
           size="sm"
           typography="mono"
-          aria-label={`Go to current month, ${getMonthInfo(currentMonth).label}`}
+          aria-label={t("goToCurrentMonth", { month: currentMonthLabel })}
           disabled={isNavigating}
           onClick={() => navigateToMonth(currentMonth)}
           className="w-8 px-0 sm:w-auto sm:px-3"
         >
           <CalendarDays className="size-3.5" />
-          <span className="hidden sm:inline">Current month</span>
+          <span className="hidden sm:inline">{t("currentMonth")}</span>
         </Button>
       ) : null}
     </section>

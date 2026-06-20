@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useLocale, useTranslations } from "next-intl";
 import { Fragment, useState, useTransition } from "react";
 
 import type {
@@ -18,6 +19,10 @@ import {
 } from "lucide-react";
 
 import { api } from "@/lib/convexClient";
+import {
+  formatDocumentDate,
+  formatFileSize as formatLocalizedFileSize,
+} from "@/lib/localized-format";
 import { Badge } from "@mailtobills/ui/components/badge";
 import { Button } from "@mailtobills/ui/components/button";
 import { Card, CardContent } from "@mailtobills/ui/components/card";
@@ -43,7 +48,7 @@ import { cn } from "@mailtobills/ui/lib/utils";
 const getSenderEmail = (document: ExpenseDocumentRow) =>
   document.originFromEmail ?? document.fromEmail;
 
-const getSenderName = (document: ExpenseDocumentRow) => {
+const getSenderName = (document: ExpenseDocumentRow, unknownSender: string) => {
   const originName = document.originFromName?.trim();
   if (originName) return originName;
 
@@ -56,31 +61,20 @@ const getSenderName = (document: ExpenseDocumentRow) => {
   const fallback =
     document.subject?.trim() ||
     document.primaryAttachment?.originalFilename ||
-    "Unknown sender";
+    unknownSender;
   return fallback.length
     ? fallback.charAt(0).toUpperCase() + fallback.slice(1)
-    : "Unknown sender";
-};
-
-const formatReceivedAt = (timestamp: number) =>
-  new Intl.DateTimeFormat("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  }).format(new Date(timestamp));
-
-const formatFileSize = (fileSize: number | undefined) => {
-  if (!fileSize || fileSize <= 0) return null;
-  if (fileSize < 1024 * 1024) return `${Math.round(fileSize / 1024)} KB`;
-  return `${(fileSize / 1024 / 1024).toFixed(1)} MB`;
+    : unknownSender;
 };
 
 function ViewPdfButton({
   attachment,
-  children = "View PDF",
+  label,
+  children,
 }: {
   attachment: ExpenseDocumentAttachment | undefined;
-  children?: string;
+  label: string;
+  children: string;
 }) {
   const url = attachment?.downloadUrl ?? attachment?.fileUrl;
 
@@ -88,7 +82,7 @@ function ViewPdfButton({
     return (
       <Button variant="outline" size="sm" disabled>
         <ExternalLink className="size-3.5" />
-        {children}
+        {label}
       </Button>
     );
   }
@@ -111,6 +105,9 @@ export function ExpenseDocumentsTable({
   emptyLabel: string;
 }) {
   const router = useRouter();
+  const locale = useLocale();
+  const t = useTranslations("ExpenseDocuments.table");
+  const fileSizeT = useTranslations("ExpenseDocuments.fileSize");
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -136,7 +133,7 @@ export function ExpenseDocumentsTable({
             <EmptyStateIcon>
               <FileText />
             </EmptyStateIcon>
-            <EmptyStateTitle>No documents</EmptyStateTitle>
+            <EmptyStateTitle>{t("emptyTitle")}</EmptyStateTitle>
             <EmptyStateDescription>{emptyLabel}</EmptyStateDescription>
           </EmptyState>
         </CardContent>
@@ -153,7 +150,7 @@ export function ExpenseDocumentsTable({
           <ExpenseDocumentsTableHeader />
           <TableBody>
             {documents.map((document) => {
-              const sender = getSenderName(document);
+              const sender = getSenderName(document, t("unknownSender"));
               const primary = document.primaryAttachment;
               const isExpanded = expandedId === document.id;
               const isBusy =
@@ -180,8 +177,8 @@ export function ExpenseDocumentsTable({
                         aria-expanded={isExpanded}
                         aria-label={
                           isExpanded
-                            ? "Collapse attachments"
-                            : "Expand attachments"
+                            ? t("collapseAttachments")
+                            : t("expandAttachments")
                         }
                       >
                         <ChevronRight
@@ -203,11 +200,13 @@ export function ExpenseDocumentsTable({
                             className="text-muted-foreground truncate text-xs"
                             title={
                               document.originFromEmail && document.fromEmail
-                                ? `Forwarded by ${document.fromEmail}`
+                                ? t("forwardedBy", {
+                                    email: document.fromEmail,
+                                  })
                                 : undefined
                             }
                           >
-                            {getSenderEmail(document) ?? "Forwarded email"}
+                            {getSenderEmail(document) ?? t("forwardedEmail")}
                           </div>
                         </div>
                       </div>
@@ -215,21 +214,26 @@ export function ExpenseDocumentsTable({
                     <TableCell className="min-w-0">
                       <div className="flex min-w-0 items-center gap-2">
                         <div className="truncate font-medium">
-                          {primary?.originalFilename ?? "No primary PDF"}
+                          {primary?.originalFilename ?? t("noPrimaryPdf")}
                         </div>
                         {primary ? (
-                          <Badge variant="warning">Primary</Badge>
+                          <Badge variant="warning">{t("primary")}</Badge>
                         ) : null}
                       </div>
                       <div className="text-muted-foreground truncate text-xs">
-                        {document.subject ?? "No email subject"}
+                        {document.subject ?? t("noSubject")}
                       </div>
                     </TableCell>
                     <TableCell className="text-muted-foreground border-l font-mono text-xs whitespace-nowrap tabular-nums">
-                      <div>{formatReceivedAt(document.receivedAt)}</div>
+                      <div>{formatDocumentDate(document.receivedAt, locale)}</div>
                       {document.originSentAt ? (
                         <div className="text-muted-foreground/70 text-[11px]">
-                          Sent {formatReceivedAt(document.originSentAt)}
+                          {t("sentDate", {
+                            date: formatDocumentDate(
+                              document.originSentAt,
+                              locale,
+                            ) ?? "",
+                          })}
                         </div>
                       ) : null}
                     </TableCell>
@@ -243,7 +247,9 @@ export function ExpenseDocumentsTable({
                     </TableCell>
                     <TableCell className="border-l text-right">
                       <div className="flex justify-end gap-2">
-                        <ViewPdfButton attachment={primary} />
+                        <ViewPdfButton attachment={primary} label={t("viewPdf")}>
+                          {t("viewPdf")}
+                        </ViewPdfButton>
                         <Button
                           type="button"
                           variant="ghost"
@@ -258,7 +264,7 @@ export function ExpenseDocumentsTable({
                               }),
                             )
                           }
-                          aria-label="Delete document"
+                          aria-label={t("deleteDocument")}
                         >
                           <Trash2 className="size-4" />
                         </Button>
@@ -274,8 +280,13 @@ export function ExpenseDocumentsTable({
                         <div className="animate-in fade-in slide-in-from-top-1 space-y-2 pl-0 duration-200 sm:pl-[52px]">
                           {document.attachments.map((attachment) => {
                             const isPrimary = attachment.id === primary?.id;
-                            const fileSize = formatFileSize(
+                            const fileSize = formatLocalizedFileSize(
                               attachment.fileSize,
+                              locale,
+                              {
+                                kb: (size) => fileSizeT("kb", { size }),
+                                mb: (size) => fileSizeT("mb", { size }),
+                              },
                             );
 
                             return (
@@ -306,7 +317,7 @@ export function ExpenseDocumentsTable({
                                       {attachment.originalFilename}
                                     </div>
                                     <div className="text-muted-foreground text-xs">
-                                      {isPrimary ? "Primary PDF" : "PDF"}
+                                      {isPrimary ? t("primaryPdf") : t("pdf")}
                                       {fileSize ? ` - ${fileSize}` : ""}
                                     </div>
                                   </div>
@@ -329,11 +340,14 @@ export function ExpenseDocumentsTable({
                                         )
                                       }
                                     >
-                                      Make primary
+                                      {t("makePrimary")}
                                     </Button>
                                   ) : null}
-                                  <ViewPdfButton attachment={attachment}>
-                                    Open
+                                  <ViewPdfButton
+                                    attachment={attachment}
+                                    label={t("open")}
+                                  >
+                                    {t("open")}
                                   </ViewPdfButton>
                                 </div>
                               </div>

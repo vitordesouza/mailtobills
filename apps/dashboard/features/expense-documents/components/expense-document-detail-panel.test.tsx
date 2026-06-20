@@ -1,5 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { NextIntlClientProvider } from "next-intl";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type {
@@ -7,6 +8,7 @@ import type {
   ExpenseDocumentRow,
 } from "@mailtobills/domain";
 
+import messages from "@/messages/en/common.json";
 import { ExpenseDocumentDetailPanel } from "./expense-document-detail-panel";
 
 const matchMedia = vi.fn((query: string) => ({
@@ -83,7 +85,14 @@ function renderPanel(
     ...overrides,
   };
 
-  return { ...render(<ExpenseDocumentDetailPanel {...props} />), props };
+  return {
+    ...render(
+      <NextIntlClientProvider locale="en" messages={messages}>
+        <ExpenseDocumentDetailPanel {...props} />
+      </NextIntlClientProvider>,
+    ),
+    props,
+  };
 }
 
 describe("ExpenseDocumentDetailPanel", () => {

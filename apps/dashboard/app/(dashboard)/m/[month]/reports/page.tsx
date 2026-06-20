@@ -1,7 +1,9 @@
 import { Download, FileArchive, Inbox, Paperclip } from "lucide-react";
+import { getLocale, getTranslations } from "next-intl/server";
 
 import { getExpenseDocuments } from "@/features/expense-documents/read-model/getExpenseDocuments";
 import { percentDelta } from "@/features/expense-documents/read-model/transform";
+import { formatCollectionMonthLabel } from "@/lib/localized-format";
 import { getMonthInfo } from "@/lib/months";
 import { Button } from "@mailtobills/ui/components/button";
 import {
@@ -30,31 +32,40 @@ export default async function ReportsPage({
 }) {
   const { month } = await params;
   const monthInfo = getCollectionMonthRoute(month);
-  const { summary, previousSummary, exportSummary, previousExportSummary } =
-    await getExpenseDocuments(monthInfo.value);
+  const [
+    { summary, previousSummary, exportSummary, previousExportSummary },
+    locale,
+    t,
+  ] = await Promise.all([
+    getExpenseDocuments(monthInfo.value),
+    getLocale(),
+    getTranslations("Reports"),
+  ]);
 
-  const previousShortLabel = getMonthInfo(
-    monthInfo.previous,
-  ).start.toLocaleString("en-US", { month: "short" });
-  const vsPrevious = `VS ${previousShortLabel}`;
+  const previousShortLabel = formatCollectionMonthLabel(
+    getMonthInfo(monthInfo.previous).start,
+    locale,
+    "short",
+  );
+  const monthLabel = formatCollectionMonthLabel(monthInfo.start, locale);
+  const vsPrevious = t("stats.vsPrevious", { month: previousShortLabel });
 
   return (
     <div className="animate-in fade-in space-y-5 duration-300">
       <PageHeader>
         <PageHeaderContent className="space-y-2">
-          <SectionLabel>Accountant Export</SectionLabel>
+          <SectionLabel>{t("sectionLabel")}</SectionLabel>
           <PageHeaderTitle className="text-3xl">
-            {monthInfo.label}
+            {monthLabel}
           </PageHeaderTitle>
           <PageHeaderDescription>
-            Download the current primary PDFs and a CSV manifest for collected
-            expense documents in this collection month.
+            {t("description")}
           </PageHeaderDescription>
         </PageHeaderContent>
         <Button asChild typography="mono" className="w-full md:w-auto">
           <a href={`/api/exports/${monthInfo.value}`}>
             <Download className="size-4" />
-            Export ZIP
+            {t("exportZip")}
           </a>
         </Button>
       </PageHeader>
@@ -62,20 +73,21 @@ export default async function ReportsPage({
       <StatGroup variant="row">
         <StatTile>
           <StatTileHeader>
-            <StatLabel>Documents</StatLabel>
+            <StatLabel>{t("stats.documents")}</StatLabel>
             <Inbox />
           </StatTileHeader>
           <StatValue className="text-3xl">{summary.count}</StatValue>
           <StatTileFooter>
             <TrendChip
               delta={percentDelta(summary.count, previousSummary.count)}
+              newLabel={t("stats.new")}
             />
             <StatTilePeriod>{vsPrevious}</StatTilePeriod>
           </StatTileFooter>
         </StatTile>
         <StatTile>
           <StatTileHeader>
-            <StatLabel>PDF Attachments</StatLabel>
+            <StatLabel>{t("stats.pdfAttachments")}</StatLabel>
             <Paperclip />
           </StatTileHeader>
           <StatValue className="text-3xl">{summary.attachmentCount}</StatValue>
@@ -85,13 +97,14 @@ export default async function ReportsPage({
                 summary.attachmentCount,
                 previousSummary.attachmentCount,
               )}
+              newLabel={t("stats.new")}
             />
             <StatTilePeriod>{vsPrevious}</StatTilePeriod>
           </StatTileFooter>
         </StatTile>
         <StatTile>
           <StatTileHeader>
-            <StatLabel>Files in Export</StatLabel>
+            <StatLabel>{t("stats.filesInExport")}</StatLabel>
             <FileArchive />
           </StatTileHeader>
           <StatValue className="text-3xl">{exportSummary.fileCount}</StatValue>
@@ -101,6 +114,7 @@ export default async function ReportsPage({
                 exportSummary.fileCount,
                 previousExportSummary.fileCount,
               )}
+              newLabel={t("stats.new")}
             />
             <StatTilePeriod>{vsPrevious}</StatTilePeriod>
           </StatTileFooter>
@@ -108,28 +122,18 @@ export default async function ReportsPage({
       </StatGroup>
 
       <section className="bg-card space-y-3 rounded-lg border p-4 shadow-xs md:p-5">
-        <SectionLabel>What is inside the ZIP</SectionLabel>
+        <SectionLabel>{t("zipContents.title")}</SectionLabel>
         <ul className="text-muted-foreground space-y-1.5 text-sm">
-          <li>
-            One PDF for each collected document with a Primary Attachment.
-          </li>
-          <li>
-            A CSV manifest with sender, subject, received date, and filename for
-            every included document.
-          </li>
+          <li>{t("zipContents.primaryPdfs")}</li>
+          <li>{t("zipContents.manifest")}</li>
           {exportSummary.skippedDocumentCount > 0 ? (
             <li>
-              {exportSummary.skippedDocumentCount} collected document
-              {exportSummary.skippedDocumentCount === 1 ? "" : "s"} without a
-              Primary Attachment{" "}
-              {exportSummary.skippedDocumentCount === 1 ? "is" : "are"} not
-              included.
+              {t("zipContents.skipped", {
+                count: exportSummary.skippedDocumentCount,
+              })}
             </li>
           ) : null}
-          <li>
-            This estimate uses stored document metadata. The downloaded ZIP is
-            authoritative if a Primary Attachment cannot be read.
-          </li>
+          <li>{t("zipContents.estimate")}</li>
         </ul>
       </section>
     </div>
