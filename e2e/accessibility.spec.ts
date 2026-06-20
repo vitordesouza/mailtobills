@@ -48,6 +48,7 @@ for (const { heading, lang, locale, path, title } of [
     const crawlerHead = crawlerHtml.match(/<head>([\s\S]*?)<\/head>/)?.[1];
 
     expect(crawlerResponse.status()).toBe(404);
+    expect(crawlerHtml).toContain(`<html lang="${lang}"`);
     expect(crawlerHead).toContain(`<title>${title}</title>`);
     expect(crawlerHead).toContain('<meta name="robots" content="noindex"/>');
     expect(crawlerHead).not.toContain('rel="canonical"');

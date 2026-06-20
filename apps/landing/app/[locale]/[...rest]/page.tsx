@@ -1,5 +1,5 @@
-import { notFound } from "next/navigation";
+import NotFound from "../not-found";
 
-export default function CatchAllPage() {
-  notFound();
+export default async function CatchAllPage() {
+  return <NotFound />;
 }
