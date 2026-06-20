@@ -1,3 +1,5 @@
+import { useTranslations } from "next-intl";
+
 import { ExpenseDocumentsTableSkeleton } from "@/features/expense-documents/components/expense-documents-table-skeleton";
 import { Skeleton } from "@mailtobills/ui/components/skeleton";
 
@@ -22,11 +24,13 @@ export function DashboardPageSkeleton({
 }: {
   includeTable?: boolean;
 }) {
+  const t = useTranslations("System");
+
   return (
     <div
       className="flex flex-col gap-5"
       role="status"
-      aria-label="Loading dashboard"
+      aria-label={t("loadingDashboard")}
     >
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div className="space-y-2">
@@ -42,7 +46,7 @@ export function DashboardPageSkeleton({
         <StatTileSkeleton />
       </div>
       {includeTable ? <ExpenseDocumentsTableSkeleton /> : null}
-      <span className="sr-only">Loading dashboard content</span>
+      <span className="sr-only">{t("loadingDashboardContent")}</span>
     </div>
   );
 }

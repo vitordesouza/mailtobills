@@ -1,8 +1,10 @@
 import type { AnchorHTMLAttributes, ReactNode } from "react";
 
 import { fireEvent, render, screen } from "@testing-library/react";
+import { NextIntlClientProvider } from "next-intl";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import messages from "@/messages/en/common.json";
 import { MonthNavigator } from "./month-navigator";
 
 const mocks = vi.hoisted(() => ({
@@ -39,6 +41,14 @@ vi.mock("next/link", () => ({
   },
 }));
 
+function renderNavigator() {
+  return render(
+    <NextIntlClientProvider locale="en" messages={messages}>
+      <MonthNavigator />
+    </NextIntlClientProvider>,
+  );
+}
+
 describe("MonthNavigator", () => {
   beforeEach(() => {
     vi.useFakeTimers();
@@ -54,7 +64,7 @@ describe("MonthNavigator", () => {
   });
 
   it("shows a current-month action away from the current month", () => {
-    render(<MonthNavigator />);
+    renderNavigator();
 
     expect(
       screen.getByRole("button", {
@@ -67,7 +77,7 @@ describe("MonthNavigator", () => {
     mocks.pathname = "/m/2026-06";
     mocks.params = { month: "2026-06" };
 
-    render(<MonthNavigator />);
+    renderNavigator();
 
     expect(
       screen.queryByRole("button", {
@@ -77,7 +87,7 @@ describe("MonthNavigator", () => {
   });
 
   it("keeps the current route suffix when jumping to the current month", () => {
-    render(<MonthNavigator />);
+    renderNavigator();
 
     fireEvent.click(
       screen.getByRole("button", {
@@ -89,7 +99,7 @@ describe("MonthNavigator", () => {
   });
 
   it("opens a month grid and navigates to the selected month", () => {
-    render(<MonthNavigator />);
+    renderNavigator();
 
     fireEvent.click(
       screen.getByRole("button", {
@@ -102,7 +112,7 @@ describe("MonthNavigator", () => {
   });
 
   it("does not navigate when selecting the already-viewed month", () => {
-    render(<MonthNavigator />);
+    renderNavigator();
 
     fireEvent.click(
       screen.getByRole("button", {
@@ -115,7 +125,7 @@ describe("MonthNavigator", () => {
   });
 
   it("announces the current month marker inside the picker", () => {
-    render(<MonthNavigator />);
+    renderNavigator();
 
     fireEvent.click(
       screen.getByRole("button", {

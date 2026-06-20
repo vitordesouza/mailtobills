@@ -10,7 +10,9 @@
     "convexNotConfigured": "Convex not configured",
     "convexInstructions": "Set NEXT_PUBLIC_CONVEX_URL in apps/dashboard/.env.local and restart the development server.",
     "loadingApp": "Loading MailToBills",
-    "loadingSettings": "Loading settings"
+    "loadingSettings": "Loading settings",
+    "loadingDashboard": "Loading dashboard",
+    "loadingDashboardContent": "Loading dashboard content"
   },
   "Navigation": {
     "customer": "Customer",
@@ -31,7 +33,17 @@
     "dark": "Dark",
     "system": "System",
     "logOut": "Log out",
-    "userMenu": "Open user menu"
+    "userMenu": "Open user menu",
+    "previousMonth": "Previous month",
+    "nextMonth": "Next month",
+    "chooseMonth": "Choose month, currently {month}",
+    "chooseCollectionMonth": "Choose collection month",
+    "previousYear": "Previous year",
+    "nextYear": "Next year",
+    "jumpTo": "Jump to",
+    "currentMonth": "Current month",
+    "goToCurrentMonth": "Go to current month, {month}",
+    "monthIsCurrent": "{month}, current month"
   },
   "Auth": {
     "language": "Language",
@@ -176,6 +188,124 @@
       "scheduleDisabled": "Export Schedule disabled.",
       "scheduleSaveFailed": "Could not save Export Schedule."
     }
+  },
+  "CollectionMonth": {
+    "sectionLabel": "Collection Month",
+    "description": "Collected Expense Documents ready for review, download, or Accountant Export.",
+    "exportMonth": "Export month",
+    "stats": {
+      "collected": "Collected",
+      "pdfAttachments": "PDF Attachments",
+      "primaryPdfs": "Primary PDFs",
+      "vsPrevious": "VS {month}",
+      "new": "New"
+    },
+    "notFound": {
+      "title": "Collection Month not found",
+      "description": "Use a Collection Month in YYYY-MM format to browse collected Expense Documents.",
+      "openMonth": "Open {month}"
+    }
+  },
+  "Reports": {
+    "sectionLabel": "Accountant Export",
+    "description": "Download the current primary PDFs and a CSV manifest for collected expense documents in this collection month.",
+    "exportZip": "Export ZIP",
+    "stats": {
+      "documents": "Documents",
+      "pdfAttachments": "PDF Attachments",
+      "filesInExport": "Files in Export",
+      "vsPrevious": "VS {month}",
+      "new": "New"
+    },
+    "zipContents": {
+      "title": "What is inside the ZIP",
+      "primaryPdfs": "One PDF for each collected document with a Primary Attachment.",
+      "manifest": "A CSV manifest with sender, subject, received date, and filename for every included document.",
+      "skipped": "{count, plural, one {# collected document without a Primary Attachment is not included.} other {# collected documents without a Primary Attachment are not included.}}",
+      "estimate": "This estimate uses stored document metadata. The downloaded ZIP is authoritative if a Primary Attachment cannot be read."
+    }
+  },
+  "ExpenseDocuments": {
+    "table": {
+      "title": "Collected Expense Documents",
+      "description": "One row per accepted forwarded email.",
+      "count": "{count, plural, one {# doc} other {# docs}}",
+      "headers": {
+        "expand": "Expand",
+        "sender": "Sender",
+        "document": "Document",
+        "received": "Received",
+        "pdfs": "PDFs",
+        "actions": "Actions"
+      },
+      "emptyTitle": "No documents",
+      "emptyMonth": "No expense documents collected in {month}.",
+      "unknownSender": "Unknown sender",
+      "forwardedEmail": "Forwarded email",
+      "forwardedBy": "Forwarded by {email}",
+      "noPrimaryPdf": "No primary PDF",
+      "primary": "Primary",
+      "noSubject": "No email subject",
+      "sentDate": "Sent {date}",
+      "expandAttachments": "Expand attachments",
+      "collapseAttachments": "Collapse attachments",
+      "deleteDocument": "Delete document",
+      "viewPdf": "View PDF",
+      "open": "Open",
+      "makePrimary": "Make primary",
+      "primaryPdf": "Primary PDF",
+      "pdf": "PDF"
+    },
+    "detail": {
+      "fallbackTitle": "Expense document",
+      "documentPosition": "Document {current} of {total}",
+      "sectionLabel": "Collected expense document",
+      "previousDocument": "Previous document",
+      "nextDocument": "Next document",
+      "downloadPdf": "Download PDF",
+      "makePrimary": "Make primary",
+      "moreActions": "More document actions",
+      "deleteDocument": "Delete document",
+      "emailDetails": "Email details",
+      "originalSender": "Original sender",
+      "forwardedBy": "Forwarded by",
+      "receivedByMailToBills": "Received by MailToBills",
+      "originalSentDate": "Original sent date",
+      "notAvailable": "Not available",
+      "pdfPreview": "PDF preview",
+      "openOriginal": "Open original",
+      "loadingPreview": "Loading PDF preview",
+      "previewTitle": "Preview {title}",
+      "previewAttachment": "Preview {filename}",
+      "previewUnavailableTitle": "Can't preview this PDF here",
+      "previewUnavailableDescription": "Open the original file or download it to continue.",
+      "attachments": "Attachments",
+      "previewing": "Previewing {title}",
+      "deleteTitle": "Delete this expense document?",
+      "deleteDescription": "This removes the collected email and all its attachments. This action cannot be undone.",
+      "cancel": "Cancel"
+    },
+    "fileSize": {
+      "kb": "{size} KB",
+      "mb": "{size} MB"
+    }
+  },
+  "Onboarding": {
+    "sectionLabel": "First Collection",
+    "title": "Forward your first Expense Document",
+    "description": "Use the Collection Address below. Accepted PDFs will appear here grouped by the month MailToBills receives the forwarded email.",
+    "collectionAddress": "Collection Address",
+    "steps": {
+      "find": "Find an expense PDF in your email.",
+      "forward": "Forward it to {address}.",
+      "stored": "MailToBills stores the accepted PDF for this Collection Month."
+    },
+    "sending": "Sending...",
+    "addDemo": "Add a demo document",
+    "demoHelp": "Use this while email ingestion is being tested end to end.",
+    "imageAlt": "Expense document in an envelope",
+    "copy": "Copy",
+    "copied": "Copied"
   },
   "Error": {
     "title": "Could not load this page",

@@ -1,9 +1,11 @@
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { NextIntlClientProvider } from "next-intl";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { ExpenseDocumentRow } from "@mailtobills/domain";
 
+import messages from "@/messages/en/common.json";
 import { ExpenseDocumentsTable } from "./expense-documents-table";
 
 const mocks = vi.hoisted(() => ({
@@ -84,10 +86,12 @@ describe("ExpenseDocumentsTable", () => {
   it("renders rows, expands attachments, and marks a secondary attachment primary", async () => {
     const user = userEvent.setup();
     render(
-      <ExpenseDocumentsTable
-        documents={[documentRow()]}
-        emptyLabel="No documents this month."
-      />,
+      <NextIntlClientProvider locale="en" messages={messages}>
+        <ExpenseDocumentsTable
+          documents={[documentRow()]}
+          emptyLabel="No documents this month."
+        />
+      </NextIntlClientProvider>,
     );
 
     expect(screen.getByText("invoice-primary.pdf")).toBeInTheDocument();

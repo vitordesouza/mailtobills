@@ -1,8 +1,11 @@
 import { Download, FileText, Inbox, Paperclip } from "lucide-react";
+import { getLocale, getTranslations } from "next-intl/server";
+
 import { getMonthInfo } from "@/lib/months";
 import { ExpenseDocumentsTable } from "@/features/expense-documents/components/expense-documents-table";
 import { getExpenseDocuments } from "@/features/expense-documents/read-model/getExpenseDocuments";
 import { percentDelta } from "@/features/expense-documents/read-model/transform";
+import { formatCollectionMonthLabel } from "@/lib/localized-format";
 import { Button } from "@mailtobills/ui/components/button";
 import {
   PageHeader,
@@ -33,32 +36,42 @@ export default async function DashboardPage({
 }) {
   const { month } = await params;
   const monthInfo = getCollectionMonthRoute(month);
-  const [{ summary, previousSummary, totalCount, documents }, { customer }] =
-    await Promise.all([
-      getExpenseDocuments(monthInfo.value),
-      requireCurrentCustomer(),
-    ]);
+  const [
+    { summary, previousSummary, totalCount, documents },
+    { customer },
+    locale,
+    t,
+    tableT,
+  ] = await Promise.all([
+    getExpenseDocuments(monthInfo.value),
+    requireCurrentCustomer(),
+    getLocale(),
+    getTranslations("CollectionMonth"),
+    getTranslations("ExpenseDocuments.table"),
+  ]);
 
   if (totalCount === 0) {
     return <OnboardingEmptyState />;
   }
 
-  const previousShortLabel = getMonthInfo(
-    monthInfo.previous,
-  ).start.toLocaleString("en-US", { month: "short" });
-  const vsPrevious = `VS ${previousShortLabel}`;
+  const previousShortLabel = formatCollectionMonthLabel(
+    getMonthInfo(monthInfo.previous).start,
+    locale,
+    "short",
+  );
+  const monthLabel = formatCollectionMonthLabel(monthInfo.start, locale);
+  const vsPrevious = t("stats.vsPrevious", { month: previousShortLabel });
 
   return (
     <div className="animate-in fade-in space-y-5 duration-300">
       <PageHeader>
         <PageHeaderContent className="space-y-2">
-          <SectionLabel>Collection Month</SectionLabel>
+          <SectionLabel>{t("sectionLabel")}</SectionLabel>
           <PageHeaderTitle className="text-3xl">
-            {monthInfo.label}
+            {monthLabel}
           </PageHeaderTitle>
           <PageHeaderDescription>
-            Collected Expense Documents ready for review, download, or
-            Accountant Export.
+            {t("description")}
           </PageHeaderDescription>
         </PageHeaderContent>
         <div className="flex w-full flex-col items-stretch gap-2 md:w-auto md:items-end">
@@ -71,7 +84,7 @@ export default async function DashboardPage({
             <Button asChild typography="mono" className="w-full md:w-auto">
               <a href={`/api/exports/${monthInfo.value}`}>
                 <Download className="size-4" />
-                Export month
+                {t("exportMonth")}
               </a>
             </Button>
           </div>
@@ -81,20 +94,21 @@ export default async function DashboardPage({
       <StatGroup variant="row">
         <StatTile>
           <StatTileHeader>
-            <StatLabel>Collected</StatLabel>
+            <StatLabel>{t("stats.collected")}</StatLabel>
             <Inbox />
           </StatTileHeader>
           <StatValue className="text-3xl">{summary.count}</StatValue>
           <StatTileFooter>
             <TrendChip
               delta={percentDelta(summary.count, previousSummary.count)}
+              newLabel={t("stats.new")}
             />
             <StatTilePeriod>{vsPrevious}</StatTilePeriod>
           </StatTileFooter>
         </StatTile>
         <StatTile>
           <StatTileHeader>
-            <StatLabel>PDF Attachments</StatLabel>
+            <StatLabel>{t("stats.pdfAttachments")}</StatLabel>
             <Paperclip />
           </StatTileHeader>
           <StatValue className="text-3xl">{summary.attachmentCount}</StatValue>
@@ -104,19 +118,21 @@ export default async function DashboardPage({
                 summary.attachmentCount,
                 previousSummary.attachmentCount,
               )}
+              newLabel={t("stats.new")}
             />
             <StatTilePeriod>{vsPrevious}</StatTilePeriod>
           </StatTileFooter>
         </StatTile>
         <StatTile>
           <StatTileHeader>
-            <StatLabel>Primary PDFs</StatLabel>
+            <StatLabel>{t("stats.primaryPdfs")}</StatLabel>
             <FileText className="text-amber-600 dark:text-amber-400" />
           </StatTileHeader>
           <StatValue className="text-3xl">{summary.count}</StatValue>
           <StatTileFooter>
             <TrendChip
               delta={percentDelta(summary.count, previousSummary.count)}
+              newLabel={t("stats.new")}
             />
             <StatTilePeriod>{vsPrevious}</StatTilePeriod>
           </StatTileFooter>
@@ -125,7 +141,9 @@ export default async function DashboardPage({
 
       <ExpenseDocumentsTable
         documents={documents}
-        emptyLabel={`No expense documents collected in ${monthInfo.label}.`}
+        emptyLabel={tableT("emptyMonth", {
+          month: monthLabel,
+        })}
       />
     </div>
   );

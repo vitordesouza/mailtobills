@@ -1,3 +1,5 @@
+import { useTranslations } from "next-intl";
+
 import { SectionLabel } from "@mailtobills/ui/components/section-label";
 import {
   TableHead,
@@ -20,19 +22,21 @@ export function ExpenseDocumentsTableColumns() {
 }
 
 export function ExpenseDocumentsTableHeading({ count }: { count?: number }) {
+  const t = useTranslations("ExpenseDocuments.table");
+
   return (
     <div className="bg-card flex flex-col gap-1 border-b px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
       <div className="min-w-0 space-y-0.5">
         <SectionLabel withRule={false} className="text-foreground">
-          Collected Expense Documents
+          {t("title")}
         </SectionLabel>
         <p className="text-muted-foreground text-xs">
-          One row per accepted forwarded email.
+          {t("description")}
         </p>
       </div>
       {count !== undefined ? (
         <div className="text-muted-foreground font-mono text-[11px] font-medium tracking-[0.08em] uppercase tabular-nums">
-          {count} {count === 1 ? "doc" : "docs"}
+          {t("count", { count })}
         </div>
       ) : null}
     </div>
@@ -42,18 +46,22 @@ export function ExpenseDocumentsTableHeading({ count }: { count?: number }) {
 const monoHeadClass = "font-mono text-[11px] tracking-[0.08em] uppercase";
 
 export function ExpenseDocumentsTableHeader() {
+  const t = useTranslations("ExpenseDocuments.table.headers");
+
   return (
     <TableHeader>
       <TableRow className="hover:bg-transparent">
-        <TableHead className="sr-only">Expand</TableHead>
-        <TableHead className={monoHeadClass}>Sender</TableHead>
-        <TableHead className={monoHeadClass}>Document</TableHead>
+        <TableHead className="sr-only">{t("expand")}</TableHead>
+        <TableHead className={monoHeadClass}>{t("sender")}</TableHead>
+        <TableHead className={monoHeadClass}>{t("document")}</TableHead>
         <TableHead className={cn(monoHeadClass, "border-l")}>
-          Received
+          {t("received")}
         </TableHead>
-        <TableHead className={cn(monoHeadClass, "border-l")}>PDFs</TableHead>
+        <TableHead className={cn(monoHeadClass, "border-l")}>
+          {t("pdfs")}
+        </TableHead>
         <TableHead className={cn(monoHeadClass, "border-l text-right")}>
-          Actions
+          {t("actions")}
         </TableHead>
       </TableRow>
     </TableHeader>

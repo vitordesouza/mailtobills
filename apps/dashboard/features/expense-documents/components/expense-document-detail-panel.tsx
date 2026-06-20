@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useLocale, useTranslations } from "next-intl";
 
 import type {
   ExpenseDocumentAttachment,
@@ -51,6 +52,10 @@ import {
 } from "@mailtobills/ui/components/sheet";
 import { Skeleton } from "@mailtobills/ui/components/skeleton";
 import { cn } from "@mailtobills/ui/lib/utils";
+import {
+  formatDocumentDate,
+  formatFileSize as formatLocalizedFileSize,
+} from "@/lib/localized-format";
 
 type PreviewState = "loading" | "ready" | "error";
 
@@ -67,21 +72,6 @@ export type ExpenseDocumentDetailPanelProps = {
   onSelectAttachment: (attachmentId: string) => void;
   onMakePrimary: (attachmentId: string) => void;
   onDelete: () => void;
-};
-
-const formatDate = (timestamp: number | undefined) => {
-  if (!timestamp) return "Not available";
-  return new Intl.DateTimeFormat("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  }).format(new Date(timestamp));
-};
-
-const formatFileSize = (fileSize: number | undefined) => {
-  if (!fileSize || fileSize <= 0) return null;
-  if (fileSize < 1024 * 1024) return `${Math.round(fileSize / 1024)} KB`;
-  return `${(fileSize / 1024 / 1024).toFixed(1)} MB`;
 };
 
 const getAttachmentUrl = (attachment: ExpenseDocumentAttachment | null) =>
@@ -114,6 +104,10 @@ export function ExpenseDocumentDetailPanel({
   onMakePrimary,
   onDelete,
 }: ExpenseDocumentDetailPanelProps) {
+  const locale = useLocale();
+  const t = useTranslations("ExpenseDocuments.detail");
+  const tableT = useTranslations("ExpenseDocuments.table");
+  const fileSizeT = useTranslations("ExpenseDocuments.fileSize");
   const [previewState, setPreviewState] = useState<PreviewState>("loading");
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [emailDetailsOpen, setEmailDetailsOpen] = useState(false);
@@ -143,7 +137,7 @@ export function ExpenseDocumentDetailPanel({
   const title =
     selectedAttachment?.originalFilename ??
     document.primaryAttachment?.originalFilename ??
-    "Expense document";
+    t("fallbackTitle");
 
   return (
     <>
@@ -155,7 +149,10 @@ export function ExpenseDocumentDetailPanel({
           <SheetHeader className="gap-4 border-b px-5 pt-5 pb-4 sm:px-6">
             <div className="flex items-center justify-between gap-4 pr-8">
               <p className="text-muted-foreground font-mono text-[11px] font-medium uppercase tracking-[0.08em] tabular-nums">
-                Document {documentIndex + 1} of {documentCount}
+                {t("documentPosition", {
+                  current: documentIndex + 1,
+                  total: documentCount,
+                })}
               </p>
               <div className="flex items-center gap-1">
                 <Button
@@ -164,7 +161,7 @@ export function ExpenseDocumentDetailPanel({
                   size="icon-sm"
                   onClick={onPrevious}
                   disabled={documentIndex <= 0}
-                  aria-label="Previous document"
+                  aria-label={t("previousDocument")}
                 >
                   <ChevronLeft />
                 </Button>
@@ -174,7 +171,7 @@ export function ExpenseDocumentDetailPanel({
                   size="icon-sm"
                   onClick={onNext}
                   disabled={documentIndex >= documentCount - 1}
-                  aria-label="Next document"
+                  aria-label={t("nextDocument")}
                 >
                   <ChevronRight />
                 </Button>
@@ -183,7 +180,7 @@ export function ExpenseDocumentDetailPanel({
 
             <div className="min-w-0 pr-8">
               <p className="text-muted-foreground mb-1 font-mono text-[10px] font-medium uppercase tracking-[0.08em]">
-                Collected expense document
+                {t("sectionLabel")}
               </p>
               <SheetTitle className="truncate text-lg" title={title}>
                 {title}
@@ -191,7 +188,7 @@ export function ExpenseDocumentDetailPanel({
               <SheetDescription className="truncate">
                 {document.originSubject ??
                   document.subject ??
-                  "No email subject"}
+                  tableT("noSubject")}
               </SheetDescription>
             </div>
 
@@ -200,13 +197,13 @@ export function ExpenseDocumentDetailPanel({
                 <Button asChild size="sm">
                   <a href={attachmentUrl} download>
                     <Download />
-                    Download PDF
+                    {t("downloadPdf")}
                   </a>
                 </Button>
               ) : (
                 <Button size="sm" disabled>
                   <Download />
-                  Download PDF
+                  {t("downloadPdf")}
                 </Button>
               )}
               {!isPrimary && selectedAttachment ? (
@@ -218,7 +215,7 @@ export function ExpenseDocumentDetailPanel({
                   onClick={() => onMakePrimary(selectedAttachment.id)}
                 >
                   <Star />
-                  Make primary
+                  {t("makePrimary")}
                 </Button>
               ) : null}
               <div className="ml-auto">
@@ -230,7 +227,7 @@ export function ExpenseDocumentDetailPanel({
                       variant="ghost"
                       size="icon-sm"
                       disabled={isBusy}
-                      aria-label="More document actions"
+                      aria-label={t("moreActions")}
                     >
                       <MoreHorizontal />
                     </Button>
@@ -241,7 +238,7 @@ export function ExpenseDocumentDetailPanel({
                       onSelect={() => setConfirmDelete(true)}
                     >
                       <Trash2 />
-                      Delete document
+                      {t("deleteDocument")}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -262,7 +259,7 @@ export function ExpenseDocumentDetailPanel({
                   className="group h-11 w-full justify-between rounded-none px-5 sm:px-6"
                 >
                   <span className="font-mono text-[11px] font-medium uppercase tracking-[0.08em]">
-                    Email details
+                    {t("emailDetails")}
                   </span>
                   <ChevronDown className="transition-transform group-data-[state=open]:rotate-180" />
                 </Button>
@@ -270,40 +267,51 @@ export function ExpenseDocumentDetailPanel({
               <CollapsibleContent>
                 <dl className="grid grid-cols-1 gap-x-6 gap-y-4 px-5 pt-1 pb-5 sm:grid-cols-2 sm:px-6">
                   <MetadataItem
-                    label="Original sender"
+                    label={t("originalSender")}
                     value={
                       document.originFromEmail ??
                       document.originFromName ??
-                      "Not available"
+                      t("notAvailable")
                     }
                   />
                   <MetadataItem
-                    label="Forwarded by"
-                    value={document.fromEmail ?? "Not available"}
+                    label={t("forwardedBy")}
+                    value={document.fromEmail ?? t("notAvailable")}
                   />
                   <MetadataItem
-                    label="Received by MailToBills"
-                    value={formatDate(document.receivedAt)}
+                    label={t("receivedByMailToBills")}
+                    value={
+                      formatDocumentDate(document.receivedAt, locale) ??
+                      t("notAvailable")
+                    }
                   />
                   <MetadataItem
-                    label="Original sent date"
-                    value={formatDate(document.originSentAt)}
+                    label={t("originalSentDate")}
+                    value={
+                      formatDocumentDate(document.originSentAt, locale) ??
+                      t("notAvailable")
+                    }
                   />
                 </dl>
               </CollapsibleContent>
             </Collapsible>
 
-            <section aria-label="PDF preview" className="space-y-3 p-4 sm:p-6">
+            <section
+              aria-label={t("pdfPreview")}
+              className="space-y-3 p-4 sm:p-6"
+            >
               <div className="flex min-w-0 items-center justify-between gap-3">
                 <div className="flex min-w-0 items-center gap-2">
                   <FileText className="text-muted-foreground size-4 shrink-0" />
                   <span className="truncate text-sm font-medium">{title}</span>
-                  {isPrimary ? <Badge variant="warning">Primary</Badge> : null}
+                  {isPrimary ? (
+                    <Badge variant="warning">{tableT("primary")}</Badge>
+                  ) : null}
                 </div>
                 {attachmentUrl ? (
                   <Button asChild variant="ghost" size="sm">
                     <a href={attachmentUrl} target="_blank" rel="noreferrer">
-                      Open original
+                      {t("openOriginal")}
                       <ExternalLink />
                     </a>
                   </Button>
@@ -314,7 +322,7 @@ export function ExpenseDocumentDetailPanel({
                 {previewState === "loading" ? (
                   <div
                     className="absolute inset-0 z-10 space-y-3 bg-inherit p-4"
-                    aria-label="Loading PDF preview"
+                    aria-label={t("loadingPreview")}
                   >
                     <Skeleton className="h-full w-full rounded-sm" />
                   </div>
@@ -323,7 +331,7 @@ export function ExpenseDocumentDetailPanel({
                   <iframe
                     key={attachmentUrl}
                     src={attachmentUrl}
-                    title={`Preview ${title}`}
+                    title={t("previewTitle", { title })}
                     className="absolute inset-0 size-full bg-white"
                     onLoad={(event) => {
                       const contentType =
@@ -344,10 +352,10 @@ export function ExpenseDocumentDetailPanel({
                     </div>
                     <div className="space-y-1">
                       <p className="font-medium">
-                        Can&apos;t preview this PDF here
+                        {t("previewUnavailableTitle")}
                       </p>
                       <p className="text-muted-foreground max-w-sm text-sm">
-                        Open the original file or download it to continue.
+                        {t("previewUnavailableDescription")}
                       </p>
                     </div>
                     {attachmentUrl ? (
@@ -358,7 +366,7 @@ export function ExpenseDocumentDetailPanel({
                           rel="noreferrer"
                         >
                           <ExternalLink />
-                          Open original
+                          {t("openOriginal")}
                         </a>
                       </Button>
                     ) : null}
@@ -368,10 +376,10 @@ export function ExpenseDocumentDetailPanel({
             </section>
 
             {document.attachments.length > 1 ? (
-              <section aria-label="Attachments" className="px-4 pb-6 sm:px-6">
+              <section aria-label={t("attachments")} className="px-4 pb-6 sm:px-6">
                 <Separator className="mb-4" />
                 <h3 className="text-muted-foreground mb-2 font-mono text-[10px] font-medium uppercase tracking-[0.08em]">
-                  Attachments
+                  {t("attachments")}
                 </h3>
                 <div className="grid gap-2 sm:grid-cols-2">
                   {document.attachments.map((attachment) => {
@@ -379,7 +387,14 @@ export function ExpenseDocumentDetailPanel({
                       attachment.id === document.primaryAttachment?.id;
                     const attachmentIsSelected =
                       attachment.id === selectedAttachment?.id;
-                    const fileSize = formatFileSize(attachment.fileSize);
+                    const fileSize = formatLocalizedFileSize(
+                      attachment.fileSize,
+                      locale,
+                      {
+                        kb: (size) => fileSizeT("kb", { size }),
+                        mb: (size) => fileSizeT("mb", { size }),
+                      },
+                    );
 
                     return (
                       <button
@@ -392,7 +407,9 @@ export function ExpenseDocumentDetailPanel({
                         )}
                         onClick={() => onSelectAttachment(attachment.id)}
                         aria-pressed={attachmentIsSelected}
-                        aria-label={`Preview ${attachment.originalFilename}`}
+                        aria-label={t("previewAttachment", {
+                          filename: attachment.originalFilename,
+                        })}
                       >
                         <div
                           className={cn(
@@ -408,7 +425,9 @@ export function ExpenseDocumentDetailPanel({
                             {attachment.originalFilename}
                           </span>
                           <span className="text-muted-foreground block text-xs">
-                            {attachmentIsPrimary ? "Primary PDF" : "PDF"}
+                            {attachmentIsPrimary
+                              ? tableT("primaryPdf")
+                              : tableT("pdf")}
                             {fileSize ? ` - ${fileSize}` : ""}
                           </span>
                         </span>
@@ -421,7 +440,7 @@ export function ExpenseDocumentDetailPanel({
           </div>
 
           <p className="sr-only" aria-live="polite">
-            Previewing {title}
+            {t("previewing", { title })}
           </p>
 
           <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
@@ -433,16 +452,13 @@ export function ExpenseDocumentDetailPanel({
               }}
             >
               <AlertDialogHeader>
-                <AlertDialogTitle>
-                  Delete this expense document?
-                </AlertDialogTitle>
+                <AlertDialogTitle>{t("deleteTitle")}</AlertDialogTitle>
                 <AlertDialogDescription>
-                  This removes the collected email and all its attachments. This
-                  action cannot be undone.
+                  {t("deleteDescription")}
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
                 <AlertDialogAction
                   disabled={isBusy}
                   onClick={() => {
@@ -450,7 +466,7 @@ export function ExpenseDocumentDetailPanel({
                     onDelete();
                   }}
                 >
-                  Delete document
+                  {t("deleteDocument")}
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>

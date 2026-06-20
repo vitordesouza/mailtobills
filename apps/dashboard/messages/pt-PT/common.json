@@ -10,7 +10,9 @@
     "convexNotConfigured": "Convex não configurado",
     "convexInstructions": "Defina NEXT_PUBLIC_CONVEX_URL em apps/dashboard/.env.local e reinicie o servidor de desenvolvimento.",
     "loadingApp": "A carregar o MailToBills",
-    "loadingSettings": "A carregar as definições"
+    "loadingSettings": "A carregar as definições",
+    "loadingDashboard": "A carregar o painel",
+    "loadingDashboardContent": "A carregar o conteúdo do painel"
   },
   "Navigation": {
     "customer": "Cliente",
@@ -31,7 +33,17 @@
     "dark": "Escuro",
     "system": "Sistema",
     "logOut": "Terminar sessão",
-    "userMenu": "Abrir menu do utilizador"
+    "userMenu": "Abrir menu do utilizador",
+    "previousMonth": "Mês anterior",
+    "nextMonth": "Mês seguinte",
+    "chooseMonth": "Escolher mês, atualmente {month}",
+    "chooseCollectionMonth": "Escolher mês de recolha",
+    "previousYear": "Ano anterior",
+    "nextYear": "Ano seguinte",
+    "jumpTo": "Ir para",
+    "currentMonth": "Mês atual",
+    "goToCurrentMonth": "Ir para o mês atual, {month}",
+    "monthIsCurrent": "{month}, mês atual"
   },
   "Auth": {
     "language": "Idioma",
@@ -176,6 +188,124 @@
       "scheduleDisabled": "Agendamento de Exportação desativado.",
       "scheduleSaveFailed": "Não foi possível guardar o Agendamento de Exportação."
     }
+  },
+  "CollectionMonth": {
+    "sectionLabel": "Mês de Recolha",
+    "description": "Documentos de Despesas reunidos, prontos para revisão, transferência ou Exportação para o Contabilista.",
+    "exportMonth": "Exportar mês",
+    "stats": {
+      "collected": "Reunidos",
+      "pdfAttachments": "Anexos PDF",
+      "primaryPdfs": "PDFs principais",
+      "vsPrevious": "VS {month}",
+      "new": "Novo"
+    },
+    "notFound": {
+      "title": "Mês de Recolha não encontrado",
+      "description": "Use um Mês de Recolha no formato AAAA-MM para consultar Documentos de Despesas reunidos.",
+      "openMonth": "Abrir {month}"
+    }
+  },
+  "Reports": {
+    "sectionLabel": "Exportação para o Contabilista",
+    "description": "Transfira os PDFs principais atuais e um manifesto CSV dos documentos de despesas reunidos neste mês de recolha.",
+    "exportZip": "Exportar ZIP",
+    "stats": {
+      "documents": "Documentos",
+      "pdfAttachments": "Anexos PDF",
+      "filesInExport": "Ficheiros na exportação",
+      "vsPrevious": "VS {month}",
+      "new": "Novo"
+    },
+    "zipContents": {
+      "title": "O que está dentro do ZIP",
+      "primaryPdfs": "Um PDF para cada documento reunido com um Anexo Principal.",
+      "manifest": "Um manifesto CSV com remetente, assunto, data de receção e nome do ficheiro para cada documento incluído.",
+      "skipped": "{count, plural, one {# documento reunido sem Anexo Principal não é incluído.} other {# documentos reunidos sem Anexo Principal não são incluídos.}}",
+      "estimate": "Esta estimativa usa os metadados guardados dos documentos. O ZIP transferido é a fonte definitiva se um Anexo Principal não puder ser lido."
+    }
+  },
+  "ExpenseDocuments": {
+    "table": {
+      "title": "Documentos de Despesas Reunidos",
+      "description": "Uma linha por email encaminhado aceite.",
+      "count": "{count, plural, one {# doc} other {# docs}}",
+      "headers": {
+        "expand": "Expandir",
+        "sender": "Remetente",
+        "document": "Documento",
+        "received": "Recebido",
+        "pdfs": "PDFs",
+        "actions": "Ações"
+      },
+      "emptyTitle": "Sem documentos",
+      "emptyMonth": "Não foram reunidos documentos de despesas em {month}.",
+      "unknownSender": "Remetente desconhecido",
+      "forwardedEmail": "Email encaminhado",
+      "forwardedBy": "Encaminhado por {email}",
+      "noPrimaryPdf": "Sem PDF principal",
+      "primary": "Principal",
+      "noSubject": "Sem assunto do email",
+      "sentDate": "Enviado em {date}",
+      "expandAttachments": "Expandir anexos",
+      "collapseAttachments": "Recolher anexos",
+      "deleteDocument": "Eliminar documento",
+      "viewPdf": "Ver PDF",
+      "open": "Abrir",
+      "makePrimary": "Definir como principal",
+      "primaryPdf": "PDF principal",
+      "pdf": "PDF"
+    },
+    "detail": {
+      "fallbackTitle": "Documento de despesa",
+      "documentPosition": "Documento {current} de {total}",
+      "sectionLabel": "Documento de despesa reunido",
+      "previousDocument": "Documento anterior",
+      "nextDocument": "Documento seguinte",
+      "downloadPdf": "Transferir PDF",
+      "makePrimary": "Definir como principal",
+      "moreActions": "Mais ações do documento",
+      "deleteDocument": "Eliminar documento",
+      "emailDetails": "Detalhes do email",
+      "originalSender": "Remetente original",
+      "forwardedBy": "Encaminhado por",
+      "receivedByMailToBills": "Recebido pelo MailToBills",
+      "originalSentDate": "Data original de envio",
+      "notAvailable": "Não disponível",
+      "pdfPreview": "Pré-visualização do PDF",
+      "openOriginal": "Abrir original",
+      "loadingPreview": "A carregar pré-visualização do PDF",
+      "previewTitle": "Pré-visualizar {title}",
+      "previewAttachment": "Pré-visualizar {filename}",
+      "previewUnavailableTitle": "Não é possível pré-visualizar este PDF aqui",
+      "previewUnavailableDescription": "Abra o ficheiro original ou transfira-o para continuar.",
+      "attachments": "Anexos",
+      "previewing": "A pré-visualizar {title}",
+      "deleteTitle": "Eliminar este documento de despesa?",
+      "deleteDescription": "Isto remove o email reunido e todos os seus anexos. Esta ação não pode ser anulada.",
+      "cancel": "Cancelar"
+    },
+    "fileSize": {
+      "kb": "{size} KB",
+      "mb": "{size} MB"
+    }
+  },
+  "Onboarding": {
+    "sectionLabel": "Primeira Recolha",
+    "title": "Encaminhe o primeiro Documento de Despesa",
+    "description": "Use o Endereço de Recolha abaixo. Os PDFs aceites aparecem aqui agrupados pelo mês em que o MailToBills recebe o email encaminhado.",
+    "collectionAddress": "Endereço de Recolha",
+    "steps": {
+      "find": "Encontre um PDF de despesa no seu email.",
+      "forward": "Encaminhe-o para {address}.",
+      "stored": "O MailToBills guarda o PDF aceite neste Mês de Recolha."
+    },
+    "sending": "A enviar...",
+    "addDemo": "Adicionar documento de demonstração",
+    "demoHelp": "Use isto enquanto a ingestão de emails está a ser testada de ponta a ponta.",
+    "imageAlt": "Documento de despesa num envelope",
+    "copy": "Copiar",
+    "copied": "Copiado"
   },
   "Error": {
     "title": "Não foi possível carregar esta página",
