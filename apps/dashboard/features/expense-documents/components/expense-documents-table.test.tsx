@@ -178,6 +178,55 @@ describe("ExpenseDocumentsTable", () => {
     );
   });
 
+  it("opens the drawer from the document row", async () => {
+    const user = userEvent.setup();
+    renderTable([documentRow()]);
+    const row = screen.getByText("invoice-primary.pdf").closest("tr");
+
+    expect(row).not.toBeNull();
+    await user.click(row as HTMLElement);
+
+    expect(
+      screen.getByRole("dialog", { name: "invoice-primary.pdf" }),
+    ).toBeInTheDocument();
+    expect(row).toHaveAttribute("aria-selected", "true");
+  });
+
+  it("opens a selected expanded attachment in the drawer", async () => {
+    const user = userEvent.setup();
+    renderTable([documentRow()]);
+
+    await user.click(
+      screen.getByRole("button", { name: /expand attachments/i }),
+    );
+    const secondary = screen
+      .getByText("invoice-secondary.pdf")
+      .closest("div[class*='rounded-md']");
+    expect(secondary).not.toBeNull();
+
+    await user.click(
+      within(secondary as HTMLElement).getByRole("button", {
+        name: /open/i,
+      }),
+    );
+
+    expect(
+      screen.getByRole("dialog", { name: "invoice-secondary.pdf" }),
+    ).toBeInTheDocument();
+    expect(screen.getByTitle("Preview invoice-secondary.pdf")).toHaveAttribute(
+      "src",
+      "/api/files/attachment-secondary",
+    );
+  });
+
+  it("keeps destructive deletion behind the drawer overflow menu", () => {
+    renderTable([documentRow()]);
+
+    expect(
+      screen.queryByRole("button", { name: "Delete document" }),
+    ).not.toBeInTheDocument();
+  });
+
   it("restores focus to the view action when the drawer closes", async () => {
     const user = userEvent.setup();
     renderTable([documentRow()]);
