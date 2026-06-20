@@ -13,10 +13,8 @@ import type { Id } from "@mailtobills/convex/_generated/dataModel";
 import { useMutation } from "convex/react";
 import {
   ChevronRight,
-  ExternalLink,
   FileText,
   Star,
-  Trash2,
 } from "lucide-react";
 
 import { api } from "@/lib/convexClient";
@@ -86,27 +84,16 @@ function ViewPdfButton({
   if (!url) {
     return (
       <Button variant="outline" size="sm" disabled>
-        <ExternalLink className="size-3.5" />
+        <FileText className="size-3.5" />
         {children}
-      </Button>
-    );
-  }
-
-  if (onClick) {
-    return (
-      <Button type="button" variant="outline" size="sm" onClick={onClick}>
-        <ExternalLink className="size-3.5" />
-        {label}
       </Button>
     );
   }
 
   return (
-    <Button asChild variant="outline" size="sm">
-      <a href={url} target="_blank" rel="noreferrer">
-        <ExternalLink className="size-3.5" />
-        {children}
-      </a>
+    <Button type="button" variant="outline" size="sm" onClick={onClick}>
+      <FileText className="size-3.5" />
+      {label}
     </Button>
   );
 }
@@ -130,9 +117,7 @@ export function ExpenseDocumentsTable({
   const [selectedAttachmentId, setSelectedAttachmentId] = useState<
     string | null
   >(null);
-  const [panelTrigger, setPanelTrigger] = useState<HTMLButtonElement | null>(
-    null,
-  );
+  const [panelTrigger, setPanelTrigger] = useState<HTMLElement | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [pendingId, setPendingId] = useState<string | null>(null);
   const setPrimaryAttachment = useMutation(
@@ -173,17 +158,21 @@ export function ExpenseDocumentsTable({
     selectedDocument?.primaryAttachment ??
     null;
 
-  const selectDocument = (document: ExpenseDocumentRow) => {
+  const selectDocument = (
+    document: ExpenseDocumentRow,
+    attachmentId = document.primaryAttachment?.id ?? null,
+  ) => {
     setSelectedDocumentId(document.id);
-    setSelectedAttachmentId(document.primaryAttachment?.id ?? null);
+    setSelectedAttachmentId(attachmentId);
     setActionError(null);
   };
 
   const openDocument = (
     document: ExpenseDocumentRow,
-    trigger: HTMLButtonElement,
+    trigger: HTMLElement,
+    attachmentId?: string,
   ) => {
-    selectDocument(document);
+    selectDocument(document, attachmentId);
     setPanelTrigger(trigger);
     setActionError(null);
     setPanelOpen(true);
@@ -264,16 +253,34 @@ export function ExpenseDocumentsTable({
                 <Fragment key={document.id}>
                   <TableRow
                     data-state={isExpanded ? "selected" : undefined}
-                    className={cn(isExpanded && "border-b-0")}
+                    aria-selected={panelOpen && selectedDocumentId === document.id}
+                    tabIndex={0}
+                    className={cn(
+                      "cursor-pointer focus-visible:ring-ring/50 outline-none focus-visible:ring-2 focus-visible:ring-inset",
+                      isExpanded && "border-b-0",
+                      panelOpen &&
+                        selectedDocumentId === document.id &&
+                        "bg-accent/50",
+                    )}
+                    onClick={(event) =>
+                      openDocument(document, event.currentTarget)
+                    }
+                    onKeyDown={(event) => {
+                      if (event.target !== event.currentTarget) return;
+                      if (event.key !== "Enter" && event.key !== " ") return;
+                      event.preventDefault();
+                      openDocument(document, event.currentTarget);
+                    }}
                   >
                     <TableCell>
                       <Button
                         type="button"
                         variant="ghost"
                         size="icon-sm"
-                        onClick={() =>
+                        onClick={(event) => {
+                          event.stopPropagation();
                           setExpandedId(isExpanded ? null : document.id)
-                        }
+                        }}
                         aria-expanded={isExpanded}
                         aria-label={
                           isExpanded
@@ -350,30 +357,13 @@ export function ExpenseDocumentsTable({
                         <ViewPdfButton
                           attachment={primary}
                           label={t("viewPdf")}
-                          onClick={(event) =>
+                          onClick={(event) => {
+                            event.stopPropagation();
                             openDocument(document, event.currentTarget)
-                          }
+                          }}
                         >
                           {t("viewPdf")}
                         </ViewPdfButton>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon-sm"
-                          className="text-muted-foreground hover:text-destructive"
-                          disabled={isBusy}
-                          onClick={() =>
-                            runAction(document.id, () =>
-                              softDelete({
-                                expenseDocumentId:
-                                  document.id as Id<"expenseDocuments">,
-                              }),
-                            )
-                          }
-                          aria-label={t("deleteDocument")}
-                        >
-                          <Trash2 className="size-4" />
-                        </Button>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -381,6 +371,7 @@ export function ExpenseDocumentsTable({
                     <TableRow
                       key={`${document.id}-attachments`}
                       className="hover:bg-transparent"
+                      onClick={(event) => event.stopPropagation()}
                     >
                       <TableCell colSpan={6} className="bg-muted/25 px-4 py-3">
                         <div className="animate-in fade-in slide-in-from-top-1 space-y-2 pl-0 duration-200 sm:pl-[52px]">
@@ -452,6 +443,13 @@ export function ExpenseDocumentsTable({
                                   <ViewPdfButton
                                     attachment={attachment}
                                     label={t("open")}
+                                    onClick={(event) =>
+                                      openDocument(
+                                        document,
+                                        event.currentTarget,
+                                        attachment.id,
+                                      )
+                                    }
                                   >
                                     {t("open")}
                                   </ViewPdfButton>
