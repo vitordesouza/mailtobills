@@ -39,7 +39,20 @@ for (const { heading, lang, locale, path, title } of [
 ]) {
   test(`${locale} not-found page preserves locale and landmarks`, async ({
     page,
+    request,
   }) => {
+    const crawlerResponse = await request.get(path, {
+      headers: { "user-agent": "Googlebot/2.1" },
+    });
+    const crawlerHtml = await crawlerResponse.text();
+    const crawlerHead = crawlerHtml.match(/<head>([\s\S]*?)<\/head>/)?.[1];
+
+    expect(crawlerResponse.status()).toBe(404);
+    expect(crawlerHead).toContain(`<title>${title}</title>`);
+    expect(crawlerHead).toContain('<meta name="robots" content="noindex"/>');
+    expect(crawlerHead).not.toContain('rel="canonical"');
+    expect(crawlerHead).not.toContain('property="og:title"');
+
     const response = await page.goto(path);
 
     expect(response?.status()).toBe(404);
