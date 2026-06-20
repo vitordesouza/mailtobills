@@ -307,6 +307,20 @@
     "copy": "Copiar",
     "copied": "Copiado"
   },
+  "OutboundExport": {
+    "proRequiredNotice": "O envio direto está disponível no plano Pro. A transferência do ZIP continua incluída. <settingsLink>Mudar nas definições</settingsLink>.",
+    "missingAccountantNotice": "Nenhum contabilista configurado. <settingsLink>Configure primeiro o contabilista</settingsLink>.",
+    "send": "Enviar ao contabilista",
+    "sending": "A enviar...",
+    "sentTo": "Enviado para {email}",
+    "errors": {
+      "accountantMissing": "Configure um Endereço do Contabilista antes de enviar.",
+      "proRequired": "Mude para Pro para enviar Exportações para o Contabilista diretamente.",
+      "emailNotConfigured": "O envio de emails ainda não está configurado.",
+      "providerFailed": "O fornecedor de email não conseguiu enviar esta exportação.",
+      "fallback": "Não foi possível enviar esta exportação. A transferência do ZIP continua disponível."
+    }
+  },
   "Error": {
     "title": "Não foi possível carregar esta página",
     "description": "O MailToBills não conseguiu obter os dados mais recentes. Verifique a página antes de tentar novamente.",

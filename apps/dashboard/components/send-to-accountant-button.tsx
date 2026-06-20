@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { Check, LoaderCircle, Send } from "lucide-react";
 import { useAction } from "convex/react";
 import { api } from "@mailtobills/convex/_generated/api";
@@ -14,26 +15,28 @@ type SendToAccountantButtonProps = {
   accountantEmail?: string;
 };
 
-function errorMessage(error: unknown) {
+type OutboundExportTranslator = ReturnType<typeof useTranslations>;
+
+function errorMessage(error: unknown, t: OutboundExportTranslator) {
   const message = error instanceof Error ? error.message : "";
 
   if (message.includes("ACCOUNTANT_EMAIL_NOT_CONFIGURED")) {
-    return "Configure an Accountant Address before sending.";
+    return t("errors.accountantMissing");
   }
 
   if (message.includes("PRO_REQUIRED")) {
-    return "Upgrade to Pro to send Accountant Exports directly.";
+    return t("errors.proRequired");
   }
 
   if (message.includes("RESEND_API_KEY is not set")) {
-    return "Email sending is not configured yet.";
+    return t("errors.emailNotConfigured");
   }
 
   if (message.includes("RESEND_SEND_FAILED")) {
-    return "The email provider could not send this export.";
+    return t("errors.providerFailed");
   }
 
-  return "Could not send this export. ZIP download is still available.";
+  return t("errors.fallback");
 }
 
 export function SendToAccountantButton({
@@ -41,6 +44,7 @@ export function SendToAccountantButton({
   isPro,
   accountantEmail,
 }: SendToAccountantButtonProps) {
+  const t = useTranslations("OutboundExport");
   const sendManualExportToAccountant = useAction(
     api.exports.sendManualExportToAccountant,
   );
@@ -60,11 +64,16 @@ export function SendToAccountantButton({
   if (!isPro) {
     return (
       <p className="text-muted-foreground text-sm">
-        Direct send is available on Pro. ZIP download is still included.{" "}
-        <Link className="font-medium underline underline-offset-4" href="/settings">
-          Upgrade in settings
-        </Link>
-        .
+        {t.rich("proRequiredNotice", {
+          settingsLink: (chunks) => (
+            <Link
+              className="font-medium underline underline-offset-4"
+              href="/settings"
+            >
+              {chunks}
+            </Link>
+          ),
+        })}
       </p>
     );
   }
@@ -72,11 +81,16 @@ export function SendToAccountantButton({
   if (!accountantEmail) {
     return (
       <p className="text-muted-foreground text-sm">
-        No accountant configured.{" "}
-        <Link className="font-medium underline underline-offset-4" href="/settings">
-          Configure accountant first
-        </Link>
-        .
+        {t.rich("missingAccountantNotice", {
+          settingsLink: (chunks) => (
+            <Link
+              className="font-medium underline underline-offset-4"
+              href="/settings"
+            >
+              {chunks}
+            </Link>
+          ),
+        })}
       </p>
     );
   }
@@ -97,16 +111,19 @@ export function SendToAccountantButton({
         timeoutRef.current = setTimeout(() => setSentTo(null), 4000);
       })
       .catch((sendError: unknown) => {
-        setError(errorMessage(sendError));
+        setError(errorMessage(sendError, t));
       })
       .finally(() => setIsSending(false));
   };
 
   if (sentTo) {
     return (
-      <p className="text-sm font-medium text-emerald-700 dark:text-emerald-300">
+      <p
+        className="text-sm font-medium text-emerald-700 dark:text-emerald-300"
+        role="status"
+      >
         <Check className="mr-1.5 inline size-4" />
-        Sent to {sentTo}
+        {t("sentTo", { email: sentTo })}
       </p>
     );
   }
@@ -126,7 +143,7 @@ export function SendToAccountantButton({
         ) : (
           <Send className="size-4" />
         )}
-        Send to accountant
+        {isSending ? t("sending") : t("send")}
       </Button>
       {error ? (
         <p className="text-destructive text-sm" role="alert">
