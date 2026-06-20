@@ -307,6 +307,20 @@
     "copy": "Copy",
     "copied": "Copied"
   },
+  "OutboundExport": {
+    "proRequiredNotice": "Direct send is available on Pro. ZIP download is still included. <settingsLink>Upgrade in settings</settingsLink>.",
+    "missingAccountantNotice": "No accountant configured. <settingsLink>Configure accountant first</settingsLink>.",
+    "send": "Send to accountant",
+    "sending": "Sending...",
+    "sentTo": "Sent to {email}",
+    "errors": {
+      "accountantMissing": "Configure an Accountant Address before sending.",
+      "proRequired": "Upgrade to Pro to send Accountant Exports directly.",
+      "emailNotConfigured": "Email sending is not configured yet.",
+      "providerFailed": "The email provider could not send this export.",
+      "fallback": "Could not send this export. ZIP download is still available."
+    }
+  },
   "Error": {
     "title": "Could not load this page",
     "description": "MailToBills could not retrieve the latest data. Check the page before trying the action again.",

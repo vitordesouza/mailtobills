@@ -89,6 +89,7 @@ export const getAccountantExportCustomer = internalQuery({
       isPro: user.isPro,
       accountantEmail: user.accountantEmail,
       accountantName: user.accountantName,
+      locale: user.locale,
     };
   },
 });

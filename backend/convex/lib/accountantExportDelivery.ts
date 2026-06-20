@@ -15,6 +15,7 @@ export type AccountantExportCustomer = {
   isPro?: boolean;
   accountantEmail?: string;
   accountantName?: string;
+  locale?: "en" | "pt-PT";
 };
 
 type ScheduledAccountantExportCustomer = AccountantExportCustomer & {
@@ -74,6 +75,7 @@ async function sendAccountantExportEmail({
     month: monthNumber,
     year,
     accountantName: customer.accountantName,
+    locale: customer.locale,
   });
 
   await deps.emailSender.send({
@@ -154,6 +156,7 @@ export async function sendScheduledAccountantExport({
         customerName: name,
         month: monthNumber,
         year,
+        locale: customer.locale,
       });
 
       await deps.emailSender.send({
@@ -213,6 +216,7 @@ export async function sendScheduledAccountantExport({
       month: monthNumber,
       year,
       dashboardUrl: dashboardMonthUrl(month, deps.siteUrl),
+      locale: customer.locale,
     });
 
     await deps.emailSender.send({

@@ -294,6 +294,7 @@ export const sendLapseNotification = internalAction({
     const email = buildLapseNotificationEmail({
       customerName,
       settingsUrl: `${siteUrl.replace(/\/+$/, "")}/settings`,
+      locale: customer.locale,
     });
 
     await getEmailSender().send({

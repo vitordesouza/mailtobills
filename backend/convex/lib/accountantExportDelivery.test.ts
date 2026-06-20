@@ -55,6 +55,7 @@ describe("Accountant Export delivery", () => {
           isPro: true,
           accountantEmail: "accountant@example.com",
           accountantName: "Marta",
+          locale: "pt-PT",
         },
         userId,
         month: "2026-01",
@@ -70,6 +71,7 @@ describe("Accountant Export delivery", () => {
         to: "accountant@example.com",
         cc: "owner@example.com",
         fromName: "Owner",
+        subject: "MailToBills - Documentos de janeiro 2026",
         attachment: expect.objectContaining({
           filename: "mailtobills-2026-01.zip",
         }),
