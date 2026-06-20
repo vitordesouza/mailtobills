@@ -1,0 +1,182 @@
+{
+  "Accessibility": {
+    "skipToContent": "Saltar para o conteúdo principal"
+  },
+  "Metadata": {
+    "title": "MailToBills — Pare de procurar PDFs de despesas todos os meses",
+    "description": "Encaminhe qualquer fatura ou recibo para o seu endereço privado MailToBills. Organizamos tudo por mês e entregamos ao seu contabilista um ZIP com cada PDF e um manifesto CSV.",
+    "openGraphDescription": "Encaminhe PDFs de despesas, organize-os por mês e exporte um pacote completo para o seu contabilista."
+  },
+  "NotFound": {
+    "title": "Página não encontrada",
+    "description": "A página pedida não existe ou foi movida.",
+    "backHome": "Voltar ao MailToBills"
+  },
+  "Navigation": {
+    "homeLabel": "Página inicial do MailToBills",
+    "primaryLabel": "Navegação principal",
+    "languageLabel": "Escolher idioma",
+    "howItWorks": "Como funciona",
+    "features": "Funcionalidades",
+    "pricing": "Preços",
+    "faq": "Perguntas",
+    "signIn": "Entrar",
+    "getStarted": "Começar"
+  },
+  "Hero": {
+    "eyebrow": "Recolha de despesas por email",
+    "title": "Pare de procurar PDFs de despesas todos os meses.",
+    "description": "Encaminhe qualquer fatura ou recibo para o seu endereço privado MailToBills. Fica arquivado no mês certo e o seu contabilista recebe um ZIP organizado com cada PDF e um manifesto CSV.",
+    "primaryCta": "Começar gratuitamente",
+    "secondaryCta": "Ver como funciona",
+    "note": "Grátis para começar · Sem cartão de crédito · Configuração em 2 minutos"
+  },
+  "DashboardPreview": {
+    "month": "Maio de 2026",
+    "exportMonth": "Exportar mês",
+    "previousPeriod": "VS ABR",
+    "primary": "Principal",
+    "stats": {
+      "collected": "Recolhidos",
+      "attachments": "Anexos",
+      "primaryPdfs": "PDFs principais"
+    },
+    "rows": {
+      "energy": {
+        "subject": "Enc: A sua fatura de eletricidade",
+        "date": "3 mai"
+      },
+      "hosting": {
+        "subject": "Enc: O seu recibo da Acme Hosting",
+        "date": "12 mai"
+      },
+      "hotel": {
+        "subject": "Enc: Confirmação de reserva e recibo",
+        "date": "21 mai"
+      }
+    }
+  },
+  "HowItWorks": {
+    "eyebrow": "Como funciona",
+    "title": "Da confusão da caixa de entrada a um pacote mensal organizado",
+    "description": "Sem aplicações para instalar, recibos para digitalizar ou pastas para manter. Se consegue encaminhar um email, está feito.",
+    "steps": {
+      "forward": {
+        "title": "Encaminhe o email",
+        "copy": "Envie faturas e recibos de fornecedores a partir do seu email de confiança para o seu endereço privado de recolha."
+      },
+      "file": {
+        "title": "Organizamos por mês",
+        "copy": "Cada email aceite torna-se uma linha de documento, com os anexos PDF guardados no Mês de Recolha certo."
+      },
+      "export": {
+        "title": "Exporte para o contabilista",
+        "copy": "Descarregue um ZIP com os PDFs principais e um manifesto CSV com remetente, assunto, data e nome de ficheiro de cada documento."
+      }
+    }
+  },
+  "Features": {
+    "eyebrow": "Funcionalidades",
+    "title": "Feito para quem prefere não perder tempo com tarefas contabilísticas",
+    "description": "O MailToBills faz uma coisa muito bem: recolhe documentos de despesa e entrega-os de forma organizada.",
+    "items": {
+      "monthly": {
+        "title": "Recolhas mensais",
+        "copy": "Cada email aceite é arquivado no mês em que chega. Consulte os meses como um registo, não como uma árvore de pastas."
+      },
+      "primary": {
+        "title": "Deteção do PDF principal",
+        "copy": "Emails com vários anexos? Marque o que conta para que as exportações contenham apenas o documento certo."
+      },
+      "export": {
+        "title": "Exportação pronta para o contabilista",
+        "copy": "Um ZIP por mês: os PDFs principais e um manifesto CSV que o seu contabilista pode abrir em qualquer lugar."
+      },
+      "trusted": {
+        "title": "Apenas remetentes de confiança",
+        "copy": "Só são aceites encaminhamentos do email registado na sua conta. Mais ninguém pode adicionar documentos à sua recolha."
+      },
+      "inbox": {
+        "title": "Funciona com qualquer caixa de entrada",
+        "copy": "Gmail, Outlook, iCloud ou o email da empresa: se permite encaminhar uma mensagem, funciona com o MailToBills."
+      },
+      "install": {
+        "title": "Nada para instalar",
+        "copy": "Sem extensões de navegador, aplicações móveis ou digitalizadores. O seu cliente de email é a integração."
+      }
+    }
+  },
+  "Pricing": {
+    "eyebrow": "Preços",
+    "title": "Mais barato do que uma hora de trabalho contabilístico",
+    "description": "Comece gratuitamente. Mude de plano quando o MailToBills recolher mais valor do que custa.",
+    "highlight": "Preço de lançamento",
+    "note": "Preços em EUR, IVA não incluído. Cancele quando quiser — as suas exportações continuam a ser suas.",
+    "starter": {
+      "name": "Inicial",
+      "price": "€0",
+      "period": "para sempre",
+      "description": "Experimente todo o fluxo de encaminhamento e recolha com documentos reais.",
+      "cta": "Começar gratuitamente",
+      "features": {
+        "address": "O seu endereço privado de recolha",
+        "limit": "Até 10 documentos por mês",
+        "dashboard": "Dashboard mensal com PDFs principais",
+        "export": "Exportação manual ZIP + CSV"
+      }
+    },
+    "pro": {
+      "name": "Pro",
+      "price": "€9",
+      "period": "por mês",
+      "description": "Para empresas que fecham cada mês com um contabilista.",
+      "cta": "Obter Pro",
+      "features": {
+        "starter": "Tudo do plano Inicial",
+        "unlimited": "Documentos e anexos ilimitados",
+        "export": "Exportação para o contabilista em todos os meses",
+        "support": "Suporte prioritário",
+        "access": "Acesso antecipado a novas funcionalidades"
+      }
+    }
+  },
+  "Faq": {
+    "eyebrow": "Perguntas",
+    "title": "Perguntas respondidas",
+    "items": {
+      "forward": {
+        "question": "O que acontece quando encaminho um email?",
+        "answer": "O MailToBills confirma que o email vem do seu endereço de confiança, guarda os anexos PDF e arquiva tudo no Mês de Recolha em que chega. Um email encaminhado torna-se uma linha de documento no dashboard."
+      },
+      "accountant": {
+        "question": "O que recebe exatamente o meu contabilista?",
+        "answer": "Um único ZIP por mês com o PDF principal de cada documento recolhido e um manifesto CSV com remetente, assunto, data de receção e nome do ficheiro. Sem contas nem novas ferramentas para o contabilista."
+      },
+      "files": {
+        "question": "Que tipos de ficheiro são suportados?",
+        "answer": "Anexos PDF. Este formato cobre a grande maioria das faturas e recibos enviados atualmente pelos fornecedores."
+      },
+      "senders": {
+        "question": "Quem pode enviar documentos para o meu endereço de recolha?",
+        "answer": "Apenas o utilizador. Os encaminhamentos são aceites exclusivamente a partir dos endereços de confiança da sua conta, por isso spam e desconhecidos nunca chegam à recolha."
+      },
+      "demo": {
+        "question": "Posso experimentar sem encaminhar documentos reais?",
+        "answer": "Sim. O dashboard inclui um documento de demonstração criado com um clique, para poder ver todo o fluxo de recolha e exportação antes de enviar algo real."
+      }
+    }
+  },
+  "FinalCta": {
+    "title": "Torne o fecho do próximo mês mais simples",
+    "description": "Configure agora o seu endereço de recolha, encaminhe a próxima fatura que chegar à caixa de entrada e esse documento fica tratado para o mês.",
+    "cta": "Começar gratuitamente",
+    "note": "Grátis para começar · Sem cartão de crédito"
+  },
+  "Footer": {
+    "tagline": "Documentos de despesa. Organizados.",
+    "howItWorks": "Como funciona",
+    "pricing": "Preços",
+    "faq": "Perguntas",
+    "copyright": "© {year} MailToBills"
+  }
+}
