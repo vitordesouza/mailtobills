@@ -192,6 +192,38 @@ describe("ExpenseDocumentsTable", () => {
     expect(row).toHaveAttribute("aria-selected", "true");
   });
 
+  it.each([
+    ["Enter", "{Enter}"],
+    ["Space", " "],
+  ])(
+    "opens the drawer from the keyboard-focused document row with %s",
+    async (_keyName, keyboardInput) => {
+      const user = userEvent.setup();
+      renderTable([documentRow()]);
+      const row = screen.getByText("invoice-primary.pdf").closest("tr");
+      expect(row).not.toBeNull();
+
+      (row as HTMLElement).focus();
+      await user.keyboard(keyboardInput);
+
+      expect(
+        screen.getByRole("dialog", { name: "invoice-primary.pdf" }),
+      ).toBeInTheDocument();
+    },
+  );
+
+  it("restores focus to the row when the row opened the drawer", async () => {
+    const user = userEvent.setup();
+    renderTable([documentRow()]);
+    const row = screen.getByText("invoice-primary.pdf").closest("tr");
+    expect(row).not.toBeNull();
+
+    await user.click(row as HTMLElement);
+    await user.click(screen.getByRole("button", { name: "Close" }));
+
+    await waitFor(() => expect(row).toHaveFocus());
+  });
+
   it("opens a selected expanded attachment in the drawer", async () => {
     const user = userEvent.setup();
     renderTable([documentRow()]);

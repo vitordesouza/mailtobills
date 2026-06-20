@@ -142,6 +142,40 @@ describe("ExpenseDocumentDetailPanel", () => {
     expect(props.onDelete).toHaveBeenCalledOnce();
   });
 
+  it("marks the selected attachment primary from the header action", async () => {
+    const user = userEvent.setup();
+    const document = documentRow();
+    const { props } = renderPanel({
+      document,
+      selectedAttachment: document.attachments[1]!,
+    });
+
+    await user.click(screen.getByRole("button", { name: "Make primary" }));
+
+    expect(props.onMakePrimary).toHaveBeenCalledWith("attachment-secondary");
+  });
+
+  it("disables dismissive and mutating controls while busy", () => {
+    const document = documentRow();
+    renderPanel({
+      document,
+      selectedAttachment: document.attachments[1]!,
+      isBusy: true,
+    });
+
+    expect(screen.getByRole("button", { name: "Close" })).toBeDisabled();
+    expect(
+      screen.getByRole("button", { name: "Next document" }),
+    ).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Make primary" })).toBeDisabled();
+    expect(
+      screen.getByRole("button", { name: "More document actions" }),
+    ).toBeDisabled();
+    expect(
+      screen.getByRole("button", { name: "Preview invoice-primary.pdf" }),
+    ).toBeDisabled();
+  });
+
   it("restores focus to the overflow button when deletion is canceled", async () => {
     const user = userEvent.setup();
     renderPanel();
