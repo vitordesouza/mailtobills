@@ -28,13 +28,9 @@ export default async function SettingsLayout({
           <InboxChip className="hidden sm:inline-flex" />
         </div>
       </header>
-      <main
-        id="main-content"
-        tabIndex={-1}
-        className="flex min-w-0 flex-1 flex-col gap-4 p-4 pt-0 outline-none"
-      >
+      <div className="flex min-w-0 flex-1 flex-col gap-4 p-4 pt-0">
         {children}
-      </main>
+      </div>
     </>
   );
 }
