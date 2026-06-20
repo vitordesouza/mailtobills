@@ -1,16 +1,20 @@
 import { defineConfig, devices } from "@playwright/test";
 
+const port = Number(process.env.PLAYWRIGHT_PORT ?? "3001");
+const baseURL = `http://localhost:${port}`;
+
 export default defineConfig({
   testDir: "./e2e",
   timeout: 30_000,
   use: {
-    baseURL: "http://localhost:3001",
+    baseURL,
     trace: "on-first-retry",
   },
   webServer: {
-    command: "pnpm --filter @mailtobills/landing dev",
-    url: "http://localhost:3001",
-    reuseExistingServer: true,
+    command: `pnpm --filter @mailtobills/landing exec next dev --turbopack -p ${port}`,
+    url: baseURL,
+    reuseExistingServer:
+      process.env.PLAYWRIGHT_REUSE_EXISTING_SERVER === "true",
     timeout: 120_000,
   },
   projects: [
